@@ -14,8 +14,10 @@ import org.bouncycastle.openpgp.*
 import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.util.Strings
 import org.pgpainless.bouncycastle.extensions.certificate
+import org.pgpainless.bouncycastle.extensions.isEncrypted
 import org.pgpainless.bouncycastle.extensions.requireSecretKey
 import org.pgpainless.exception.MissingPassphraseException
+import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.key.protection.fixes.S2KUsageFix
 import org.slf4j.Logger
@@ -484,26 +486,27 @@ class KeyRingUtils {
             oldProtector: SecretKeyRingProtector,
             newProtector: SecretKeyRingProtector
         ): PGPSecretKeyRing {
-            return if (keyId == null) {
-                    PGPSecretKeyRing(
-                        secretKeys.secretKeys
-                            .asSequence()
-                            .map { reencryptPrivateKey(it, oldProtector, newProtector) }
-                            .toList())
+            val changedKeys = mutableListOf<PGPSecretKey>()
+            val missingPassphrases = mutableSetOf<SubkeyIdentifier>()
+
+            secretKeys.secretKeys.asSequence().forEach {
+                if (keyId == null || it.keyIdentifier.matchesExplicit(keyId)) {
+                    try {
+                        changedKeys.add(reencryptPrivateKey(it, oldProtector, newProtector))
+                    } catch (_: NullPointerException) {
+                        missingPassphrases.add(SubkeyIdentifier(secretKeys, it.keyIdentifier))
+                    }
                 } else {
-                    PGPSecretKeyRing(
-                        secretKeys.secretKeys
-                            .asSequence()
-                            .map {
-                                if (it.keyIdentifier.matchesExplicit(keyId)) {
-                                    reencryptPrivateKey(it, oldProtector, newProtector)
-                                } else {
-                                    it
-                                }
-                            }
-                            .toList())
+                    // Do not change this subkeys passphrase
+                    changedKeys.add(it)
                 }
-                .let { s2kUsageFixIfNecessary(it, newProtector) }
+            }
+
+            if (missingPassphrases.isNotEmpty()) {
+                throw MissingPassphraseException(missingPassphrases)
+            }
+
+            return s2kUsageFixIfNecessary(PGPSecretKeyRing(changedKeys), newProtector)
         }
 
         @JvmStatic
@@ -517,10 +520,13 @@ class KeyRingUtils {
                 return secretKey
             }
 
+            val decryptor = oldProtector.getDecryptor(secretKey.keyIdentifier)
+            if (secretKey.isEncrypted() && decryptor == null) {
+                throw NullPointerException("Decryptor for key ${secretKey.keyIdentifier} is null.")
+            }
+
             return PGPSecretKey.copyWithNewPassword(
-                secretKey,
-                oldProtector.getDecryptor(secretKey.keyIdentifier),
-                newProtector.getEncryptor(secretKey.publicKey))
+                secretKey, decryptor, newProtector.getEncryptor(secretKey.publicKey))
         }
 
         @JvmStatic
