@@ -235,6 +235,8 @@ class GenerateKeyImpl(private val api: PGPainless) : GenerateKey {
                 else -> throw SOPGPException.UnsupportedProfile("generate-key", profile)
             }
 
+        keyBuilder.setExpirationDate(null)
+
         userIds.forEach { keyBuilder.addUserId(it) }
         if (!passphrase.isEmpty) {
             keyBuilder.setPassphrase(passphrase)
