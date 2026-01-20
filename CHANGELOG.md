@@ -8,8 +8,12 @@ SPDX-License-Identifier: CC0-1.0
 ## 2.0.3-SNAPSHOT
 - Bump `bcpg-jdk8on` to `1.83`
 - Bump `bcprov-jdk18on` to `1.83`
+- Bump `sop-java` to `15.0.0`
 - `sop encrypt`: For symmetric-key encryption; default to rfc4880 packet format
 - `sop list-profiles encrypt`: Add profile descriptions
+- `sop generate-key`: Do not add expiration date
+- `sop encrypt`: Add support for `--for={communications|storage|any}` flag
+- `sop update-key`: Add encryption subkey if `--signing-only` is missing
 - Fix issue, where third-party certification is considered during encryption (#495)
 - Treat literal data packets with non-standard format octets as binary (#496)
 
