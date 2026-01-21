@@ -5,7 +5,7 @@
 package org.pgpainless.key;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -39,7 +39,7 @@ public class OpenPgpV5FingerprintTest {
         PGPPublicKey publicKey = getMockedPublicKey(hex);
 
         OpenPgpFingerprint fingerprint = OpenPgpFingerprint.of(publicKey);
-        assertTrue(fingerprint instanceof OpenPgpV5Fingerprint);
+        assertInstanceOf(OpenPgpV5Fingerprint.class, fingerprint);
         assertEquals(5, fingerprint.getVersion());
         assertEquals(hex, fingerprint.toString());
     }
