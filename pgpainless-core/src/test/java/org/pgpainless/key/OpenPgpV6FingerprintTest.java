@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -86,7 +87,7 @@ public class OpenPgpV6FingerprintTest {
         PGPPublicKey publicKey = getMockedPublicKey(hex);
 
         OpenPgpFingerprint fingerprint = OpenPgpFingerprint.of(publicKey);
-        assertTrue(fingerprint instanceof OpenPgpV6Fingerprint);
+        assertInstanceOf(OpenPgpV6Fingerprint.class, fingerprint);
         assertEquals(6, fingerprint.getVersion());
         assertEquals(hex, fingerprint.toString());
     }

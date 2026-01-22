@@ -6,6 +6,7 @@ package org.pgpainless.key;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -100,7 +101,7 @@ public class OpenPgpV4FingerprintTest {
         String prettyPrint = "C94B 884B 9A56 7B1C FB23  6999 7DC5 BDAC BBDF BF87";
         OpenPgpFingerprint parsed = OpenPgpFingerprint.parse(prettyPrint);
 
-        assertTrue(parsed instanceof OpenPgpV4Fingerprint);
+        assertInstanceOf(OpenPgpV4Fingerprint.class, parsed);
         OpenPgpV4Fingerprint v4fp = (OpenPgpV4Fingerprint) parsed;
         assertEquals(prettyPrint, v4fp.prettyPrint());
     }
@@ -111,7 +112,7 @@ public class OpenPgpV4FingerprintTest {
         byte[] binary = Hex.decode(hex);
 
         OpenPgpFingerprint fingerprint = OpenPgpFingerprint.parseFromBinary(binary);
-        assertTrue(fingerprint instanceof OpenPgpV4Fingerprint);
+        assertInstanceOf(OpenPgpV4Fingerprint.class, fingerprint);
         assertEquals(hex, fingerprint.toString());
         assertArrayEquals(binary, fingerprint.getBytes());
     }
@@ -122,7 +123,7 @@ public class OpenPgpV4FingerprintTest {
         byte[] binary = Hex.decode(hex);
 
         OpenPgpFingerprint fingerprint = OpenPgpFingerprint.parseFromBinary(binary);
-        assertTrue(fingerprint instanceof OpenPgpV4Fingerprint);
+        assertInstanceOf(OpenPgpV4Fingerprint.class, fingerprint);
         assertEquals(hex, fingerprint.toString());
         assertArrayEquals(binary, fingerprint.getBytes());
     }
@@ -133,7 +134,7 @@ public class OpenPgpV4FingerprintTest {
         byte[] binary = Hex.decode(hex);
 
         OpenPgpFingerprint fingerprint = OpenPgpFingerprint.parseFromBinary(binary);
-        assertTrue(fingerprint instanceof OpenPgpV4Fingerprint);
+        assertInstanceOf(OpenPgpV4Fingerprint.class, fingerprint);
         assertEquals(hex, fingerprint.toString());
     }
 
