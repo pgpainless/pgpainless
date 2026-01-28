@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Paul Schaub <info@pgpainless.org>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 # Enable auto-env through the sdkman_auto_env config
 # Add key=value pairs of SDKs to use below
 java=21.0.5-graal
