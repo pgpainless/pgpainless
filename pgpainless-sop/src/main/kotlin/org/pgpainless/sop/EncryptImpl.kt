@@ -21,6 +21,7 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm
 import org.pgpainless.encryption_signing.EncryptionOptions
 import org.pgpainless.encryption_signing.ProducerOptions
 import org.pgpainless.encryption_signing.SigningOptions
+import org.pgpainless.exception.KeyException
 import org.pgpainless.exception.KeyException.UnacceptableEncryptionKeyException
 import org.pgpainless.exception.KeyException.UnacceptableSigningKeyException
 import org.pgpainless.exception.WrongPassphraseException
@@ -144,11 +145,20 @@ class EncryptImpl(private val api: PGPainless) : Encrypt {
 
     override fun withCert(cert: InputStream): Encrypt = apply {
         try {
-            KeyReader(api).readPublicKeys(cert, true).forEach {
-                encryptionOptions.addRecipient(it, keySelectorForPurpose(purpose))
+            val certs = KeyReader(api).readPublicKeys(cert, true)
+            certs.forEach {
+                try {
+                    encryptionOptions.addRecipient(it, keySelectorForPurpose(purpose))
+                } catch (e: UnacceptableEncryptionKeyException) {
+                    throw SOPGPException.CertCannotEncrypt(
+                        "Cert ${it.keyIdentifier} cannot encrypt: ${e.message ?: "unknown cause"}",
+                        e)
+                } catch (e: KeyException.ExpiredKeyException) {
+                    throw SOPGPException.CertCannotEncrypt(
+                        "Cert ${it.keyIdentifier} cannot encrypt because it is expired: ${e.message ?: ""}",
+                        e)
+                }
             }
-        } catch (e: UnacceptableEncryptionKeyException) {
-            throw SOPGPException.CertCannotEncrypt(e.message ?: "Cert cannot encrypt", e)
         } catch (e: IOException) {
             throw SOPGPException.BadData(e)
         }
