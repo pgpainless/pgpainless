@@ -46,7 +46,7 @@ class SOPImpl(
 
     override fun detachedSign(): DetachedSign = DetachedSignImpl(api)
 
-    override fun detachedVerify(): DetachedVerify = sopv.detachedVerify()!!
+    override fun detachedVerify(): DetachedVerify = sopv.detachedVerify()
 
     override fun encrypt(): Encrypt = EncryptImpl(api)
 
@@ -58,7 +58,7 @@ class SOPImpl(
 
     override fun inlineSign(): InlineSign = InlineSignImpl(api)
 
-    override fun inlineVerify(): InlineVerify = sopv.inlineVerify()!!
+    override fun inlineVerify(): InlineVerify = sopv.inlineVerify()
 
     override fun listProfiles(): ListProfiles = ListProfilesImpl(api)
 
@@ -68,7 +68,7 @@ class SOPImpl(
 
     override fun updateKey(): UpdateKey = UpdateKeyImpl(api)
 
-    override fun validateUserId(): ValidateUserId = sopv.validateUserId()!!
+    override fun validateUserId(): ValidateUserId = sopv.validateUserId()
 
-    override fun version(): Version = sopv.version()!!
+    override fun version(): Version = sopv.version()
 }
