@@ -49,6 +49,7 @@ class S2KUsageFix {
             val keyList = mutableListOf<PGPSecretKey>()
             for (key in keys) {
                 // CHECKSUM is not recommended
+                @Suppress("DEPRECATION")
                 if (key.s2KUsage != SecretKeyPacket.USAGE_CHECKSUM) {
                     keyList.add(key)
                     continue

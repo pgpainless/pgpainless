@@ -535,6 +535,7 @@ class KeyRingUtils {
             protector: SecretKeyRingProtector
         ): PGPSecretKeyRing {
             if (secretKeys.secretKeys.asSequence().any {
+                @Suppress("DEPRECATION")
                 it.s2KUsage == SecretKeyPacket.USAGE_CHECKSUM
             }) {
                 return S2KUsageFix.replaceUsageChecksumWithUsageSha1(secretKeys, protector, true)
