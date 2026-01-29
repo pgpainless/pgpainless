@@ -10,7 +10,7 @@ allprojects {
         bouncyCastleVersion = '1.83-SNAPSHOT'
         bouncyPgVersion = bouncyCastleVersion
         junitVersion = '5.8.2'
-        logbackVersion = '1.5.19'
+        logbackVersion = '1.5.25'
         mockitoVersion = '4.5.1'
         slf4jVersion = '1.7.36'
         sopJavaVersion = '15.0.1-SNAPSHOT'
