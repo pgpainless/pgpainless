@@ -15,7 +15,8 @@ graalvmNative {
     //  system locale at runtime. As a workaround, we set the default locale to English to prevent users
     //  being surprised by sudden German messages
     binaries.main {
-        buildArgs.add('-H:DefaultLocale=en')
+        buildArgs.add('-Duser.language=en')
+        buildArgs.add('-Duser.country=us')
         buildArgs.add('-H:IncludeLocales=de,en')
     }
 }
