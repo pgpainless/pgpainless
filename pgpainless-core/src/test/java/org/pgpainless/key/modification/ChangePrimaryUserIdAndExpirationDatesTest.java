@@ -9,8 +9,10 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.OpenPGPKeyVersion;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.util.DateUtil;
 
 import java.util.Date;
 
@@ -32,7 +34,7 @@ public class ChangePrimaryUserIdAndExpirationDatesTest {
                 .modernKeyRing("A");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
-        Date now = new Date();
+        Date now = DateUtil.now();
         KeyRingInfo info = api.inspect(secretKeys, now);
         assertFalse(info.isHardRevoked("A"));
         assertFalse(info.isHardRevoked("B"));
@@ -74,17 +76,16 @@ public class ChangePrimaryUserIdAndExpirationDatesTest {
     @Test
     public void generateA_primaryExpire_isExpired() {
         PGPainless api = PGPainless.getInstance();
-        OpenPGPKey secretKeys = api.generateKey()
+        Date now = DateUtil.now();
+        OpenPGPKey secretKeys = api.generateKey(OpenPGPKeyVersion.v4, now)
                 .modernKeyRing("A");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
         KeyRingInfo info = api.inspect(secretKeys);
         assertIsPrimaryUserId("A", info);
 
-        Date now = new Date();
         Date later = new Date(now.getTime() + millisInHour);
-
-        secretKeys = api.modify(secretKeys, now)
+        secretKeys = api.modify(secretKeys, new Date(now.getTime() + 1000)) // make sure sig is newer than default sig
                 .setExpirationDate(later, protector) // expire the whole key
                 .done();
 
@@ -101,7 +102,7 @@ public class ChangePrimaryUserIdAndExpirationDatesTest {
                 .modernKeyRing("A");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
-        Date now = new Date();
+        Date now = DateUtil.now();
         // Generate key with primary user-id A
         KeyRingInfo info = api.inspect(secretKeys);
         assertIsPrimaryUserId("A", info);
@@ -130,7 +131,7 @@ public class ChangePrimaryUserIdAndExpirationDatesTest {
         assertIsPrimaryUserId("B", info);
         assertIsNotPrimaryUserId("A", info);
 
-        info = api.inspect(secretKeys, expiration);
+        info = api.inspect(secretKeys, new Date(expiration.getTime() + 1000));
         assertIsPrimaryUserId("B", info);   // B is still primary, even though
         assertFalse(info.isUserIdValid("A"));      // key is expired by now
         assertFalse(info.isUserIdValid("B"));
@@ -142,7 +143,7 @@ public class ChangePrimaryUserIdAndExpirationDatesTest {
         OpenPGPKey secretKeys = api.generateKey().modernKeyRing("A");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
-        Date now = new Date();
+        Date now = DateUtil.now();
         Date t1 = new Date(now.getTime() + millisInHour);
         secretKeys = api.modify(secretKeys, now)
                 .setExpirationDate(t1, protector)
@@ -166,7 +167,7 @@ public class ChangePrimaryUserIdAndExpirationDatesTest {
         OpenPGPKey secretKeys = api.generateKey().modernKeyRing("A");
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
-        Date now = new Date();
+        Date now = DateUtil.now();
         Date t1 = new Date(now.getTime() + millisInHour);
         secretKeys = api.modify(secretKeys, t1)
                 .setExpirationDate(t1, protector)
