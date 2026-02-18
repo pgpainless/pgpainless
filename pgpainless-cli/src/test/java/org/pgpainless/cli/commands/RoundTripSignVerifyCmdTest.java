@@ -14,8 +14,8 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.Date;
 
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
@@ -30,6 +30,8 @@ import sop.exception.SOPGPException;
 import sop.util.UTCUtil;
 
 public class RoundTripSignVerifyCmdTest extends CLITest {
+
+    private final PGPainless api = PGPainless.getInstance();
 
     public RoundTripSignVerifyCmdTest() {
         super(LoggerFactory.getLogger(RoundTripSignVerifyCmdTest.class));
@@ -197,12 +199,12 @@ public class RoundTripSignVerifyCmdTest extends CLITest {
     @Test
     public void testSignWithIncapableKey()
             throws IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
+        OpenPGPKey secretKeys = api.buildKey()
                 .addUserId("Cannot Sign <cannot@sign.key>")
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
-                .build()
-                .getPGPSecretKeyRing();
+                .build();
+
         File keyFile = writeFile("key.pgp", secretKeys.getEncoded());
 
         pipeStringToStdin("Hello, World!\n");
@@ -243,8 +245,8 @@ public class RoundTripSignVerifyCmdTest extends CLITest {
 
         // Test verification output
 
-        PGPPublicKeyRing cert = PGPainless.readKeyRing().publicKeyRing(readBytesFromFile(aliceCertFile));
-        KeyRingInfo info = PGPainless.inspectKeyRing(cert);
+        OpenPGPCertificate cert = api.readKey().parseCertificate(readBytesFromFile(aliceCertFile));
+        KeyRingInfo info = api.inspect(cert);
 
         // [date] [signing-key-fp] [primary-key-fp] signed by [key.pub]
         String verification = verificationsOut.toString();
