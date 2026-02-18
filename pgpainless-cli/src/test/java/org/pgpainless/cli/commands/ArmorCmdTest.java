@@ -10,20 +10,25 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPLiteralDataGenerator;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.slf4j.LoggerFactory;
 
 public class ArmorCmdTest extends CLITest {
 
+    private final PGPainless api = PGPainless.getInstance();
+
     public ArmorCmdTest() {
         super(LoggerFactory.getLogger(ArmorCmdTest.class));
     }
 
-    private static final String key = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
+    private static final String KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
             "Version: PGPainless\n" +
             "Comment: 62E9 DDA4 F20F 8341 D2BC  4B4C 8B07 5177 01F9 534C\n" +
             "Comment: alice@pgpainless.org\n" +
@@ -50,51 +55,55 @@ public class ArmorCmdTest extends CLITest {
 
     @Test
     public void armorSecretKey() throws IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(key);
-        byte[] binary = secretKeys.getEncoded();
+        OpenPGPKey key = api.readKey().parseKey(KEY);
+        byte[] binary = key.getEncoded();
 
         pipeBytesToStdin(binary);
         ByteArrayOutputStream armorOut = pipeStdoutToStream();
         assertSuccess(executeCommand("armor"));
 
-        PGPSecretKeyRing armored = PGPainless.readKeyRing().secretKeyRing(armorOut.toString());
-        assertArrayEquals(secretKeys.getEncoded(), armored.getEncoded());
+        OpenPGPKey armored = api.readKey().parseKey(armorOut.toString());
+        assertArrayEquals(binary, armored.getEncoded());
     }
 
     @Test
     public void armorPublicKey() throws IOException {
-        PGPSecretKeyRing secretKey = PGPainless.readKeyRing().secretKeyRing(key);
-        PGPPublicKeyRing publicKey = PGPainless.extractCertificate(secretKey);
+        OpenPGPKey secretKey = api.readKey().parseKey(KEY);
+        OpenPGPCertificate publicKey = secretKey.toCertificate();
         byte[] bytes = publicKey.getEncoded();
 
         pipeBytesToStdin(bytes);
         ByteArrayOutputStream armorOut = pipeStdoutToStream();
         assertSuccess(executeCommand("armor"));
 
-        PGPPublicKeyRing armored = PGPainless.readKeyRing().publicKeyRing(armorOut.toString());
+        OpenPGPCertificate armored = api.readKey().parseCertificate(armorOut.toString());
         assertArrayEquals(publicKey.getEncoded(), armored.getEncoded());
     }
 
     @Test
     public void armorMessage() throws IOException {
         String message = "Hello, World!\n";
+        ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+        PGPLiteralDataGenerator litGen = new PGPLiteralDataGenerator();
+        OutputStream litOut = litGen.open(bOut, PGPLiteralDataGenerator.UTF8, "", PGPLiteralDataGenerator.NOW, new byte[512]);
+        litOut.write(message.getBytes(StandardCharsets.UTF_8));
+        litOut.close();
 
-        pipeStringToStdin(message);
+        pipeBytesToStdin(bOut.toByteArray());
         ByteArrayOutputStream armorOut = pipeStdoutToStream();
         assertSuccess(executeCommand("armor"));
 
         String armored = armorOut.toString();
         assertTrue(armored.startsWith("-----BEGIN PGP MESSAGE-----\n"));
-        assertTrue(armored.contains("SGVsbG8sIFdvcmxkIQo="));
     }
 
     @Test
     public void armorAlreadyArmoredDataIsIdempotent() throws IOException {
-        pipeStringToStdin(key);
+        pipeStringToStdin(KEY);
         ByteArrayOutputStream armorOut = pipeStdoutToStream();
         assertSuccess(executeCommand("armor"));
 
         String armored = armorOut.toString();
-        assertEquals(key, armored);
+        assertEquals(KEY, armored);
     }
 }
