@@ -11,8 +11,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.slf4j.LoggerFactory;
@@ -20,11 +20,13 @@ import sop.exception.SOPGPException;
 
 public class DearmorCmdTest extends CLITest {
 
+    private final PGPainless api = PGPainless.getInstance();
+
     public DearmorCmdTest() {
         super(LoggerFactory.getLogger(DearmorCmdTest.class));
     }
 
-    private static final String key = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
+    private static final String KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
             "Version: PGPainless\n" +
             "Comment: 62E9 DDA4 F20F 8341 D2BC  4B4C 8B07 5177 01F9 534C\n" +
             "Comment: alice@pgpainless.org\n" +
@@ -51,9 +53,9 @@ public class DearmorCmdTest extends CLITest {
 
     @Test
     public void dearmorSecretKey() throws IOException {
-        PGPSecretKeyRing secretKey = PGPainless.readKeyRing().secretKeyRing(key);
+        OpenPGPKey secretKey = api.readKey().parseKey(KEY);
 
-        pipeStringToStdin(key);
+        pipeStringToStdin(KEY);
         ByteArrayOutputStream dearmored = pipeStdoutToStream();
         assertSuccess(executeCommand("dearmor"));
 
@@ -74,9 +76,9 @@ public class DearmorCmdTest extends CLITest {
 
     @Test
     public void dearmorCertificate() throws IOException {
-        PGPSecretKeyRing secretKey = PGPainless.readKeyRing().secretKeyRing(key);
-        PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKey);
-        String armoredCert = PGPainless.asciiArmor(certificate);
+        OpenPGPKey secretKey = api.readKey().parseKey(KEY);
+        OpenPGPCertificate certificate = secretKey.toCertificate();
+        String armoredCert = certificate.toAsciiArmoredString();
 
         pipeStringToStdin(armoredCert);
         ByteArrayOutputStream out = pipeStdoutToStream();
