@@ -4,8 +4,11 @@
 
 package org.pgpainless.example;
 
+import static org.junit.JUtils.assertDateEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -66,9 +69,7 @@ public class ModifyKeys {
     public void extractPublicKey() {
         // the certificate consists of only the public keys
         OpenPGPCertificate certificate = secretKey.toCertificate();
-
-        KeyRingInfo info = PGPainless.getInstance().inspect(certificate);
-        assertFalse(info.isSecretKey());
+        assertFalse(certificate.isSecretKey());
     }
 
     /**
@@ -141,9 +142,13 @@ public class ModifyKeys {
                 .addUserId("additional@user.id", protector)
                 .done();
 
-        KeyRingInfo info = api.inspect(secretKey);
-        assertTrue(info.isUserIdValid("additional@user.id"));
-        assertFalse(info.isUserIdValid("another@user.id"));
+        OpenPGPCertificate.OpenPGPUserId additional = secretKey.getUserId("additional@user.id");
+        assertNotNull(additional);
+        assertTrue(additional.isBound());
+
+        // another@user.id is not existent
+        OpenPGPCertificate.OpenPGPUserId another = secretKey.getUserId("another@user.id");
+        assertNull(another);
     }
 
     /**
@@ -174,6 +179,8 @@ public class ModifyKeys {
                         protector)
                 .done();
 
+        // TODO: Replace info usage with native OpenPGPCertificate methods once
+        //  https://github.com/bcgit/bc-java/pull/2236 is merged
         KeyRingInfo info = api.inspect(secretKey);
         assertEquals(4, info.getSecretKeys().size());
         assertEquals(4, info.getPublicKeys().size());
@@ -200,13 +207,15 @@ public class ModifyKeys {
                 .setExpirationDate(expirationDate, protector)
                 .done();
 
+        // TODO: Replace usage of info once https://github.com/bcgit/bc-java/pull/2236 is merged
         KeyRingInfo info = api.inspect(secretKey);
-        assertEquals(DateUtil.formatUTCDate(expirationDate),
-                DateUtil.formatUTCDate(info.getPrimaryKeyExpirationDate()));
-        assertEquals(DateUtil.formatUTCDate(expirationDate),
-                DateUtil.formatUTCDate(info.getExpirationDateForUse(KeyFlag.ENCRYPT_COMMS)));
-        assertEquals(DateUtil.formatUTCDate(expirationDate),
-                DateUtil.formatUTCDate(info.getExpirationDateForUse(KeyFlag.SIGN_DATA)));
+
+        assertDateEquals(expirationDate, info.getPrimaryKeyExpirationDate());
+        assertDateEquals(expirationDate, secretKey.getExpirationTime());
+        assertDateEquals(expirationDate, secretKey.getPrimaryKey().getKeyExpirationDate());
+
+        assertDateEquals(expirationDate, info.getExpirationDateForUse(KeyFlag.ENCRYPT_COMMS));
+        assertDateEquals(expirationDate, info.getExpirationDateForUse(KeyFlag.SIGN_DATA));
     }
 
     /**
@@ -218,7 +227,7 @@ public class ModifyKeys {
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockEachKeyWith(
                 Passphrase.fromPassword(originalPassphrase), secretKey);
         secretKey = api.modify(secretKey)
-                .addUserId("alcie@pgpainless.org", protector)
+                .addUserId("alcie@pgpainless.org", protector) // note: typo
                 .done();
         // Initially the user-id is valid
         assertTrue(api.inspect(secretKey).isUserIdValid("alcie@pgpainless.org"));

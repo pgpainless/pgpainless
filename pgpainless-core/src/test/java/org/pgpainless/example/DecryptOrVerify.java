@@ -17,7 +17,6 @@ import java.nio.charset.StandardCharsets;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
-import org.bouncycastle.openpgp.api.OpenPGPKeyReader;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -140,9 +139,8 @@ public class DecryptOrVerify {
 
     @BeforeAll
     public static void prepare() throws IOException {
-        OpenPGPKeyReader reader = PGPainless.getInstance().readKey();
         // read the secret key
-        secretKey = reader.parseKey(KEY);
+        secretKey = PGPainless.getInstance().readKey().parseKey(KEY);
         // certificate is the public part of the key
         certificate = secretKey.toCertificate();
     }
@@ -152,14 +150,15 @@ public class DecryptOrVerify {
      */
     @Test
     public void decryptMessage() throws PGPException, IOException {
-        ConsumerOptions consumerOptions = ConsumerOptions.get()
+        PGPainless api = PGPainless.getInstance();
+        ConsumerOptions consumerOptions = ConsumerOptions.get(api)
                 .addDecryptionKey(secretKey, keyProtector); // add the decryption key ring
 
         ByteArrayOutputStream plaintextOut = new ByteArrayOutputStream();
         ByteArrayInputStream ciphertextIn = new ByteArrayInputStream(ENCRYPTED.getBytes(StandardCharsets.UTF_8));
 
         // The decryption stream is an input stream from which we read the decrypted data
-        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(ciphertextIn)
                 .withOptions(consumerOptions);
 
@@ -182,14 +181,15 @@ public class DecryptOrVerify {
      */
     @Test
     public void decryptMessageAndVerifySignatures() throws PGPException, IOException {
-        ConsumerOptions consumerOptions = ConsumerOptions.get()
+        PGPainless api = PGPainless.getInstance();
+        ConsumerOptions consumerOptions = ConsumerOptions.get(api)
                 .addDecryptionKey(secretKey, keyProtector) // provide the secret key of the recipient for decryption
                 .addVerificationCert(certificate); // provide the signers public key for signature verification
 
         ByteArrayOutputStream plaintextOut = new ByteArrayOutputStream();
         ByteArrayInputStream ciphertextIn = new ByteArrayInputStream(ENCRYPTED_AND_SIGNED.getBytes(StandardCharsets.UTF_8));
 
-        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(ciphertextIn)
                 .withOptions(consumerOptions);
 
@@ -212,14 +212,15 @@ public class DecryptOrVerify {
      */
     @Test
     public void verifySignatures() throws PGPException, IOException {
-        ConsumerOptions options = ConsumerOptions.get()
+        PGPainless api = PGPainless.getInstance();
+        ConsumerOptions options = ConsumerOptions.get(api)
                 .addVerificationCert(certificate); // provide the signers certificate for verification of signatures
 
         for (String signed : new String[] {INBAND_SIGNED, CLEARTEXT_SIGNED}) {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             ByteArrayInputStream in = new ByteArrayInputStream(signed.getBytes(StandardCharsets.UTF_8));
 
-            DecryptionStream verificationStream = PGPainless.getInstance().processMessage()
+            DecryptionStream verificationStream = api.processMessage()
                     .onInputStream(in)
                     .withOptions(options);
 
