@@ -6,8 +6,8 @@ SPDX-License-Identifier: CC0-1.0
 # PGPainless Changelog
 
 ## 2.0.3-SNAPSHOT
-- Bump `bcpg-jdk8on` to `1.83-SNAPSHOT`
-- Bump `bcprov-jdk18on` to `1.83-SNAPSHOT`
+- Bump `bcpg-jdk8on` to `1.84`
+- Bump `bcprov-jdk18on` to `1.84`
 - Bump `sop-java` to `15.0.1`
 - Bump `logback-classic` to `1.5.25`
 - `sop encrypt`: For symmetric-key encryption; default to rfc4880 packet format
