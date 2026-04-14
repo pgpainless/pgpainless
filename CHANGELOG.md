@@ -5,7 +5,7 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 2.0.3-SNAPSHOT
+## 2.0.3
 - Bump `bcpg-jdk8on` to `1.84`
 - Bump `bcprov-jdk18on` to `1.84`
 - Bump `sop-java` to `15.0.1`
