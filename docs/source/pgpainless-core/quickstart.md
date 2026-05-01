@@ -42,6 +42,11 @@ Replace `XYZ` with the current version, in this case {{ env.config.version }}!
 :::
 
 The entry point to the API is the `PGPainless` class.
+You should create a single instance of this class and pass that around in your app.
+```java
+PGPainless api = PGPainless.getInstance();
+```
+
 For many common use-cases, examples can be found in the
 {{ '[examples package](https://{}/main/pgpainless-core/src/test/java/org/pgpainless/example)'.format(repo_pgpainless_src) }}.
 There is a very good chance that you can find code examples there that fit your needs.
@@ -52,21 +57,19 @@ Reading keys from ASCII armored strings or from binary files is easy:
 ```java
 // Secret Keys
 String key = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n"...;
-PGPSecretKeyRing secretKey = PGPainless.readKeyRing()
-        .secretKeyRing(key);
+OpenPGPKey secretKey = api.readKey().parseKey(key);
 
 // Certificates (Public Keys)
 String cert = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n...";
-PGPPublicKeyRing certificate = PGPainless.readKeyRing()
-        .publicKeyRing(cert);
+OpenPGPCertificate certificate = api.readKey().parseCertificate(cert);
 ```
 
 Similarly, keys or certificates can quickly be exported:
 
 ```java
 // ASCII armored key
-PGPSecretKeyRing secretKey = ...;
-String armored = PGPainless.asciiArmor(secretKey);
+OpenPGPKey secretKey = ...;
+String armored = secretKey.toAsciiArmoredString();
         
 // binary (unarmored) key
 byte[] binary = secretKey.getEncoded();
@@ -78,11 +81,11 @@ There are some predefined key archetypes, but it is possible to fully customize 
 
 ```java
 // EdDSA primary key with EdDSA signing- and XDH encryption subkeys
-PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+OpenPGPKey secretKeys = api.generateKey()
         .modernKeyRing("Romeo <romeo@montague.lit>", "thisIsAPassword");
 
 // RSA key without additional subkeys
-PGPSecretKeyRing secretKeys = PGPainless.generateKeyRing()
+OpenPGPKey secretKeys = api.generateKey()
         .simpleRsaKeyRing("Juliet <juliet@montague.lit>", RsaLength._4096);
 ```
 
@@ -92,8 +95,8 @@ As you can see, it is possible to generate all kinds of different keys.
 If you have a secret key, you might want to extract a public key certificate from it:
 
 ```java
-PGPSecretKeyRing secretKey = ...;
-PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKey);
+OpenPGPKey secretKey = ...;
+OpenPGPCertificate certificate = secretKey.toCertificate();
 ```
 
 ### Apply / Remove ASCII Armor
@@ -104,8 +107,8 @@ The way in which ASCII armor can be applied depends on the type of data that you
 The easies way to ASCII armor an OpenPGP key or certificate is by using PGPainless' `asciiArmor()` method:
 
 ```java
-PGPPublicKey certificate = ...;
-String asciiArmored = PGPainless.asciiArmor(certificate);
+OpenPGPCertificate certificate = ...;
+String asciiArmored = certificate.toAsciiArmoredString();
 ```
 
 If you want to ASCII armor ciphertext, you can enable ASCII armoring during encrypting/signing by requesting
@@ -116,7 +119,7 @@ ProducerOptions producerOptions = ...; // prepare as usual (see next section)
 
 producerOptions.setAsciiArmor(true); // enable armoring
 
-EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+EncryptionStream encryptionStream = api.generateMessage()
         .onOutputStream(out)
         .withOptions(producerOptions);
 
@@ -145,7 +148,7 @@ you need to use the following code:
 InputStream inputStream = ...;
 OutputStream output = ...;
 
-EncryptionStream armorStream = PGPainless.encryptAndOrSign()
+EncryptionStream armorStream = api.generateMessage()
         .onOutputStream(output)
         .withOptions(ProducerOptions.noEncryptionNoSigning()
                 .setAsciiArmor(true));
@@ -183,13 +186,13 @@ ProducerOptions options = ProducerOptions.sign(signingOptions);
 ProducerOptions options = ProducerOptions.signAndEncrypt(signingOptions, encryptionOptions);
 ```
 
-The `ProducerOptions` object can then be passed into the `encryptAndOrSign()` API:
+The `ProducerOptions` object can then be passed into the `generateMessage()` API:
 
 ```java
 InputStream plaintext = ...; // The data that shall be encrypted and/or signed
 OutputStream ciphertext = ...; // Destination for the ciphertext
 
-EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+EncryptionStream encryptionStream = api.generateMessage()
         .onOutputStream(ciphertext)
         .withOptions(options); // pass in the options object
 
@@ -205,7 +208,7 @@ Now lets take a look at the configuration of the `SigningOptions` object and how
 signature to the message:
 
 ```java
-PGPSecretKeyRing signingKey = ...; // Key used for signing
+OpenPGPKey signingKey = ...; // Key used for signing
 SecretKeyRingProtector protector = ...; // Protector to unlock the signing key
 
 SigningOptions signOptions = SigningOptions.get()
@@ -229,7 +232,7 @@ That way, it can be distributed independent of the message.
 The `EncryptionOptions` object can be configured in a similar way:
 
 ```java
-PGPPublicKey certificate = ...;
+OpenPGPCertificate certificate = ...;
 
 EncryptionOptions encOptions = EncryptionOptions.get()
         .addRecipient(certificate);
@@ -262,8 +265,8 @@ the `MessageMetadata` object which can be obtained from the `DecryptionStream`.
 To configure the decryption / verification process, the `ConsumerOptions` object is used:
 
 ```java
-PGPPublicKeyRing verificationCert = ...; // optional, signers certificate for signature verification
-PGPSecretKeyRing decryptionKey = ...; // optional, decryption key
+OpenPGPCertificate verificationCert = ...; // optional, signers certificate for signature verification
+OpenPGPKey decryptionKey = ...; // optional, decryption key
 
 ConsumerOptions options = ConsumerOptions.get()
         .addVerificationCert(verificationCert) // add a verification cert for signature verification
@@ -290,7 +293,7 @@ InputStream ciphertext = ...; // encrypted and/or signed message
 OutputStream plaintext = ...; // destination for the plaintext
 
 ConsumerOptions options = ...; // see above
-DecryptionStream consumerStream = PGPainless.decryptAndOrVerify()
+DecryptionStream consumerStream = api.processMessage()
         .onInputStream(ciphertext)
         .withOptions(options);
 
@@ -325,13 +328,13 @@ To verify a detached signature, you need to call the PGPainless API like this:
 ```java
 InputStream plaintext = ...; // e.g. new FileInputStream(releaseFile);
 InputStream detachedSignature = ...; // e.g. new FileInputStream(releaseGpgFile);
-PGPPublicKeyRing certificate = ...; // e.g. debians public signing key
+OpenPGPCertificate certificate = ...; // e.g. debians public signing key
 
 ConsumerOptions options = ConsumerOptions.get()
         .addVerificationCert(certificate) // provide certificate for verification
-        .addVerificationOfDetachedSignatures(detachedSignature) // provide detached signature
+        .addVerificationOfDetachedSignatures(detachedSignature); // provide detached signature
 
-DecryptionStream verificationStream = PGPainless.decryptAndOrVerify()
+DecryptionStream verificationStream = api.processMessage()
         .onInputStream(plaintext)
         .withOptions(options);
 
@@ -367,7 +370,7 @@ ConsumerOptions options = ConsumerOptions.get()
         .setDecryptionKey(secretKey)
         ...
 
-DecryptionStream decryptionStream = PGPainless.decryptAndOrVerify()
+DecryptionStream decryptionStream = api.processMessage()
         .onInputStream(ciphertextIn)
         .withOptions(options);
 ...
@@ -395,7 +398,7 @@ algorithms.put(PublicKeyAlgorithm.ECDSA, 100);
 Policy.PublicKeyAlgorithmPolicy pkPolicy = 
         new Policy.PublicKeyAlgorithmPolicy(algorithms);
 // set the custom algorithm policy
-PGPainless.getPolicy().setPublicKeyAlgorithmPolicy();
+api.getAlgorithmPolicy().setPublicKeyAlgorithmPolicy(pkPolicy);
 ```
 
 Since OpenPGP uses a hybrid encryption scheme of asymmetric and symmetric encryption algorithms,
@@ -416,10 +419,10 @@ Policy.SymmetricKeyAlgorithmPolicy skPolicy =
         new SymmtricKeyAlgorithmPolicy(fallbackAlgorithm, algorithms);
 // set the custom algorithm policy
 // algorithm policy applicable when decrypting messages created by legacy senders:
-PGPainless.getPolicy()
+api.getAlgorithmPolicy()
         .setSymmetricKeyDecryptionAlgorithmPolicy(skPolicy);
 // algorithm policy applicable when generating messages for legacy recipients:
-PGPainless.getPolicy()
+api.getAlgorithmPolicy()
         .setSymmetricKeyEncryptionAlgorithmPolicy(skPolicy);
 ```
 
@@ -446,10 +449,10 @@ algorithms.put(HashAlgorithm.SHA1, null);
 Policy.HashAlgorithmPolicy hPolicy =
         new Policy.HashAlgorithmPolicy(fallbackAlgorithm, algorithms);
 // set policy for revocation signatures
-PGPainless.getPolicy()
+api.getAlgorithmPolicy()
         .setRevocationSignatureHashAlgorithmPolicy(hPolicy);
 // set policy for normal signatures (certifications and document signatures)
-PGPainless.getPolicy()
+api.getAlgorithmPolicy()
         .setSignatureHashAlgorithmPolicy(hPolicy);
 ```
 
@@ -464,7 +467,7 @@ algorithms.add(CompressionAlgorithm.BZIP2);
 ...
 Policy.CompressionAlgorithmPolicy cPolicy =
         new Policy.CompressionAlgorithmPolicy(fallback, algorithms);
-PGPainless.getPolicy()
+api.getAlgorithmPolicy()
         .setCompressionAlgorithmPolicy(cPolicy);
 ```
 
@@ -475,7 +478,7 @@ to make sure that an attacker didn't tamper with the corresponding public key pa
 
 These checks are disabled by default, but they can be enabled as follows:
 ```java
-PGPainless.getPolicy()
+api.getAlgorithmPolicy()
         .setEnableKeyParameterValidation(true);
 ```
 
@@ -498,7 +501,7 @@ such that a signature containing a critical notation of a certain value is not r
 To register a known notation, you can do the following:
 
 ```java
-NotationRegistry registry = PGPainless.getPolicy()
+NotationRegistry registry = api.getAlgorithmPolicy()
         .getNotationRegistry();
 
 registry.addKnownNotation("sample@example.com");

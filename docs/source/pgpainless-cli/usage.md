@@ -42,6 +42,14 @@ $ gradle installDist
 Afterwards, an uncompressed distributable is installed in `build/install/`.
 To execute the application, you can call `build/install/bin/pgpainless-cli{.bat}`
 
+To generate a native binary with immensely increased startup time:
+```shell
+$ cd pgpainless-cli/
+$ gradle nativeCompile
+```
+
+The native binary can then be found in `build/native/nativeCompile/`.
+
 Building / updating man pages is a two-step process.
 The contents of the man pages is largely defined by the `sop-java-picocli` source code.
 
@@ -79,10 +87,12 @@ Hereafter, the program will be referred to as `pgpainless-cli`.
 ```
 $ pgpainless-cli help
 Stateless OpenPGP Protocol
-Usage: pgpainless-cli [--stacktrace] [COMMAND]
+Usage: pgpainless-cli [--debug] [-l=<ignored>] [COMMAND]
 
 Options:
-      --stacktrace   Print stacktrace
+      --debug, --stacktrace
+                           Print stacktrace
+  -l, --locale=<ignored>   Locale for description texts
 
 Commands:
   version              Display version information about the tool
@@ -92,6 +102,12 @@ Commands:
   change-key-password  Update the password of a key
   revoke-key           Generate revocation certificates
   extract-cert         Extract a public key certificate from a secret key
+  update-key           Keep a secret key up-to-date
+  merge-certs          Merge OpenPGP certificates from standard input with
+                         related elements from CERTS and emit the result to
+                         standard output
+  certify-userid       Certify OpenPGP Certificate User IDs
+  validate-userid      Validate a UserID in an OpenPGP certificate
   sign                 Create a detached message signature
   verify               Verify a detached signature
   encrypt              Encrypt a message from standard input
@@ -101,31 +117,40 @@ Commands:
   inline-verify        Verify an inline-signed message
   armor                Add ASCII Armor to standard input
   dearmor              Remove ASCII Armor from standard input
-  help                 Display usage information for the specified subcommand
+  help                 Stateless OpenPGP Protocol
 
 Exit Codes:
-   0   Successful program execution
-   1   Generic program error
-   3   Verification requested but no verifiable signature found
-  13   Unsupported asymmetric algorithm
-  17   Certificate is not encryption capable
-  19   Usage error: Missing argument
-  23   Incomplete verification instructions
-  29   Unable to decrypt
-  31   Password is not human-readable
-  37   Unsupported Option
-  41   Invalid data or data of wrong type encountered
-  53   Non-text input received where text was expected
-  59   Output file already exists
-  61   Input file does not exist
-  67   Cannot unlock password protected secret key
-  69   Unsupported subcommand
-  71   Unsupported special prefix (e.g. "@ENV/@FD") of indirect parameter
-  73   Ambiguous input (a filename matching the designator already exists)
-  79   Key is not signing capable
-  83   Options were supplied that are incompatible with each other
-  89   The requested profile is unsupported, or the indicated subcommand does
-         not accept profiles
+   0    Successful program execution
+   1    Generic program error
+   3    Verification requested but no verifiable signature found
+  13    Unsupported asymmetric algorithm
+  17    Certificate is not encryption capable
+  19    Usage error: Missing argument
+  23    Incomplete verification instructions
+  29    Unable to decrypt
+  31    Password is not human-readable
+  37    Unsupported Option
+  41    Invalid data or data of wrong type encountered
+  53    Non-text input received where text was expected
+  59    Output file already exists
+  61    Input file does not exist
+  67    Cannot unlock password protected secret key
+  69    Unsupported subcommand
+  71    Unsupported special prefix (e.g. "@ENV/@FD") of indirect parameter
+  73    Ambiguous input (a filename matching the designator already exists)
+  79    Key is not signing capable
+  83    Options were supplied that are incompatible with each other
+  89    The requested profile is unsupported, or the indicated subcommand does
+          not accept profiles
+  97    The implementation supports some form of hardware-backed secret keys,
+          but could not identify the hardware device
+  101   The implementation tried to use a hardware-backed secret key, but the
+          cryptographic hardware refused the operation for some reason other
+          than a bad PIN or password
+  103   The primary key of a KEYS object is too weak or revoked
+  107   The CERTS object has no matching User ID
+Powered by picocli
+
 ```
 
 To get help on a subcommand, e.g. `encrypt`, just call the help subcommand followed by the subcommand you
