@@ -5,6 +5,10 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 2.0.4-SNAPSHOT
+- Bump `checkstyle` tool version to `10.26.1`
+- Fix PGPainless silently dropping trailing `0xFF` octet (Thanks to @byteoverride for the report, suggested fix and regression test!)
+
 ## 2.0.3
 - Bump `bcpg-jdk8on` to `1.84`
 - Bump `bcprov-jdk18on` to `1.84`
