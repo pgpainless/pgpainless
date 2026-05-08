@@ -114,7 +114,7 @@ class TeeBCPGInputStream(inputStream: BCPGInputStream, outputStream: OutputStrea
                 last =
                     if (r > 0) {
                         outputStream.write(b, off, r - 1)
-                        b[off + r - 1].toInt()
+                        b[off + r - 1].toInt() and 0xFF
                     } else {
                         -1
                     }
