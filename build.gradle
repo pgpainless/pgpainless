@@ -45,6 +45,21 @@ allprojects {
         toolVersion = '10.26.1'
     }
 
+    // Bump plexus-utils from 3.3.0 to 3.6.1 to fix CVE-2025-67030
+    // checkstyle unfortunately depends on the broken version and bumping checkstyle breaks the build, so we need this
+    //  workaround.
+    // Fixes https://github.com/pgpainless/pgpainless/security/dependabot/37
+    // Fixes https://github.com/pgpainless/pgpainless/security/dependabot/38
+    // Fixes https://github.com/pgpainless/pgpainless/security/dependabot/39
+    configurations.configureEach {
+        resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'org.codehaus.plexus' &&
+                    details.requested.name == 'plexus-utils') {
+                details.useVersion '3.6.1'
+            }
+        }
+    }
+
     spotless {
       kotlin {
         ktfmt().dropboxStyle()
