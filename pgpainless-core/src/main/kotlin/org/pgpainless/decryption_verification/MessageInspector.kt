@@ -8,7 +8,6 @@ import java.io.IOException
 import java.io.InputStream
 import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.*
-import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.pgpainless.PGPainless
 import org.pgpainless.decryption_verification.MessageMetadata.Layer.Companion.MAX_LAYER_DEPTH
 import org.pgpainless.exception.MalformedOpenPgpMessageException
@@ -104,7 +103,7 @@ class MessageInspector(val api: PGPainless = PGPainless.getInstance()) {
                     }
 
                     objectFactory =
-                        OpenPGPImplementation.getInstance()
+                        api.implementation
                             .pgpObjectFactory(PGPUtil.getDecoderStream(next.dataStream))
                     continue
                 }

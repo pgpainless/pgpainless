@@ -7,7 +7,6 @@ package org.pgpainless.encryption_signing
 import java.util.*
 import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.*
-import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPPrivateKey
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPSecretKey
@@ -570,7 +569,7 @@ class SigningOptions(private val api: PGPainless) {
         hashAlgorithm: HashAlgorithm,
         signatureType: DocumentSignatureType
     ): PGPSignatureGenerator {
-        return OpenPGPImplementation.getInstance()
+        return api.implementation
             .pgpContentSignerBuilder(signingKey.publicKey.algorithm, hashAlgorithm.algorithmId)
             .let { csb ->
                 PGPSignatureGenerator(csb, signingKey.publicKey).also {
