@@ -111,6 +111,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
      * @return this
      */
     @Deprecated("Repeatedly pass OpenPGPCertificate instances instead.")
+    // TODO: Remove in 2.1
     fun addRecipients(keys: Iterable<PGPPublicKeyRing>) = apply {
         keys.toList().let {
             require(it.isNotEmpty()) { "Set of recipient keys cannot be empty." }
@@ -130,6 +131,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
      * @return this
      */
     @Deprecated("Repeatedly pass OpenPGPCertificate instances instead.")
+    // TODO: Remove in 2.1
     fun addRecipients(keys: Iterable<PGPPublicKeyRing>, selector: EncryptionKeySelector) = apply {
         keys.toList().let {
             require(it.isNotEmpty()) { "Set of recipient keys cannot be empty." }
@@ -155,6 +157,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
         "Pass in OpenPGPCertificate instead.",
         replaceWith =
             ReplaceWith("addRecipient(key.toOpenPGPCertificate(), encryptionKeySelector)"))
+    // TODO: Remove in 2.1
     fun addRecipient(key: PGPPublicKeyRing) = addRecipient(key, encryptionKeySelector)
 
     /**
@@ -180,6 +183,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
     @Deprecated(
         "Pass in OpenPGPCertificate instead.",
         replaceWith = ReplaceWith("addRecipient(key.toOpenPGPCertificate(), userId)"))
+    // TODO: Remove in 2.1
     fun addRecipient(key: PGPPublicKeyRing, userId: CharSequence) =
         addRecipient(key, userId, encryptionKeySelector)
 
@@ -228,6 +232,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
         "Pass in OpenPGPCertificate instead.",
         replaceWith =
             ReplaceWith("addRecipient(key.toOpenPGPCertificate(), userId, encryptionKeySelector)"))
+    // TODO: Remove in 2.1
     fun addRecipient(
         key: PGPPublicKeyRing,
         userId: CharSequence,
@@ -257,6 +262,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
         "Pass in OpenPGPCertificate instead.",
         replaceWith =
             ReplaceWith("addRecipient(key.toOpenPGPCertificate(), encryptionKeySelector)"))
+    // TODO: Remove in 2.1
     fun addRecipient(key: PGPPublicKeyRing, encryptionKeySelector: EncryptionKeySelector) =
         addRecipient(api.toCertificate(key), encryptionKeySelector)
 
@@ -286,6 +292,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
     @Deprecated(
         "Pass in an OpenPGPCertificate instead.",
         replaceWith = ReplaceWith("addHiddenRecipient(key.toOpenPGPCertificate(), selector)"))
+    // TODO: Remove in 2.1
     fun addHiddenRecipient(
         key: PGPPublicKeyRing,
         selector: EncryptionKeySelector = encryptionKeySelector
@@ -354,6 +361,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
     @Deprecated(
         "Deprecated in favor of addMessagePassphrase",
         ReplaceWith("addMessagePassphrase(passphrase)"))
+    // TODO: Remove in 2.1
     fun addPassphrase(passphrase: Passphrase) = addMessagePassphrase(passphrase)
 
     /**
