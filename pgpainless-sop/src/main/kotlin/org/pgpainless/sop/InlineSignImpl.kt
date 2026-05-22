@@ -27,7 +27,7 @@ import sop.operation.InlineSign
 class InlineSignImpl(private val api: PGPainless) : InlineSign {
 
     private val signingOptions = SigningOptions.get(api)
-    private val protector = MatchMakingSecretKeyRingProtector()
+    private val protector = MatchMakingSecretKeyRingProtector(api)
     private val signingKeys = mutableListOf<OpenPGPKey>()
 
     private var armor = true

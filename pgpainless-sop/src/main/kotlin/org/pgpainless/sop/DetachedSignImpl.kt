@@ -30,7 +30,7 @@ import sop.operation.DetachedSign
 class DetachedSignImpl(private val api: PGPainless) : DetachedSign {
 
     private val signingOptions = SigningOptions.get(api)
-    private val protector = MatchMakingSecretKeyRingProtector()
+    private val protector = MatchMakingSecretKeyRingProtector(api)
     private val signingKeys = mutableListOf<OpenPGPKey>()
 
     private var armor = true

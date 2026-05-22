@@ -34,19 +34,19 @@ public class SecretKeyRingProtectorTest {
     @ExtendWith(TestAllImplementations.class)
     public void testUnlockAllKeysWithSamePassword()
             throws IOException, PGPException {
-
+        PGPainless api = PGPainless.getInstance();
         OpenPGPKey key = TestKeys.getCryptieKey();
         SecretKeyRingProtector protector =
                 SecretKeyRingProtector.unlockEachKeyWith(TestKeys.CRYPTIE_PASSPHRASE, key);
         for (OpenPGPKey.OpenPGPSecretKey secretKey : key.getSecretKeys().values()) {
-            assertNotNull(secretKey.unlock(protector));
+            assertNotNull(UnlockSecretKey.unlockSecretKey(secretKey, protector, api.getAlgorithmPolicy()));
         }
 
-        OpenPGPKey unrelatedKey = PGPainless.getInstance().generateKey()
+        OpenPGPKey unrelatedKey = api.generateKey()
                 .simpleEcKeyRing("unrelated",
                 "SecurePassword");
         for (OpenPGPKey.OpenPGPSecretKey k : unrelatedKey.getSecretKeys().values()) {
-            assertThrows(PGPException.class, () -> k.unlock(protector));
+            assertThrows(PGPException.class, () -> UnlockSecretKey.unlockSecretKey(k, protector, api.getAlgorithmPolicy()));
         }
     }
 

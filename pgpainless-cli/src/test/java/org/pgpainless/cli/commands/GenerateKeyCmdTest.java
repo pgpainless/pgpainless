@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 
+import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Test;
@@ -71,7 +72,7 @@ public class GenerateKeyCmdTest extends CLITest {
     }
 
     @Test
-    public void testPasswordProtectedKey() throws IOException {
+    public void testPasswordProtectedKey() throws IOException, PGPException {
         File passwordFile = writeFile("password", "sw0rdf1sh");
         passwordFile.deleteOnExit();
         ByteArrayOutputStream out = pipeStdoutToStream();
@@ -85,7 +86,7 @@ public class GenerateKeyCmdTest extends CLITest {
         assertTrue(info.isFullyEncrypted());
 
         assertNotNull(UnlockSecretKey
-                .unlockSecretKey(secretKeys.getPrimarySecretKey(), Passphrase.fromPassword("sw0rdf1sh")));
+                .unlockSecretKey(secretKeys.getPrimarySecretKey(), Passphrase.fromPassword("sw0rdf1sh"), api.getAlgorithmPolicy()));
     }
 
     @Test

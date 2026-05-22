@@ -46,7 +46,7 @@ abstract class AbstractSignatureBuilder<B : AbstractSignatureBuilder<B>>(
         unhashedSubpackets: SignatureSubpackets,
         api: PGPainless
     ) : this(
-        UnlockSecretKey.unlockSecretKey(signingKey, protector),
+        UnlockSecretKey.unlockSecretKey(signingKey, protector, api.algorithmPolicy),
         hashAlgorithm,
         signatureType,
         hashedSubpackets,

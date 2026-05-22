@@ -52,7 +52,7 @@ class EncryptImpl(private val api: PGPainless) : Encrypt {
     private val encryptionOptions = EncryptionOptions.get(api)
     private var signingOptions: SigningOptions? = null
     private val signingKeys = mutableListOf<OpenPGPKey>()
-    private val protector = MatchMakingSecretKeyRingProtector()
+    private val protector = MatchMakingSecretKeyRingProtector(api)
 
     private var profile = RFC4880_PROFILE.name
     private var mode = EncryptAs.binary

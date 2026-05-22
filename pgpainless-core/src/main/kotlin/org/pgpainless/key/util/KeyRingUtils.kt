@@ -20,6 +20,7 @@ import org.pgpainless.exception.MissingPassphraseException
 import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.key.protection.fixes.S2KUsageFix
+import org.pgpainless.policy.Policy
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -484,7 +485,9 @@ class KeyRingUtils {
             keyId: KeyIdentifier?,
             secretKeys: PGPSecretKeyRing,
             oldProtector: SecretKeyRingProtector,
-            newProtector: SecretKeyRingProtector
+            newProtector: SecretKeyRingProtector,
+            implementation: OpenPGPImplementation,
+            policy: Policy
         ): PGPSecretKeyRing {
             val changedKeys = mutableListOf<PGPSecretKey>()
             val missingPassphrases = mutableSetOf<SubkeyIdentifier>()
@@ -506,7 +509,8 @@ class KeyRingUtils {
                 throw MissingPassphraseException(missingPassphrases)
             }
 
-            return s2kUsageFixIfNecessary(PGPSecretKeyRing(changedKeys), newProtector)
+            return s2kUsageFixIfNecessary(
+                PGPSecretKeyRing(changedKeys), newProtector, implementation, policy)
         }
 
         @JvmStatic
@@ -532,13 +536,16 @@ class KeyRingUtils {
         @JvmStatic
         fun s2kUsageFixIfNecessary(
             secretKeys: PGPSecretKeyRing,
-            protector: SecretKeyRingProtector
+            protector: SecretKeyRingProtector,
+            implementation: OpenPGPImplementation,
+            policy: Policy
         ): PGPSecretKeyRing {
             if (secretKeys.secretKeys.asSequence().any {
                 @Suppress("DEPRECATION")
                 it.s2KUsage == SecretKeyPacket.USAGE_CHECKSUM
             }) {
-                return S2KUsageFix.replaceUsageChecksumWithUsageSha1(secretKeys, protector, true)
+                return S2KUsageFix.replaceUsageChecksumWithUsageSha1(
+                    secretKeys, protector, true, implementation, policy)
             }
             return secretKeys
         }

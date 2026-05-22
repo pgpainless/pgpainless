@@ -9,10 +9,11 @@ import org.bouncycastle.openpgp.PGPSecretKey
 import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.pgpainless.bouncycastle.extensions.checksumCalculator
-import org.pgpainless.bouncycastle.extensions.unlock
 import org.pgpainless.exception.WrongPassphraseException
 import org.pgpainless.key.protection.SecretKeyRingProtector
+import org.pgpainless.key.protection.UnlockSecretKey
 import org.pgpainless.key.protection.fixes.S2KUsageFix.Companion.replaceUsageChecksumWithUsageSha1
+import org.pgpainless.policy.Policy
 
 /**
  * Repair class to fix keys which use S2K usage of value [SecretKeyPacket.USAGE_CHECKSUM]. The
@@ -43,7 +44,9 @@ class S2KUsageFix {
         fun replaceUsageChecksumWithUsageSha1(
             keys: PGPSecretKeyRing,
             protector: SecretKeyRingProtector,
-            skipKeysWithMissingPassphrase: Boolean = false
+            skipKeysWithMissingPassphrase: Boolean = false,
+            implementation: OpenPGPImplementation,
+            policy: Policy
         ): PGPSecretKeyRing {
             val digestCalculator = OpenPGPImplementation.getInstance().checksumCalculator()
             val keyList = mutableListOf<PGPSecretKey>()
@@ -72,7 +75,7 @@ class S2KUsageFix {
                     continue
                 }
 
-                val privateKey = key.unlock(protector)
+                val privateKey = UnlockSecretKey.unlockSecretKey(key, protector, policy)
                 // This constructor makes use of USAGE_SHA1 by default
                 val fixedKey =
                     PGPSecretKey(

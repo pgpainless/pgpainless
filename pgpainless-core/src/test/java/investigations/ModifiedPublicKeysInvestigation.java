@@ -258,7 +258,7 @@ public class ModifiedPublicKeysInvestigation {
         OpenPGPKey elgamal = api.readKey().parseKey(ELGAMAL);
 
         assertThrows(PGPException.class, () ->
-                UnlockSecretKey.unlockSecretKey(elgamal.getSecretKey(elgamalKID1), protector));
+                UnlockSecretKey.unlockSecretKey(elgamal.getSecretKey(elgamalKID1), protector, api.getAlgorithmPolicy()));
     }
 
     @Test
@@ -270,7 +270,7 @@ public class ModifiedPublicKeysInvestigation {
 
         for (OpenPGPKey.OpenPGPSecretKey secretKey : secretKeys.getSecretKeys().values()) {
             assertDoesNotThrow(() ->
-                    UnlockSecretKey.unlockSecretKey(secretKey, protector));
+                    UnlockSecretKey.unlockSecretKey(secretKey, protector, api.getAlgorithmPolicy()));
         }
     }
 
@@ -283,7 +283,7 @@ public class ModifiedPublicKeysInvestigation {
 
         for (OpenPGPKey.OpenPGPSecretKey secretKey : secretKeys.getSecretKeys().values()) {
             assertDoesNotThrow(() ->
-                    UnlockSecretKey.unlockSecretKey(secretKey, protector));
+                    UnlockSecretKey.unlockSecretKey(secretKey, protector, api.getAlgorithmPolicy()));
         }
     }
 
@@ -296,7 +296,7 @@ public class ModifiedPublicKeysInvestigation {
 
         for (OpenPGPKey.OpenPGPSecretKey secretKey : secretKeys.getSecretKeys().values()) {
             assertDoesNotThrow(() ->
-                    UnlockSecretKey.unlockSecretKey(secretKey, protector));
+                    UnlockSecretKey.unlockSecretKey(secretKey, protector, api.getAlgorithmPolicy()));
         }
     }
 }

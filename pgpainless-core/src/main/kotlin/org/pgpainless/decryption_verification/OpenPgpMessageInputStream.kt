@@ -458,7 +458,7 @@ class OpenPgpMessageInputStream(
 
                 val privateKey =
                     try {
-                        unlockSecretKey(secretKey, protector)
+                        unlockSecretKey(secretKey, protector, api.algorithmPolicy)
                     } catch (e: PGPException) {
                         throw WrongPassphraseException(secretKey.keyIdentifier, e)
                     }
@@ -490,7 +490,7 @@ class OpenPgpMessageInputStream(
                     continue
                 }
 
-                val privateKey = decryptionKey.unlock(protector)
+                val privateKey = unlockSecretKey(decryptionKey, protector, api.algorithmPolicy)
                 if (decryptWithPrivateKey(
                     esks, privateKey.keyPair, SubkeyIdentifier(decryptionKey), pkesk)) {
                     return true
@@ -519,7 +519,7 @@ class OpenPgpMessageInputStream(
                 val protector = options.getSecretKeyProtector(decryptionKeys) ?: continue
                 val privateKey: OpenPGPPrivateKey =
                     try {
-                        unlockSecretKey(secretKey, protector)
+                        unlockSecretKey(secretKey, protector, api.algorithmPolicy)
                     } catch (e: PGPException) {
                         throw WrongPassphraseException(secretKey.keyIdentifier, e)
                     }

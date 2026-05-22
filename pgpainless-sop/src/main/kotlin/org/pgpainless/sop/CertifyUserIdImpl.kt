@@ -20,7 +20,8 @@ class CertifyUserIdImpl(private val api: PGPainless) : CertifyUserId {
     private val keys: MutableList<OpenPGPKey> = mutableListOf()
     private var requireSelfSig = true
     private val userIds: MutableSet<String> = mutableSetOf()
-    private var protector: MatchMakingSecretKeyRingProtector = MatchMakingSecretKeyRingProtector()
+    private var protector: MatchMakingSecretKeyRingProtector =
+        MatchMakingSecretKeyRingProtector(api)
 
     override fun certs(certs: InputStream): Ready {
         return object : Ready() {

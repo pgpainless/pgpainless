@@ -197,7 +197,7 @@ class SigningOptions(private val api: PGPainless) {
                 signingKey.getSecretKey(signingPubKey)
                     ?: throw MissingSecretKeyException(signingPubKey)
             val signingPrivKey: OpenPGPPrivateKey =
-                unlockSecretKey(signingSecKey, signingKeyProtector)
+                unlockSecretKey(signingSecKey, signingKeyProtector, api.algorithmPolicy)
             val hashAlgorithms =
                 if (userId != null) keyRingInfo.getPreferredHashAlgorithms(userId)
                 else keyRingInfo.getPreferredHashAlgorithms(signingPubKey.keyIdentifier)
@@ -267,7 +267,7 @@ class SigningOptions(private val api: PGPainless) {
             throw MissingSecretKeyException(signingKey)
         }
 
-        val signingPrivKey = unlockSecretKey(signingKey, signingKeyProtector)
+        val signingPrivKey = unlockSecretKey(signingKey, signingKeyProtector, api.algorithmPolicy)
         val hashAlgorithms = keyRingInfo.getPreferredHashAlgorithms(signingKey.keyIdentifier)
         val hashAlgorithm: HashAlgorithm = negotiateHashAlgorithm(hashAlgorithms)
         addSigningMethod(signingPrivKey, hashAlgorithm, signatureType, false, subpacketsCallback)
@@ -464,7 +464,8 @@ class SigningOptions(private val api: PGPainless) {
         subpacketCallback: Callback? = null
     ): SigningOptions = apply {
         val keyRingInfo = api.inspect(signingKey.openPGPKey, evaluationDate)
-        val signingPrivKey: OpenPGPPrivateKey = signingKey.unlock(signingKeyProtector)
+        val signingPrivKey: OpenPGPPrivateKey =
+            unlockSecretKey(signingKey, signingKeyProtector, api.algorithmPolicy)
         val hashAlgorithms =
             if (userId != null) keyRingInfo.getPreferredHashAlgorithms(userId)
             else keyRingInfo.getPreferredHashAlgorithms(signingKey.keyIdentifier)

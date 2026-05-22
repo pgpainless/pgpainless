@@ -144,19 +144,19 @@ public class InvestigateMultiSEIPMessageHandlingTest {
     }
 
     private void encryptAndSign(PGPPublicKey cryptKey, PGPSecretKey signKey, ArmoredOutputStream armorOut, byte[] data) throws IOException, PGPException {
-
-        PGPDataEncryptorBuilder cryptBuilder = OpenPGPImplementation.getInstance().pgpDataEncryptorBuilder(SymmetricKeyAlgorithmTags.AES_256);
+        PGPainless api = PGPainless.getInstance();
+        PGPDataEncryptorBuilder cryptBuilder = api.getImplementation().pgpDataEncryptorBuilder(SymmetricKeyAlgorithmTags.AES_256);
         cryptBuilder.setWithIntegrityPacket(true);
 
         PGPEncryptedDataGenerator cryptGen = new PGPEncryptedDataGenerator(cryptBuilder);
-        cryptGen.addMethod(OpenPGPImplementation.getInstance().publicKeyKeyEncryptionMethodGenerator(cryptKey));
+        cryptGen.addMethod(api.getImplementation().publicKeyKeyEncryptionMethodGenerator(cryptKey));
         OutputStream cryptStream = cryptGen.open(armorOut, new byte[512]);
 
-        PGPSignatureGenerator sigGen = new PGPSignatureGenerator(OpenPGPImplementation.getInstance()
+        PGPSignatureGenerator sigGen = new PGPSignatureGenerator(api.getImplementation()
                 .pgpContentSignerBuilder(signKey.getPublicKey().getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId()),
                 signKey.getPublicKey());
         sigGen.init(SignatureType.BINARY_DOCUMENT.getCode(), UnlockSecretKey
-                .unlockSecretKey(signKey, (Passphrase) null));
+                .unlockSecretKey(signKey, (Passphrase) null, api.getAlgorithmPolicy()));
 
         sigGen.generateOnePassVersion(false).encode(cryptStream);
 

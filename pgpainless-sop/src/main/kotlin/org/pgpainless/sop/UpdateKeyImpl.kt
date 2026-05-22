@@ -22,7 +22,8 @@ class UpdateKeyImpl(private val api: PGPainless) : UpdateKey {
     private var addCapabilities = true
     private var signingOnly = false
     private var revokeDeprecatedKeys = false
-    private val protector: MatchMakingSecretKeyRingProtector = MatchMakingSecretKeyRingProtector()
+    private val protector: MatchMakingSecretKeyRingProtector =
+        MatchMakingSecretKeyRingProtector(api)
 
     private val mergeCerts: MutableMap<KeyIdentifier, OpenPGPCertificate> = mutableMapOf()
 

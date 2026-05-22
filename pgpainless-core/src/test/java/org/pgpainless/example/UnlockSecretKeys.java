@@ -37,11 +37,12 @@ public class UnlockSecretKeys {
      */
     @Test
     public void unlockUnprotectedKeys() throws PGPException, IOException {
-        OpenPGPKey unprotectedKey = PGPainless.getInstance().toKey(TestKeys.getJulietSecretKeyRing());
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey unprotectedKey = api.toKey(TestKeys.getJulietSecretKeyRing());
         // This protector will only unlock unprotected keys
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
 
-        assertProtectorUnlocksAllSecretKeys(unprotectedKey, protector);
+        assertProtectorUnlocksAllSecretKeys(unprotectedKey, protector, api);
     }
 
     /**
@@ -50,13 +51,14 @@ public class UnlockSecretKeys {
      */
     @Test
     public void unlockWholeKeyWithSamePassphrase() throws PGPException, IOException {
-        OpenPGPKey secretKey = PGPainless.getInstance().toKey(TestKeys.getCryptieSecretKeyRing());
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKey = api.toKey(TestKeys.getCryptieSecretKeyRing());
         Passphrase passphrase = TestKeys.CRYPTIE_PASSPHRASE;
 
         // Unlock all subkeys in the secret key with the same passphrase
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(passphrase);
 
-        assertProtectorUnlocksAllSecretKeys(secretKey, protector);
+        assertProtectorUnlocksAllSecretKeys(secretKey, protector, api);
     }
 
     /**
@@ -92,7 +94,8 @@ public class UnlockSecretKeys {
                 "UPPI6jsYqxEHzRGex8t971atnDAjvDiS31YN\n" +
                 "=fTmB\n" +
                 "-----END PGP PRIVATE KEY BLOCK-----";
-        OpenPGPKey secretKey = PGPainless.getInstance().readKey().parseKey(pgpPrivateKeyBlock);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKey = api.readKey().parseKey(pgpPrivateKeyBlock);
 
         CachingSecretKeyRingProtector protector = SecretKeyRingProtector.defaultSecretKeyRingProtector(null);
         // Add passphrases for subkeys via public key
@@ -105,13 +108,13 @@ public class UnlockSecretKeys {
         protector.addPassphrase(new OpenPgpV4Fingerprint("DD8E1195E4B1720E7FB10EF7F60402708E75D941"),
                 Passphrase.fromPassword("s3c0ndsubk3y"));
 
-        assertProtectorUnlocksAllSecretKeys(secretKey, protector);
+        assertProtectorUnlocksAllSecretKeys(secretKey, protector, api);
     }
 
-    private void assertProtectorUnlocksAllSecretKeys(OpenPGPKey key, SecretKeyRingProtector protector)
+    private void assertProtectorUnlocksAllSecretKeys(OpenPGPKey key, SecretKeyRingProtector protector, PGPainless api)
             throws PGPException {
         for (OpenPGPKey.OpenPGPSecretKey componentKey : key.getSecretKeys().values()) {
-            UnlockSecretKey.unlockSecretKey(componentKey, protector);
+            UnlockSecretKey.unlockSecretKey(componentKey, protector, api.getAlgorithmPolicy());
         }
     }
 }

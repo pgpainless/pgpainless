@@ -12,6 +12,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor
+import org.pgpainless.PGPainless
 import org.pgpainless.bouncycastle.extensions.isDecrypted
 import org.pgpainless.bouncycastle.extensions.unlock
 import org.pgpainless.key.protection.CachingSecretKeyRingProtector
@@ -22,11 +23,14 @@ import org.pgpainless.util.Passphrase
  * Implementation of the [SecretKeyRingProtector] which can be handed passphrases and keys
  * separately, and which then matches up passphrases and keys when needed.
  */
-class MatchMakingSecretKeyRingProtector : SecretKeyRingProtector {
+class MatchMakingSecretKeyRingProtector(private val api: PGPainless) : SecretKeyRingProtector {
 
     private val passphrases = mutableSetOf<Passphrase>()
     private val keys = mutableSetOf<PGPSecretKeyRing>()
     private val protector = CachingSecretKeyRingProtector()
+
+    @Deprecated("Deprecated in favor of constructor taking API instance")
+    constructor() : this(PGPainless.getInstance())
 
     fun addPassphrase(passphrase: Passphrase) = apply {
         if (passphrase.isEmpty) {
@@ -72,7 +76,7 @@ class MatchMakingSecretKeyRingProtector : SecretKeyRingProtector {
 
     private fun testPassphrase(passphrase: Passphrase, key: PGPSecretKey): Boolean =
         try {
-            key.unlock(passphrase)
+            key.unlock(passphrase, api.algorithmPolicy)
             true
         } catch (e: PGPException) {
             // Wrong passphrase
