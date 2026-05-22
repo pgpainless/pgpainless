@@ -26,7 +26,7 @@ import org.pgpainless.signature.subpackets.BaseSignatureSubpackets.Callback
 import org.pgpainless.signature.subpackets.SignatureSubpackets
 import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper
 
-class SigningOptions(private val api: PGPainless) {
+class SigningOptions private constructor(private val api: PGPainless) {
     var hashAlgorithmNegotiator: HashAlgorithmNegotiator =
         negotiateSignatureHashAlgorithm(api.algorithmPolicy)
     val signingMethods: Map<OpenPGPPrivateKey, SigningMethod> = mutableMapOf()
@@ -580,9 +580,13 @@ class SigningOptions(private val api: PGPainless) {
     }
 
     companion object {
-        @JvmOverloads
+
+        // TODO: Remove in 2.2
         @JvmStatic
-        fun get(api: PGPainless = PGPainless.getInstance()) = SigningOptions(api)
+        @Deprecated("Deprecated in favor of method taking api instance.")
+        fun get() = get(PGPainless.getInstance())
+
+        @JvmStatic fun get(api: PGPainless) = SigningOptions(api)
     }
 
     /** A method of signing. */

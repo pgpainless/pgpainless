@@ -17,7 +17,6 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm
 import org.pgpainless.algorithm.negotiation.EncryptionMechanismNegotiator
 import org.pgpainless.algorithm.negotiation.SymmetricKeyAlgorithmNegotiator.Companion.byPopularity
 import org.pgpainless.authentication.CertificateAuthority
-import org.pgpainless.encryption_signing.EncryptionOptions.EncryptionKeySelector
 import org.pgpainless.exception.KeyException.ExpiredKeyException
 import org.pgpainless.exception.KeyException.UnacceptableEncryptionKeyException
 import org.pgpainless.exception.KeyException.UnacceptableSelfSignatureException
@@ -26,7 +25,8 @@ import org.pgpainless.key.info.KeyAccessor
 import org.pgpainless.key.info.KeyRingInfo
 import org.pgpainless.util.Passphrase
 
-class EncryptionOptions(private val purpose: EncryptionPurpose, private val api: PGPainless) {
+class EncryptionOptions
+private constructor(private val purpose: EncryptionPurpose, private val api: PGPainless) {
 
     var encryptionMechanismNegotiator: EncryptionMechanismNegotiator =
         EncryptionMechanismNegotiator.modificationDetectionOrBetter(byPopularity())
@@ -470,19 +470,29 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
     }
 
     companion object {
-        @JvmOverloads
+        // TODO: Remove in 2.2
         @JvmStatic
-        fun get(api: PGPainless = PGPainless.getInstance()) = EncryptionOptions(api)
+        @Deprecated("Deprecated in favor of method taking api instance.")
+        fun get() = get(PGPainless.getInstance())
 
-        @JvmOverloads
+        @JvmStatic fun get(api: PGPainless) = EncryptionOptions(api)
+
+        // TODO: Remove in 2.2
         @JvmStatic
-        fun encryptCommunications(api: PGPainless = PGPainless.getInstance()) =
+        @Deprecated("Deprecated in favor of method taking api instance.")
+        fun encryptCommunications() = encryptCommunications(PGPainless.getInstance())
+
+        @JvmStatic
+        fun encryptCommunications(api: PGPainless) =
             EncryptionOptions(EncryptionPurpose.COMMUNICATIONS, api)
 
-        @JvmOverloads
+        // TODO: Remove in 2.2
         @JvmStatic
-        fun encryptDataAtRest(api: PGPainless = PGPainless.getInstance()) =
-            EncryptionOptions(EncryptionPurpose.STORAGE, api)
+        @Deprecated("Deprecated in favor of method taking api instance.")
+        fun encryptDataAtRest() = encryptDataAtRest(PGPainless.getInstance())
+
+        @JvmStatic
+        fun encryptDataAtRest(api: PGPainless) = EncryptionOptions(EncryptionPurpose.STORAGE, api)
 
         /**
          * Only encrypt to the first valid encryption capable subkey we stumble upon.
