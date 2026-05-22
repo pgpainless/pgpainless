@@ -66,36 +66,49 @@ fun interface EncryptionMechanismNegotiator {
                                 .maxByOrNull { it.value }
                                 ?.key
                                 ?: AEADCipherMode(AEADAlgorithm.OCB, SymmetricKeyAlgorithm.AES_128)
+                        val aeadEncMechanism =
+                            MessageEncryptionMechanism.aead(
+                                bestSupportedMode.ciphermode.algorithmId,
+                                bestSupportedMode.aeadAlgorithm.algorithmId)
 
-                        // return best supported mode or symmetric key fallback mechanism
-                        return MessageEncryptionMechanism.aead(
-                            bestSupportedMode.ciphermode.algorithmId,
-                            bestSupportedMode.aeadAlgorithm.algorithmId)
+                        // return best supported mode or asymmetric key fallback mechanism
+                        if (policy.messageEncryptionAlgorithmPolicy.isAcceptable(
+                            aeadEncMechanism)) {
+                            return aeadEncMechanism
+                        }
                     } else if (features.all { it.contains(Feature.LIBREPGP_OCB_ENCRYPTED_DATA) }) {
-                        return MessageEncryptionMechanism.librePgp(
-                            symmetricKeyAlgorithmNegotiator
-                                .negotiate(
-                                    policy.messageEncryptionAlgorithmPolicy
-                                        .symmetricAlgorithmPolicy,
-                                    null,
-                                    symmetricAlgorithmPreferences)
-                                .algorithmId)
+                        val librePGP =
+                            MessageEncryptionMechanism.librePgp(
+                                symmetricKeyAlgorithmNegotiator
+                                    .negotiate(
+                                        policy.messageEncryptionAlgorithmPolicy
+                                            .symmetricAlgorithmPolicy,
+                                        null,
+                                        symmetricAlgorithmPreferences)
+                                    .algorithmId)
+                        if (policy.messageEncryptionAlgorithmPolicy.isAcceptable(librePGP)) {
+                            return librePGP
+                        }
                     }
                     // If all support SEIPD1, negotiate SEIPD1 using symmetricKeyAlgorithmNegotiator
                     else if (features.all { it.contains(Feature.MODIFICATION_DETECTION) }) {
-                        return MessageEncryptionMechanism.integrityProtected(
-                            symmetricKeyAlgorithmNegotiator
-                                .negotiate(
-                                    policy.messageEncryptionAlgorithmPolicy
-                                        .symmetricAlgorithmPolicy,
-                                    null,
-                                    symmetricAlgorithmPreferences)
-                                .algorithmId)
+                        val integrityProtected =
+                            MessageEncryptionMechanism.integrityProtected(
+                                symmetricKeyAlgorithmNegotiator
+                                    .negotiate(
+                                        policy.messageEncryptionAlgorithmPolicy
+                                            .symmetricAlgorithmPolicy,
+                                        null,
+                                        symmetricAlgorithmPreferences)
+                                    .algorithmId)
+
+                        if (policy.messageEncryptionAlgorithmPolicy.isAcceptable(
+                            integrityProtected)) {
+                            return integrityProtected
+                        }
                     }
                     // Else fall back to fallback mechanism from policy
-                    else {
-                        return policy.messageEncryptionAlgorithmPolicy.asymmetricFallbackMechanism
-                    }
+                    return policy.messageEncryptionAlgorithmPolicy.asymmetricFallbackMechanism
                 }
             }
     }
