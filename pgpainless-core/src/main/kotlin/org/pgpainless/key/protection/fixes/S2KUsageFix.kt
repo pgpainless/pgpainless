@@ -48,7 +48,7 @@ class S2KUsageFix {
             implementation: OpenPGPImplementation,
             policy: Policy
         ): PGPSecretKeyRing {
-            val digestCalculator = OpenPGPImplementation.getInstance().checksumCalculator()
+            val digestCalculator = implementation.checksumCalculator()
             val keyList = mutableListOf<PGPSecretKey>()
             for (key in keys) {
                 // CHECKSUM is not recommended

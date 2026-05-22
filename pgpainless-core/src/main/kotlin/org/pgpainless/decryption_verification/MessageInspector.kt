@@ -103,8 +103,8 @@ class MessageInspector(val api: PGPainless = PGPainless.getInstance()) {
                     }
 
                     objectFactory =
-                        api.implementation
-                            .pgpObjectFactory(PGPUtil.getDecoderStream(next.dataStream))
+                        api.implementation.pgpObjectFactory(
+                            PGPUtil.getDecoderStream(next.dataStream))
                     continue
                 }
                 is PGPLiteralData -> {
