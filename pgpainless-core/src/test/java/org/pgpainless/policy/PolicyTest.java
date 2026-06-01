@@ -300,4 +300,39 @@ public class PolicyTest {
                 .withOptions(ConsumerOptions.get(rfc4880Only)
                         .addMessagePassphrase(Passphrase.fromPassword("sw0rdf1sh"))));
     }
+
+    @Test
+    public void consumingMessagesRespectsCompressionAlgorithmPolicy() throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey key = api.generateKey()
+                .modernKeyRing("Alice <alice@pgpainless.org>");
+        OpenPGPCertificate cert = key.toCertificate();
+
+        ByteArrayOutputStream mOut = new ByteArrayOutputStream();
+        EncryptionStream eOut = api.generateMessage()
+                .onOutputStream(mOut)
+                .withOptions(ProducerOptions.signAndEncrypt(
+                                EncryptionOptions.get(api)
+                                        .addRecipient(cert),
+                                SigningOptions.get(api)
+                                        .addSignature(SecretKeyRingProtector.unprotectedKeys(), key))
+                        .overrideCompressionAlgorithm(CompressionAlgorithm.ZIP));
+
+        eOut.write("Hello, World!\n".getBytes());
+        eOut.close();
+
+        // Reject compression
+        PGPainless rejectCompression = new PGPainless(api.getAlgorithmPolicy()
+                .copy()
+                .withCompressionAlgorithmPolicy(Policy.CompressionAlgorithmPolicy.rejectCompression())
+                .build());
+
+        ByteArrayInputStream bIn = new ByteArrayInputStream(mOut.toByteArray());
+        assertThrows(UnacceptableAlgorithmException.class, () ->
+                rejectCompression.processMessage()
+                        .onInputStream(bIn)
+                        .withOptions(ConsumerOptions.get(rejectCompression)
+                                .addDecryptionKey(key)
+                                .addVerificationCert(cert)));
+    }
 }

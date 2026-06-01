@@ -244,6 +244,12 @@ class OpenPgpMessageInputStream(
     }
 
     private fun decompress(compressedData: PGPCompressedData): InputStream {
+        if (!api.algorithmPolicy.compressionAlgorithmPolicy.isAcceptable(
+            compressedData.algorithm)) {
+            throw UnacceptableAlgorithmException(
+                    "Compression algorithm is not acceptable: ${compressedData.algorithm}")
+                .also { LOGGER.debug("Cannot decompress message", it) }
+        }
         return when (compressedData.algorithm) {
             CompressionAlgorithmTags.ZIP ->
                 object : InflaterInputStream(compressedData.inputStream, Inflater(true)) {

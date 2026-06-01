@@ -495,6 +495,15 @@ class Policy(
                         CompressionAlgorithm.ZIP,
                         CompressionAlgorithm.BZIP2,
                         CompressionAlgorithm.ZLIB))
+
+            /**
+             * Policy that rejects any use of compression in OpenPGP messages.
+             *
+             * @return compression algorithm policy
+             */
+            @JvmStatic
+            fun rejectCompression() =
+                CompressionAlgorithmPolicy(CompressionAlgorithm.UNCOMPRESSED, listOf())
         }
     }
 
