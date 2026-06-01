@@ -919,11 +919,15 @@ class OpenPgpMessageInputStream(
                 try {
                     signature.assertCreatedInBounds(
                         options.getVerifyNotBefore(), options.getVerifyNotAfter())
-                    if (documentSignature.verify(check.onePassSignature) &&
-                        documentSignature.isValid(api.implementation.policy())) {
-                        layer.addVerifiedOnePassSignature(verification)
-                    } else {
+                    if (!documentSignature.verify(check.onePassSignature)) {
                         throw SignatureValidationException("Incorrect OnePassSignature.")
+                    } else {
+                        if (!documentSignature.isValid(api.implementation.policy()) ||
+                            !documentSignature.isEffectiveAt(options.getVerifyNotAfter())) {
+                            throw SignatureValidationException("Invalid OnePassSignature.")
+                        } else {
+                            layer.addVerifiedOnePassSignature(verification)
+                        }
                     }
                 } catch (e: MalformedOpenPGPSignatureException) {
                     throw SignatureValidationException("Malformed OnePassSignature.", e)
@@ -1038,7 +1042,8 @@ class OpenPgpMessageInputStream(
                         options.getVerifyNotBefore(), options.getVerifyNotAfter())
                     if (!detached.verify()) {
                         throw SignatureValidationException("Incorrect detached signature.")
-                    } else if (!detached.isValid(api.implementation.policy())) {
+                    } else if (!detached.isValid(api.implementation.policy()) ||
+                        !detached.isEffectiveAt(options.getVerifyNotAfter())) {
                         throw SignatureValidationException("Detached signature is not valid.")
                     } else {
                         layer.addVerifiedDetachedSignature(verification)
@@ -1056,10 +1061,14 @@ class OpenPgpMessageInputStream(
                 try {
                     prepended.signature.assertCreatedInBounds(
                         options.getVerifyNotBefore(), options.getVerifyNotAfter())
-                    if (prepended.verify() && prepended.isValid(api.implementation.policy())) {
-                        layer.addVerifiedPrependedSignature(verification)
-                    } else {
+                    if (!prepended.verify()) {
                         throw SignatureValidationException("Incorrect prepended signature.")
+                    }
+                    if (!prepended.isValid(api.implementation.policy()) ||
+                        !prepended.isEffectiveAt(options.getVerifyNotAfter())) {
+                        throw SignatureValidationException("Invalid prepended signature.")
+                    } else {
+                        layer.addVerifiedPrependedSignature(verification)
                     }
                 } catch (e: MalformedOpenPGPSignatureException) {
                     throw SignatureValidationException("Malformed prepended signature.", e)
