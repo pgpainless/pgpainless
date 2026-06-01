@@ -151,7 +151,7 @@ class OpenPgpMessageInputStream(
 
         var packet: OpenPgpPacket?
 
-        // Comsume packets, potentially stepping into nested layers
+        // Consume packets, potentially stepping into nested layers
         layer@ while (run {
             packet = pIn.nextPacketTag()
             packet
