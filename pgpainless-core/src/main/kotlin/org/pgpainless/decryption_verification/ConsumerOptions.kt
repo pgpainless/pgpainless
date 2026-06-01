@@ -468,8 +468,10 @@ class ConsumerOptions(private val api: PGPainless) {
     }
 
     companion object {
-        @JvmOverloads
         @JvmStatic
-        fun get(api: PGPainless = PGPainless.getInstance()) = ConsumerOptions(api)
+        @Deprecated("Deprecated in favor of method taking api instance")
+        fun get() = get(PGPainless.getInstance())
+
+        @JvmStatic fun get(api: PGPainless) = ConsumerOptions(api)
     }
 }
