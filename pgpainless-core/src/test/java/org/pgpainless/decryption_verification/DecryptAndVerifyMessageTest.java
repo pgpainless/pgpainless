@@ -13,11 +13,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
-import kotlin.Pair;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
@@ -33,7 +31,7 @@ import org.pgpainless.encryption_signing.EncryptionOptions;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.encryption_signing.SigningOptions;
-import org.pgpainless.exception.MissingDecryptionMethodException;
+import org.pgpainless.exception.UnacceptableAlgorithmException;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
@@ -158,7 +156,7 @@ public class DecryptAndVerifyMessageTest {
                 "=9aCQ\n" +
                 "-----END PGP MESSAGE-----";
         ByteArrayInputStream ciphertextIn = new ByteArrayInputStream(ciphertext.getBytes());
-        assertThrows(MissingDecryptionMethodException.class,
+        assertThrows(UnacceptableAlgorithmException.class,
                 () -> PGPainless.getInstance().processMessage()
                         .onInputStream(ciphertextIn)
                         .withOptions(ConsumerOptions.get()

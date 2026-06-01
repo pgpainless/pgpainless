@@ -18,13 +18,17 @@ import java.util.Collections;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
+import org.bouncycastle.openpgp.api.MessageEncryptionMechanism;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
 import org.pgpainless.exception.MessageNotIntegrityProtectedException;
 import org.pgpainless.exception.ModificationDetectionException;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.policy.Policy;
 import org.pgpainless.util.TestAllImplementations;
 import org.pgpainless.util.Passphrase;
 
@@ -377,7 +381,7 @@ public class ModificationDetectionTests {
     @ExtendWith(TestAllImplementations.class)
     public void decryptMessageWithSEDPacket() throws IOException, PGPException {
         Passphrase passphrase = Passphrase.fromPassword("flowcrypt compatibility tests");
-        String key = "-----BEGIN PGP PRIVATE KEY BLOCK-----\r\n" +
+        String KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\r\n" +
                 "Version: FlowCrypt 6.9.1 Gmail Encryption\r\n" +
                 "Comment: Seamlessly send and receive encrypted email\r\n" +
                 "\r\n" +
@@ -495,8 +499,25 @@ public class ModificationDetectionTests {
                 "-----END PGP PRIVATE KEY BLOCK-----\r\n";
         // longId = "ADAC279C95093207"
 
-        PGPSecretKeyRing secretKeyRing = PGPainless.readKeyRing().secretKeyRing(key);
+        Policy defaultPolicy = PGPainless.getInstance().getAlgorithmPolicy();
+        // API based on policy accepting SED messages
+        PGPainless api = new PGPainless(
+                defaultPolicy.copy()
+                        .withMessageDecryptionAlgorithmPolicy(
+                                new Policy.MessageEncryptionMechanismPolicy(
+                                        defaultPolicy.getMessageDecryptionAlgorithmPolicy().getSymmetricAlgorithmPolicy(),
+                                        defaultPolicy.getMessageDecryptionAlgorithmPolicy().getAsymmetricFallbackMechanism(),
+                                        defaultPolicy.getMessageDecryptionAlgorithmPolicy().getSymmetricFallbackMechanism()) {
+                                    @Override
+                                    public boolean isAcceptable(@NotNull MessageEncryptionMechanism encryptionMechanism) {
+                                        return true;
+                                    }
+                                }
+                        )
+                        .build());
 
+        OpenPGPKey key = api.readKey().parseKey(KEY);
+        // SED message
         String ciphertext = "-----BEGIN PGP MESSAGE-----\n" +
                 "Version: FlowCrypt 5.5.9 Gmail Encryption flowcrypt.com\n" +
                 "Comment: Seamlessly send, receive and search encrypted email\n" +
@@ -532,16 +553,16 @@ public class ModificationDetectionTests {
                 "-----END PGP MESSAGE-----\n" +
                 "\n";
 
-        assertThrows(MessageNotIntegrityProtectedException.class, () -> PGPainless.getInstance().processMessage()
+        assertThrows(MessageNotIntegrityProtectedException.class, () -> api.processMessage()
                 .onInputStream(new ByteArrayInputStream(ciphertext.getBytes(StandardCharsets.UTF_8)))
-                .withOptions(ConsumerOptions.get().addDecryptionKey(secretKeyRing,
+                .withOptions(ConsumerOptions.get(api).addDecryptionKey(key,
                         SecretKeyRingProtector.unlockAnyKeyWith(passphrase)))
         );
 
-        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(ciphertext.getBytes(StandardCharsets.UTF_8)))
-                .withOptions(ConsumerOptions.get().addDecryptionKey(secretKeyRing,
-                        SecretKeyRingProtector.unlockAnyKeyWith(passphrase))
+                .withOptions(ConsumerOptions.get(api).addDecryptionKey(key,
+                                SecretKeyRingProtector.unlockAnyKeyWith(passphrase))
                         .setIgnoreMDCErrors(true));
         ByteArrayOutputStream plaintext = new ByteArrayOutputStream();
         Streams.pipeAll(decryptionStream, plaintext);

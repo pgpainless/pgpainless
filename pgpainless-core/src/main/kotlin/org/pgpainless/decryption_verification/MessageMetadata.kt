@@ -19,6 +19,7 @@ import org.pgpainless.bouncycastle.extensions.matches
 import org.pgpainless.exception.MalformedOpenPgpMessageException
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.SubkeyIdentifier
+import org.pgpainless.util.Passphrase
 import org.pgpainless.util.SessionKey
 
 /** View for extracting metadata about a [Message]. */
@@ -526,6 +527,8 @@ class MessageMetadata(val message: Message) {
          * encrypted packet).
          */
         var decryptionKey: SubkeyIdentifier? = null
+
+        var decryptionPassphrase: Passphrase? = null
 
         // An encrypted data packet MUST have a child element
         override fun hasNestedChild() = true

@@ -21,12 +21,12 @@ import org.bouncycastle.openpgp.PGPCompressedData
 import org.bouncycastle.openpgp.PGPEncryptedData
 import org.bouncycastle.openpgp.PGPEncryptedDataList
 import org.bouncycastle.openpgp.PGPException
-import org.bouncycastle.openpgp.PGPKeyPair
 import org.bouncycastle.openpgp.PGPOnePassSignature
 import org.bouncycastle.openpgp.PGPPBEEncryptedData
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData
 import org.bouncycastle.openpgp.PGPSessionKey
+import org.bouncycastle.openpgp.PGPSessionKeyEncryptedData
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.PGPSignatureException
 import org.bouncycastle.openpgp.api.EncryptedDataPacketType
@@ -37,14 +37,12 @@ import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPPrivateKey
 import org.bouncycastle.openpgp.api.OpenPGPKey.OpenPGPSecretKey
 import org.bouncycastle.openpgp.api.OpenPGPSignature.OpenPGPDocumentSignature
 import org.bouncycastle.openpgp.api.exception.MalformedOpenPGPSignatureException
-import org.bouncycastle.openpgp.operator.PBEDataDecryptorFactory
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory
 import org.bouncycastle.util.io.TeeInputStream
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.OpenPgpPacket
 import org.pgpainless.algorithm.StreamEncoding
-import org.pgpainless.algorithm.SymmetricKeyAlgorithm
 import org.pgpainless.bouncycastle.extensions.assertCreatedInBounds
 import org.pgpainless.bouncycastle.extensions.getSecretKeyFor
 import org.pgpainless.bouncycastle.extensions.getSigningKeyFor
@@ -70,6 +68,7 @@ import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.key.protection.UnlockSecretKey.Companion.unlockSecretKey
 import org.pgpainless.signature.consumer.OnePassSignatureCheck
 import org.pgpainless.util.ArmoredInputStreamFactory
+import org.pgpainless.util.Passphrase
 import org.pgpainless.util.SessionKey
 import org.slf4j.LoggerFactory
 
@@ -337,7 +336,8 @@ class OpenPgpMessageInputStream(
         val encDataList = packetInputStream!!.readEncryptedDataList()
         val esks = ESKsAndData(encDataList)
 
-        when (EncryptedDataPacketType.of(encDataList)!!) {
+        val encDataPacketType = EncryptedDataPacketType.of(encDataList)!!
+        when (encDataPacketType) {
             EncryptedDataPacketType.SEIPDv2 ->
                 LOGGER.debug(
                     "Symmetrically Encrypted Integrity Protected Data Packet version 2 at depth " +
@@ -386,20 +386,8 @@ class OpenPgpMessageInputStream(
         if (options.getSessionKey() != null) {
             val sk = options.getSessionKey()!!
             LOGGER.debug("Attempt decryption with provided session key.")
-            throwIfUnacceptable(sk.algorithm)
-
-            val pgpSk = PGPSessionKey(sk.algorithm.algorithmId, sk.key)
-            val decryptorFactory = api.implementation.sessionKeyDataDecryptorFactory(pgpSk)
-            val layer = esks.toEncryptedData(sk, layerMetadata.depth + 1)
-            val skEncData = encDataList.extractSessionKeyEncryptedData()
             try {
-                val decrypted = skEncData.getDataStream(decryptorFactory)
-                layer.sessionKey = sk
-                val integrityProtected =
-                    IntegrityProtectedInputStream(decrypted, skEncData, options)
-                nestedInputStream =
-                    OpenPgpMessageInputStream(integrityProtected, options, layer, api)
-                LOGGER.debug("Successfully decrypted data using provided session key")
+                decryptWithSessionKey(esks, sk)
                 return true
             } catch (e: PGPException) {
                 // Session key mismatch?
@@ -413,16 +401,8 @@ class OpenPgpMessageInputStream(
         for (passphrase in options.getDecryptionPassphrases()) {
             for (skesk in esks.skesks) {
                 LOGGER.debug("Attempt decryption with provided passphrase")
-                val algorithm = SymmetricKeyAlgorithm.requireFromId(skesk.algorithm)
-                if (!isAcceptable(algorithm)) {
-                    LOGGER.debug(
-                        "Skipping SKESK with unacceptable encapsulation algorithm $algorithm")
-                    continue
-                }
 
-                val decryptorFactory =
-                    api.implementation.pbeDataDecryptorFactory(passphrase.getChars())
-                if (decryptSKESKAndStream(esks, skesk, decryptorFactory)) {
+                if (decryptSKESKAndStream(esks, skesk, passphrase)) {
                     return true
                 }
             }
@@ -437,38 +417,18 @@ class OpenPgpMessageInputStream(
             val decryptionKeyCandidates = getDecryptionKeys(pkesk)
             for (decryptionKeys in decryptionKeyCandidates) {
                 val secretKey = decryptionKeys.getSecretKeyFor(pkesk)!!
-                if (!secretKey.isEncryptionKey &&
-                    !options.getAllowDecryptionWithNonEncryptionKey()) {
-                    LOGGER.debug(
-                        "Message is encrypted for ${secretKey.keyIdentifier}, but the key is not encryption capable.")
-                    continue
-                }
-                if (hasUnsupportedS2KSpecifier(secretKey)) {
-                    continue
-                }
 
                 LOGGER.debug("Attempt decryption using secret key ${decryptionKeys.keyIdentifier}")
-                val protector = options.getSecretKeyProtector(decryptionKeys) ?: continue
-                if (!protector.hasPassphraseFor(secretKey.keyIdentifier)) {
+                try {
+                    if (decryptWithSecretKey(esks, secretKey, pkesk, true)) {
+                        return true
+                    }
+                } catch (e: MissingPassphraseException) {
                     LOGGER.debug(
-                        "Missing passphrase for key ${decryptionKeys.keyIdentifier}. Postponing decryption until all other keys were tried.")
+                        "Missing passphrase for key ${decryptionKeys.keyIdentifier}. Postponing decryption until all other keys were tried.",
+                        e)
                     postponedDueToMissingPassphrase.add(secretKey to pkesk)
                     continue
-                }
-
-                val privateKey =
-                    try {
-                        unlockSecretKey(secretKey, protector, api.algorithmPolicy)
-                    } catch (e: PGPException) {
-                        throw WrongPassphraseException(secretKey.keyIdentifier, e)
-                    }
-                if (decryptWithPrivateKey(
-                    esks,
-                    privateKey.keyPair,
-                    SubkeyIdentifier(
-                        secretKey.openPGPKey.pgpSecretKeyRing, secretKey.keyIdentifier),
-                    pkesk)) {
-                    return true
                 }
             }
         }
@@ -476,24 +436,19 @@ class OpenPgpMessageInputStream(
         // try anonymous secret keys
         for (pkesk in esks.anonPkesks) {
             for (decryptionKey in findPotentialDecryptionKeys(pkesk)) {
-                if (hasUnsupportedS2KSpecifier(decryptionKey)) {
-                    continue
-                }
-
-                LOGGER.debug("Attempt decryption of anonymous PKESK with key $decryptionKey.")
-                val protector = options.getSecretKeyProtector(decryptionKey.openPGPKey) ?: continue
-
-                if (!protector.hasPassphraseFor(decryptionKey.keyIdentifier)) {
+                try {
+                    if (decryptWithSecretKey(esks, decryptionKey, pkesk, true)) {
+                        return true
+                    }
+                } catch (e: MissingPassphraseException) {
                     LOGGER.debug(
                         "Missing passphrase for key ${decryptionKey.keyIdentifier}. Postponing decryption until all other keys were tried.")
                     postponedDueToMissingPassphrase.add(decryptionKey to pkesk)
                     continue
-                }
-
-                val privateKey = unlockSecretKey(decryptionKey, protector, api.algorithmPolicy)
-                if (decryptWithPrivateKey(
-                    esks, privateKey.keyPair, SubkeyIdentifier(decryptionKey), pkesk)) {
-                    return true
+                } catch (e: PGPException) {
+                    LOGGER.debug(
+                        "Cannot decrypt anonymous PKESK with key ${decryptionKey.keyIdentifier}", e)
+                    continue
                 }
             }
         }
@@ -507,23 +462,9 @@ class OpenPgpMessageInputStream(
         } else if (options.getMissingKeyPassphraseStrategy() ==
             MissingKeyPassphraseStrategy.INTERACTIVE) {
             for ((secretKey, pkesk) in postponedDueToMissingPassphrase) {
-                val keyId = secretKey.keyIdentifier
-                val decryptionKeys = getDecryptionKey(pkesk)!!
-                val decryptionKeyId = SubkeyIdentifier(decryptionKeys.pgpSecretKeyRing, keyId)
-                if (hasUnsupportedS2KSpecifier(secretKey)) {
-                    continue
-                }
-
                 LOGGER.debug(
-                    "Attempt decryption with key $decryptionKeyId while interactively requesting its passphrase.")
-                val protector = options.getSecretKeyProtector(decryptionKeys) ?: continue
-                val privateKey: OpenPGPPrivateKey =
-                    try {
-                        unlockSecretKey(secretKey, protector, api.algorithmPolicy)
-                    } catch (e: PGPException) {
-                        throw WrongPassphraseException(secretKey.keyIdentifier, e)
-                    }
-                if (decryptWithPrivateKey(esks, privateKey.keyPair, decryptionKeyId, pkesk)) {
+                    "Attempt decryption with key ${secretKey.keyIdentifier} while interactively requesting its passphrase.")
+                if (decryptWithSecretKey(esks, secretKey, pkesk, false)) {
                     return true
                 }
             }
@@ -536,15 +477,79 @@ class OpenPgpMessageInputStream(
         return false
     }
 
+    private fun decryptWithSessionKey(
+        esksAndData: ESKsAndData,
+        sessionKey: SessionKey
+    ): EncryptedData {
+        try {
+            val encryptedData = esksAndData.toEncryptedData(sessionKey, layerMetadata.depth)
+            throwIfUnacceptable(encryptedData.mechanism)
+            val decryptorFactory =
+                api.implementation.sessionKeyDataDecryptorFactory(
+                    PGPSessionKey(sessionKey.algorithm.algorithmId, sessionKey.key))
+            val esk = esksAndData.toSessionKeyEncryptedData()
+            val decrypted = esk.getDataStream(decryptorFactory)
+            encryptedData.sessionKey = sessionKey
+            encryptedData.addRecipients(
+                esksAndData.pkesks.plus(esksAndData.anonPkesks).map { it.keyIdentifier })
+            val integrityProtected = IntegrityProtectedInputStream(decrypted, esk, options)
+            nestedInputStream =
+                OpenPgpMessageInputStream(integrityProtected, options, encryptedData, api)
+            return encryptedData
+        } catch (e: UnacceptableAlgorithmException) {
+            throw e
+        } catch (e: PGPException) {
+            LOGGER.debug("Decryption of encrypted data packet using session key failed.", e)
+            throw e
+        }
+    }
+
+    private fun decryptWithSecretKey(
+        esks: ESKsAndData,
+        secretKey: OpenPGPSecretKey,
+        pkesk: PGPPublicKeyEncryptedData,
+        skipIfMissingPassphrase: Boolean
+    ): Boolean {
+        if (!secretKey.isEncryptionKey && !options.getAllowDecryptionWithNonEncryptionKey()) {
+            LOGGER.debug(
+                "Message is encrypted for ${secretKey.keyIdentifier}, but the key is not encryption capable.")
+            return false
+        }
+        if (hasUnsupportedS2KSpecifier(secretKey)) {
+            LOGGER.debug(
+                "Message is encrypted for ${secretKey.keyIdentifier}, but the key uses unsupported S2K specifier.")
+            return false
+        }
+
+        LOGGER.debug("Attempt decryption of anonymous PKESK with key ${secretKey.keyIdentifier}.")
+        val protector = options.getSecretKeyProtector(secretKey.openPGPKey) ?: return false
+
+        if (skipIfMissingPassphrase && !protector.hasPassphraseFor(secretKey.keyIdentifier)) {
+            throw MissingPassphraseException(setOf(SubkeyIdentifier(secretKey)))
+        }
+
+        val privateKey =
+            try {
+                unlockSecretKey(secretKey, protector, api.algorithmPolicy)
+            } catch (e: PGPException) {
+                throw WrongPassphraseException(secretKey.keyIdentifier, e)
+            }
+
+        if (decryptWithPrivateKey(esks, privateKey, pkesk)) {
+            return true
+        }
+        return false
+    }
+
     private fun decryptWithPrivateKey(
         esks: ESKsAndData,
-        privateKey: PGPKeyPair,
-        decryptionKeyId: SubkeyIdentifier,
+        privateKey: OpenPGPPrivateKey,
         pkesk: PGPPublicKeyEncryptedData
     ): Boolean {
+
         val decryptorFactory =
-            api.implementation.publicKeyDataDecryptorFactory(privateKey.privateKey)
-        return decryptPKESKAndStream(esks, decryptionKeyId, decryptorFactory, pkesk)
+            api.implementation.publicKeyDataDecryptorFactory(privateKey.keyPair.privateKey)
+        return decryptPKESKAndStream(esks, SubkeyIdentifier(privateKey), decryptorFactory, pkesk)
     }
 
     private fun hasUnsupportedS2KSpecifier(secretKey: OpenPGPSecretKey): Boolean {
@@ -562,20 +567,18 @@ class OpenPgpMessageInputStream(
     private fun decryptSKESKAndStream(
         esks: ESKsAndData,
         skesk: PGPPBEEncryptedData,
-        decryptorFactory: PBEDataDecryptorFactory
+        passphrase: Passphrase
     ): Boolean {
         try {
-            val decrypted = skesk.getDataStream(decryptorFactory)
+            val decryptorFactory = api.implementation.pbeDataDecryptorFactory(passphrase.getChars())
             val sessionKey = SessionKey(skesk.getSessionKey(decryptorFactory))
-            throwIfUnacceptable(sessionKey.algorithm)
-            val encryptedData = esks.toEncryptedData(sessionKey, layerMetadata.depth + 1)
-            encryptedData.sessionKey = sessionKey
-            encryptedData.addRecipients(esks.pkesks.map { it.keyIdentifier })
+            val decrypted = decryptWithSessionKey(esks, sessionKey)
+            decrypted.decryptionPassphrase = passphrase
             LOGGER.debug("Successfully decrypted data with passphrase")
-            val integrityProtected = IntegrityProtectedInputStream(decrypted, skesk, options)
-            nestedInputStream =
-                OpenPgpMessageInputStream(integrityProtected, options, encryptedData, api)
             return true
+        } catch (e: NoSuchElementException) {
+            // Invalid Session key
+            return false
         } catch (e: UnacceptableAlgorithmException) {
             throw e
         } catch (e: PGPException) {
@@ -592,23 +595,17 @@ class OpenPgpMessageInputStream(
         pkesk: PGPPublicKeyEncryptedData
     ): Boolean {
         try {
-            val decrypted = pkesk.getDataStream(decryptorFactory)
             val sessionKey = SessionKey(pkesk.getSessionKey(decryptorFactory))
-            throwIfUnacceptable(sessionKey.algorithm)
-
-            val encryptedData = esks.toEncryptedData(sessionKey, layerMetadata.depth)
-            encryptedData.decryptionKey = decryptionKeyId
-            encryptedData.sessionKey = sessionKey
-            encryptedData.addRecipients(esks.pkesks.plus(esks.anonPkesks).map { it.keyIdentifier })
+            val decrypted = decryptWithSessionKey(esks, sessionKey)
+            decrypted.decryptionKey = decryptionKeyId
             LOGGER.debug("Successfully decrypted data with key $decryptionKeyId")
-            val integrityProtected = IntegrityProtectedInputStream(decrypted, pkesk, options)
-            nestedInputStream =
-                OpenPgpMessageInputStream(integrityProtected, options, encryptedData, api)
             return true
         } catch (e: UnacceptableAlgorithmException) {
             throw e
         } catch (e: PGPException) {
-            LOGGER.debug("Decryption of encrypted data packet using secret key failed.", e)
+            LOGGER.debug(
+                "Decryption of encrypted data packet using secret key ${decryptionKeyId} failed.",
+                e)
         }
         return false
     }
@@ -750,18 +747,24 @@ class OpenPgpMessageInputStream(
         return candidates
     }
 
-    private fun isAcceptable(algorithm: SymmetricKeyAlgorithm): Boolean =
-        api.algorithmPolicy.messageDecryptionAlgorithmPolicy.symmetricAlgorithmPolicy.isAcceptable(
-            algorithm)
+    private fun isAcceptable(mechanism: MessageEncryptionMechanism): Boolean =
+        api.algorithmPolicy.messageDecryptionAlgorithmPolicy.isAcceptable(mechanism)
 
-    private fun throwIfUnacceptable(algorithm: SymmetricKeyAlgorithm) {
-        if (!isAcceptable(algorithm)) {
-            throw UnacceptableAlgorithmException(
-                "Symmetric-Key algorithm $algorithm is not acceptable for message decryption.")
+    private fun throwIfUnacceptable(mechanism: MessageEncryptionMechanism) {
+        if (!isAcceptable(mechanism)) {
+            val e =
+                UnacceptableAlgorithmException(
+                    "Message encryption mechanism $mechanism is not acceptable for message decryption.")
+            LOGGER.debug("Unacceptable message encryption mechanism encountered", e)
+            throw e
         }
     }
 
     private class ESKsAndData(private val esks: PGPEncryptedDataList) {
+
+        fun toSessionKeyEncryptedData(): PGPSessionKeyEncryptedData =
+            esks.extractSessionKeyEncryptedData()
+
         fun toEncryptedData(sk: SessionKey, depth: Int): EncryptedData {
             return when (EncryptedDataPacketType.of(esks)!!) {
                 EncryptedDataPacketType.SED ->

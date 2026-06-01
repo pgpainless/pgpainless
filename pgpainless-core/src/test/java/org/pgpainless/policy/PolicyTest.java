@@ -6,8 +6,10 @@ package org.pgpainless.policy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
@@ -31,14 +33,17 @@ import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.algorithm.OpenPGPKeyVersion;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.encryption_signing.EncryptionOptions;
 import org.pgpainless.encryption_signing.EncryptionResult;
 import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
+import org.pgpainless.exception.UnacceptableAlgorithmException;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.util.DateUtil;
+import org.pgpainless.util.Passphrase;
 
 public class PolicyTest {
 
@@ -263,5 +268,36 @@ public class PolicyTest {
         assertTrue(result.isEncryptedFor(key.toCertificate()));
         assertEquals(MessageEncryptionMechanism.integrityProtected(SymmetricKeyAlgorithm.AES_128.getAlgorithmId()),
                 result.getEncryptionMechanism());
+    }
+
+    @Test
+    public void testRFC4880OnlyPolicyRejectsConsumingSEIPDv2Messages()
+            throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        EncryptionStream eOut = api.generateMessage()
+                .onOutputStream(out)
+                .withOptions(ProducerOptions.encrypt(
+                        EncryptionOptions.get(api)
+                                .addMessagePassphrase(Passphrase.fromPassword("sw0rdf1sh"))
+                                .overrideEncryptionMechanism(MessageEncryptionMechanism.aead(
+                                        SymmetricKeyAlgorithm.AES_256.getAlgorithmId(),
+                                        AEADAlgorithm.OCB.getAlgorithmId()
+                                ))));
+
+        eOut.write("Hello, World!\n".getBytes());
+        eOut.close();
+
+        PGPainless rfc4880Only = new PGPainless(api.getAlgorithmPolicy()
+                .copy()
+                .withMessageDecryptionAlgorithmPolicy(
+                        Policy.MessageEncryptionMechanismPolicy.rfc4880(
+                                Policy.SymmetricKeyAlgorithmPolicy.symmetricKeyDecryptionPolicy2022()))
+                .build());
+
+        assertThrows(UnacceptableAlgorithmException.class, () -> rfc4880Only.processMessage()
+                .onInputStream(new ByteArrayInputStream(out.toByteArray()))
+                .withOptions(ConsumerOptions.get(rfc4880Only)
+                        .addMessagePassphrase(Passphrase.fromPassword("sw0rdf1sh"))));
     }
 }
