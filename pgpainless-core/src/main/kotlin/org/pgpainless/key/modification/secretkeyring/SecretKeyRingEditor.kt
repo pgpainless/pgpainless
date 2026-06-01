@@ -314,7 +314,8 @@ class SecretKeyRingEditor(
         val primaryKey = key.primarySecretKey.pgpSecretKey
         val info = api.inspect(key, referenceTime)
         val hashAlgorithm =
-            HashAlgorithmNegotiator.negotiateSignatureHashAlgorithm(api.algorithmPolicy)
+            HashAlgorithmNegotiator.negotiateCertificationSignatureHashAlgorithm(
+                    api.algorithmPolicy)
                 .negotiateHashAlgorithm(info.preferredHashAlgorithms)
 
         var secretSubkey =

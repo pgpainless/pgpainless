@@ -27,7 +27,7 @@ interface HashAlgorithmNegotiator {
 
         /**
          * Return an instance that negotiates [HashAlgorithms][HashAlgorithm] used for
-         * non-revocation signatures based on the given [Policy].
+         * non-revocation data signatures based on the given [Policy].
          *
          * @param policy algorithm policy
          * @return negotiator
@@ -35,6 +35,18 @@ interface HashAlgorithmNegotiator {
         @JvmStatic
         fun negotiateSignatureHashAlgorithm(policy: Policy): HashAlgorithmNegotiator {
             return negotiateByPolicy(policy.dataSignatureHashAlgorithmPolicy)
+        }
+
+        /**
+         * Return an instance that negotiates [HashAlgorithms][HashAlgorithm] used for certification
+         * signatures based on the given [Policy].
+         *
+         * @param policy algorithm policy
+         * @return negotiator
+         */
+        @JvmStatic
+        fun negotiateCertificationSignatureHashAlgorithm(policy: Policy): HashAlgorithmNegotiator {
+            return negotiateByPolicy(policy.certificationSignatureHashAlgorithmPolicy)
         }
 
         /**

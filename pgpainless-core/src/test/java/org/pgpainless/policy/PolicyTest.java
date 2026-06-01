@@ -13,6 +13,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,6 +42,7 @@ import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.exception.UnacceptableAlgorithmException;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
+import org.pgpainless.key.generation.type.ecc.EllipticCurve;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.util.DateUtil;
 import org.pgpainless.util.Passphrase;
@@ -334,5 +336,26 @@ public class PolicyTest {
                         .withOptions(ConsumerOptions.get(rejectCompression)
                                 .addDecryptionKey(key)
                                 .addVerificationCert(cert)));
+    }
+
+    @Test
+    public void subkeyBindingSignaturesUseProperSignatureHashPolicy() throws IOException {
+        Policy defPol = PGPainless.getInstance().getAlgorithmPolicy();
+        Policy testPol = defPol.copy()
+                .withDataSignatureHashAlgorithmPolicy(new Policy.HashAlgorithmPolicy(HashAlgorithm.SHA256, Collections.singletonList(HashAlgorithm.SHA256)))
+                .withCertificationSignatureHashAlgorithmPolicy(new Policy.HashAlgorithmPolicy(HashAlgorithm.SHA384, Collections.singletonList(HashAlgorithm.SHA384)))
+                .build();
+        PGPainless api = new PGPainless(testPol);
+        OpenPGPKey key = api.generateKey()
+                .simpleEcKeyRing("Alice <alice@pgpainless.org>");
+
+        key = api.modify(key)
+                .addSubKey(KeySpec.getBuilder(
+                        KeyType.ECDSA(EllipticCurve._BRAINPOOLP256R1), KeyFlag.SIGN_DATA).build(),
+                        Passphrase.emptyPassphrase(),
+                        SecretKeyRingProtector.unprotectedKeys())
+                .done();
+        assertEquals(HashAlgorithm.SHA384.getAlgorithmId(),
+                key.getSigningKeys().get(1).getLatestSelfSignature().getSignature().getHashAlgorithm());
     }
 }
