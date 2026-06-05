@@ -44,6 +44,7 @@ import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.OpenPgpPacket
 import org.pgpainless.algorithm.StreamEncoding
 import org.pgpainless.bouncycastle.extensions.assertCreatedInBounds
+import org.pgpainless.bouncycastle.extensions.assertIsDocumentSignature
 import org.pgpainless.bouncycastle.extensions.getSecretKeyFor
 import org.pgpainless.bouncycastle.extensions.getSigningKeyFor
 import org.pgpainless.bouncycastle.extensions.issuerKeyId
@@ -919,6 +920,7 @@ class OpenPgpMessageInputStream(
                 try {
                     signature.assertCreatedInBounds(
                         options.getVerifyNotBefore(), options.getVerifyNotAfter())
+                    documentSignature.signature.assertIsDocumentSignature()
                     if (!documentSignature.verify(check.onePassSignature)) {
                         throw SignatureValidationException("Incorrect OnePassSignature.")
                     } else {
@@ -1040,6 +1042,7 @@ class OpenPgpMessageInputStream(
                 try {
                     detached.signature.assertCreatedInBounds(
                         options.getVerifyNotBefore(), options.getVerifyNotAfter())
+                    detached.signature.assertIsDocumentSignature()
                     if (!detached.verify()) {
                         throw SignatureValidationException("Incorrect detached signature.")
                     } else if (!detached.isValid(api.implementation.policy()) ||
@@ -1061,6 +1064,7 @@ class OpenPgpMessageInputStream(
                 try {
                     prepended.signature.assertCreatedInBounds(
                         options.getVerifyNotBefore(), options.getVerifyNotAfter())
+                    prepended.signature.assertIsDocumentSignature()
                     if (!prepended.verify()) {
                         throw SignatureValidationException("Incorrect prepended signature.")
                     }

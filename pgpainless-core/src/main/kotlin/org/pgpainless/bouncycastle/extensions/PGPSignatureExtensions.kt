@@ -121,6 +121,14 @@ fun PGPSignature.assertCreatedInBounds(notBefore: Date?, notAfter: Date?) {
     }
 }
 
+fun PGPSignature.assertIsDocumentSignature() {
+    when (this.signatureType) {
+        SignatureType.BINARY_DOCUMENT.code,
+        SignatureType.CANONICAL_TEXT_DOCUMENT.code -> return
+        else -> throw SignatureValidationException("Not a document signature.")
+    }
+}
+
 /**
  * Deduce a [RevocationState] from the signature. Non-revocation signatures result in
  * [RevocationState.notRevoked]. Hard revocations result in [RevocationState.hardRevoked], while
