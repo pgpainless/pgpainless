@@ -73,6 +73,15 @@ import org.pgpainless.util.ArmoredInputStreamFactory
 import org.pgpainless.util.SessionKey
 import org.slf4j.LoggerFactory
 
+/**
+ * [InputStream] which processes OpenPGP messages.
+ * This stream is used to decrypt encrypted messages and validate signatures.
+ *
+ * Note: While OpenPGP messages can be integrity protected, this stream only verifies
+ * integrity after all its contents have been consumed and [close] has been called.
+ * It is therefore advised to cache processed data and to only emit it to the user after
+ * the successful [close] method call.
+ */
 class OpenPgpMessageInputStream(
     type: Type,
     inputStream: InputStream,
