@@ -248,11 +248,10 @@ class PGPainless(
      * Process an OpenPGP message. This method attempts decryption of encrypted messages and
      * performs signature verification.
      *
-     * Note: Message integrity can only be guaranteed after all the plaintext has been read
-     * and the [org.pgpainless.decryption_verification.OpenPgpMessageInputStream] has been
-     * successfully closed.
-     * It is recommended that applications cache unverified data and only emit it to the user
-     * after the stream has been closed successfully.
+     * Note: Message integrity can only be guaranteed after all the plaintext has been read and the
+     * [org.pgpainless.decryption_verification.OpenPgpMessageInputStream] has been successfully
+     * closed. It is recommended that applications cache unverified data and only emit it to the
+     * user after the stream has been closed successfully.
      *
      * @return [DecryptionBuilder] api
      */
