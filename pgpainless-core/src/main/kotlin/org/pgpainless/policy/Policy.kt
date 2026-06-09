@@ -377,11 +377,11 @@ class Policy {
                     override fun isAcceptable(
                         encryptionMechanism: MessageEncryptionMechanism
                     ): Boolean {
-                        val rfc4480 = rfc4880(symAlgPolicy)
+                        val rfc4880 = rfc4880(symAlgPolicy)
                         val rfc9580 = rfc9580(symAlgPolicy)
                         val librePgp = librePgp(symAlgPolicy)
 
-                        return rfc4480.isAcceptable(encryptionMechanism) ||
+                        return rfc4880.isAcceptable(encryptionMechanism) ||
                             rfc9580.isAcceptable(encryptionMechanism) ||
                             librePgp.isAcceptable(encryptionMechanism)
                     }
