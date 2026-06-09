@@ -1,7 +1,7 @@
 PGPainless - Painless OpenPGP
 =============================
 
-**OpenPGP** (`RFC 4480 <https://datatracker.ietf.org/doc/rfc4880/>`_) is an Internet Standard mostly used for email
+**OpenPGP** (`RFC 4880 <https://datatracker.ietf.org/doc/rfc4880/>`_) is an Internet Standard mostly used for email
 encryption.
 It provides mechanisms to ensure *confidentiality*, *integrity* and *authenticity* of messages.
 However, OpenPGP can also be used for other purposes, such as secure messaging or as a signature mechanism for
