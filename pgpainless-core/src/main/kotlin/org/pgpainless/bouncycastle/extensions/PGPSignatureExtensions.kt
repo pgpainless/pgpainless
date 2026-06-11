@@ -129,6 +129,19 @@ fun PGPSignature.assertIsDocumentSignature() {
     }
 }
 
+fun PGPSignature.assertIntendedRecipientsContain(primaryKey: KeyIdentifier) {
+    val intendedRecipients = hashedSubPackets?.intendedRecipientFingerprints
+    if (intendedRecipients.isNullOrEmpty()) {
+        return
+    }
+    if (intendedRecipients.none { intended ->
+        primaryKey.matchesExplicit(intended.keyIdentifier)
+    }) {
+        throw SignatureValidationException(
+            "Signature does contain IntendedRecipientFingerprint subpacket, but does not contain matching subpacket for any subkey of $primaryKey")
+    }
+}
+
 /**
  * Deduce a [RevocationState] from the signature. Non-revocation signatures result in
  * [RevocationState.notRevoked]. Hard revocations result in [RevocationState.hardRevoked], while

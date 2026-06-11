@@ -701,6 +701,13 @@ class OpenPgpMessageInputStream(
             syntaxVerifier.assertValid()
             packetInputStream!!.close()
         }
+        if (options.isVerifyIntendedRecipients()) {
+            if (layerMetadata is EncryptedData) {
+                layerMetadata.decryptionKey?.keyIdentifier?.let {
+                    layerMetadata.invalidateSignaturesWithMismatchingIntendedRecipient(it)
+                }
+            }
+        }
         closed = true
     }
 

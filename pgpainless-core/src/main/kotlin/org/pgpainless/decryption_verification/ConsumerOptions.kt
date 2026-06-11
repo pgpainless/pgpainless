@@ -28,6 +28,7 @@ class ConsumerOptions(private val api: PGPainless) {
 
     private var ignoreMDCErrors = false
     var isDisableAsciiArmorCRC = false
+    private var isVerifyIntendedRecipients = true
     private var forceNonOpenPgpData = false
     private var verifyNotBefore: Date? = null
     private var verifyNotAfter: Date? = Date()
@@ -326,6 +327,17 @@ class ConsumerOptions(private val api: PGPainless) {
     fun setIgnoreMDCErrors(ignoreMDCErrors: Boolean): ConsumerOptions = apply {
         this.ignoreMDCErrors = ignoreMDCErrors
     }
+
+    /**
+     * If enabled, PGPainless will reject signatures in encrypted messages that do contain intended
+     * recipient subpackets, if the message was decrypted with a key that is not listed in the
+     * intended recipient subpackets.
+     */
+    fun setVerifyIntendedRecipients(verifyIntendedRecipients: Boolean): ConsumerOptions = apply {
+        this.isVerifyIntendedRecipients = verifyIntendedRecipients
+    }
+
+    fun isVerifyIntendedRecipients() = isVerifyIntendedRecipients
 
     fun isIgnoreMDCErrors(): Boolean = ignoreMDCErrors
 

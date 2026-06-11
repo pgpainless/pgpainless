@@ -15,8 +15,10 @@ import org.pgpainless.algorithm.CompressionAlgorithm
 import org.pgpainless.algorithm.StreamEncoding
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
 import org.pgpainless.authentication.CertificateAuthority
+import org.pgpainless.bouncycastle.extensions.assertIntendedRecipientsContain
 import org.pgpainless.bouncycastle.extensions.matches
 import org.pgpainless.exception.MalformedOpenPgpMessageException
+import org.pgpainless.exception.SignatureValidationException
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.util.Passphrase
@@ -452,6 +454,48 @@ class MessageMetadata(val message: Message) {
 
         fun addRejectedPrependedSignature(failure: SignatureVerification.Failure) = apply {
             (rejectedPrependedSignatures as MutableList).add(failure)
+        }
+
+        internal fun invalidateSignaturesWithMismatchingIntendedRecipient(
+            identifier: KeyIdentifier
+        ) {
+            for (i in verifiedPrependedSignatures.size - 1 downTo 0) {
+                val sig = verifiedPrependedSignatures[i]
+                try {
+                    sig.signature.assertIntendedRecipientsContain(identifier)
+                } catch (e: SignatureValidationException) {
+                    (verifiedPrependedSignatures as MutableList).removeAt(i)
+                    (rejectedPrependedSignatures as MutableList).add(
+                        SignatureVerification.Failure(sig, e))
+                }
+            }
+            for (i in verifiedOnePassSignatures.size - 1 downTo 0) {
+                val sig = verifiedOnePassSignatures[i]
+                try {
+                    sig.signature.assertIntendedRecipientsContain(identifier)
+                } catch (e: SignatureValidationException) {
+                    (verifiedOnePassSignatures as MutableList).removeAt(i)
+                    (rejectedOnePassSignatures as MutableList).add(
+                        SignatureVerification.Failure(sig, e))
+                }
+            }
+            for (i in verifiedDetachedSignatures.size - 1 downTo 0) {
+                val sig = verifiedDetachedSignatures[i]
+                try {
+                    sig.signature.assertIntendedRecipientsContain(identifier)
+                } catch (e: SignatureValidationException) {
+                    (verifiedDetachedSignatures as MutableList).removeAt(i)
+                    (rejectedDetachedSignatures as MutableList).add(
+                        SignatureVerification.Failure(sig, e))
+                }
+            }
+
+            if (child != null) {
+                if (child is Layer) {
+                    (child as Layer).invalidateSignaturesWithMismatchingIntendedRecipient(
+                        identifier)
+                }
+            }
         }
 
         companion object {
