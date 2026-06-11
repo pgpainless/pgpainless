@@ -59,6 +59,7 @@ class PGPainless(
     private val api: OpenPGPApi
 
     init {
+        System.setProperty("org.bouncycastle.argon2.max_memory_exp", "21") // 2GB
         implementation.setPolicy(
             PolicyAdapter(algorithmPolicy)) // adapt PGPainless' Policy to BCs OpenPGPPolicy
         api = BcOpenPGPApi(implementation)

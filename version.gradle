@@ -7,7 +7,7 @@ allprojects {
         shortVersion = '2.0.4'
         isSnapshot = true
         javaSourceCompatibility = 11
-        bouncyCastleVersion = '1.84'
+        bouncyCastleVersion = '1.85-SNAPSHOT'
         bouncyPgVersion = bouncyCastleVersion
         junitVersion = '5.8.2'
         logbackVersion = '1.5.25'
