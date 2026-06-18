@@ -489,7 +489,7 @@ class OpenPgpMessageInputStream(
         sessionKey: SessionKey
     ): EncryptedData {
         try {
-            val encryptedData = esksAndData.toEncryptedData(sessionKey, layerMetadata.depth)
+            val encryptedData = esksAndData.toEncryptedData(sessionKey, layerMetadata.depth + 1)
             throwIfUnacceptable(encryptedData.mechanism)
             val decryptorFactory =
                 api.implementation.sessionKeyDataDecryptorFactory(
