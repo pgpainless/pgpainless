@@ -461,12 +461,8 @@ class SigningOptions private constructor(private val api: PGPainless) {
     ): SigningOptions = apply {
         val keyRingInfo = api.inspect(signingKey.openPGPKey, evaluationDate)
         val signingPubKeys = keyRingInfo.signingSubkeys
-        if (signingPubKeys.isEmpty()) {
+        if (signingPubKeys.none { it.keyIdentifier.matchesExplicit(signingKey.keyIdentifier) }) {
             throw UnacceptableSigningKeyException(signingKey.openPGPKey)
-        }
-
-        if (!signingPubKeys.any { it.keyIdentifier.matchesExplicit(signingKey.keyIdentifier) }) {
-            throw MissingSecretKeyException(signingKey)
         }
 
         val signingPrivKey = unlockSecretKey(signingKey, signingKeyProtector, api.algorithmPolicy)
@@ -559,7 +555,6 @@ class SigningOptions private constructor(private val api: PGPainless) {
      * found, the [Policies][Policy] default signature hash algorithm is used as a fallback.
      *
      * @param preferences preferences
-     * @param policy policy
      * @return selected hash algorithm
      */
     private fun negotiateHashAlgorithm(preferences: Set<HashAlgorithm>?): HashAlgorithm {
@@ -609,7 +604,7 @@ class SigningOptions private constructor(private val api: PGPainless) {
              * @return inline signing method
              */
             @JvmStatic
-            fun inlineSignature(
+            internal fun inlineSignature(
                 signatureGenerator: PGPSignatureGenerator,
                 hashAlgorithm: HashAlgorithm
             ) = SigningMethod(signatureGenerator, false, hashAlgorithm)
@@ -623,7 +618,7 @@ class SigningOptions private constructor(private val api: PGPainless) {
              * @return detached signing method
              */
             @JvmStatic
-            fun detachedSignature(
+            internal fun detachedSignature(
                 signatureGenerator: PGPSignatureGenerator,
                 hashAlgorithm: HashAlgorithm
             ) = SigningMethod(signatureGenerator, true, hashAlgorithm)

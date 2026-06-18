@@ -20,6 +20,7 @@ import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
@@ -268,6 +269,21 @@ public class SigningTest {
         assertThrows(KeyException.UnboundUserIdException.class, () ->
                 options.addInlineSignature(SecretKeyRingProtector.unprotectedKeys(), secretKeys, "Bob",
                         DocumentSignatureType.BINARY_DOCUMENT));
+    }
+
+    @Test
+    public void testRejectDetachedSigningWithEncryptOnlySubkey() {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey key = api.generateKey().modernKeyRing("Alice");
+        OpenPGPKey.OpenPGPSecretKey encryptSubkey = key.getSecretKey(key.getEncryptionKeys().get(0));
+        assertFalse(encryptSubkey.isSigningKey(), "This test requires non-signing subkey.");
+
+        SigningOptions options = SigningOptions.get(api);
+        assertThrows(KeyException.UnacceptableSigningKeyException.class, () ->
+                options.addDetachedSignature(
+                        SecretKeyRingProtector.unprotectedKeys(),
+                        encryptSubkey,
+                        "Alice"));
     }
 
 }
