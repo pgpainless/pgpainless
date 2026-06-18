@@ -5,6 +5,7 @@
 package org.pgpainless
 
 import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import java.io.OutputStream
 import java.util.*
 import org.bouncycastle.bcpg.ArmoredOutputStream
@@ -26,6 +27,8 @@ import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.bouncycastle.PolicyAdapter
 import org.pgpainless.bouncycastle.extensions.setAlgorithmSuite
 import org.pgpainless.decryption_verification.DecryptionBuilder
+import org.pgpainless.decryption_verification.DecryptionStream
+import org.pgpainless.decryption_verification.MessageMetadata
 import org.pgpainless.encryption_signing.EncryptionBuilder
 import org.pgpainless.key.certification.CertifyCertificate
 import org.pgpainless.key.generation.KeyRingBuilder
@@ -251,7 +254,7 @@ class PGPainless(
      * Note: Message integrity can only be guaranteed after all the plaintext has been read and the
      * [org.pgpainless.decryption_verification.OpenPgpMessageInputStream] has been successfully
      * closed. It is recommended that applications cache unverified data and only emit it to the
-     * user after the stream has been closed successfully.
+     * user after the stream has been closed successfully. See for example [verifyAndOpen].
      *
      * @return [DecryptionBuilder] api
      */
@@ -474,5 +477,20 @@ class PGPainless(
             replaceWith = ReplaceWith("generateCertification()"))
         @JvmStatic
         fun certify(): CertifyCertificate = getInstance().generateCertification()
+
+        /**
+         * Process all the plaintext data from the given [DecryptionStream], reading it into a local
+         * buffer. After reaching EOF, close the [DecryptionStream], performing integrity
+         * verification. Lastly, reopen the local buffer as an [InputStream] and return it along
+         * with the extracted [MessageMetadata].
+         *
+         * @param inputStream initial [DecryptionStream]
+         * @return [InputStream] of integrity verified data along with [MessageMetadata]
+         */
+        fun verifyAndOpen(inputStream: DecryptionStream): Pair<InputStream, MessageMetadata> {
+            val bytes = inputStream.readAllBytes()
+            inputStream.close()
+            return bytes.inputStream() to inputStream.metadata
+        }
     }
 }

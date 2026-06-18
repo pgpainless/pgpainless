@@ -80,6 +80,7 @@ import org.slf4j.LoggerFactory
  * Note: While OpenPGP messages can be integrity protected, this stream only verifies integrity
  * after all its contents have been consumed and [close] has been called. It is therefore advised to
  * cache processed data and to only emit it to the user after the successful [close] method call.
+ * See for example [PGPainless.verifyAndOpen].
  */
 class OpenPgpMessageInputStream(
     type: Type,
