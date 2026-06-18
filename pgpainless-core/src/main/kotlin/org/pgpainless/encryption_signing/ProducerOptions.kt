@@ -23,7 +23,7 @@ class ProducerOptions(
     private var applyCRLFEncoding = false
     private var cleartextSigned = false
     private var _hideArmorHeaders = false
-    var isDisableAsciiArmorCRC = false
+    private var _isDisableAsciiArmorCRC = false
 
     private var _compressionAlgorithmOverride: CompressionAlgorithm? = null
 
@@ -209,6 +209,13 @@ class ProducerOptions(
      */
     val isApplyCRLFEncoding: Boolean
         get() = applyCRLFEncoding
+
+    val isDisableAsciiArmorCRC: Boolean
+        get() = _isDisableAsciiArmorCRC
+
+    fun setDisableAsciiArmorCRC(disableCRC: Boolean) = apply {
+        _isDisableAsciiArmorCRC = disableCRC
+    }
 
     /**
      * Override which compression algorithm shall be used.

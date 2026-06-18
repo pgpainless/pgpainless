@@ -414,12 +414,10 @@ class ConsumerOptions(private val api: PGPainless) {
         return multiPassStrategy
     }
 
-    fun setDisableAsciiArmorCRC(disable: Boolean) = apply {
-        _isDisableAsciiArmorCRC = disable
-    }
+    fun setDisableAsciiArmorCRC(disable: Boolean) = apply { _isDisableAsciiArmorCRC = disable }
 
     val isDisableAsciiArmorCRC
-    get() = _isDisableAsciiArmorCRC
+        get() = _isDisableAsciiArmorCRC
 
     /**
      * Source for OpenPGP certificates. When verifying signatures on a message, this object holds
