@@ -17,10 +17,6 @@
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
-  "name":"ch.qos.logback.classic.joran.SerializedModelConfigurator",
-  "methods":[{"name":"<init>","parameterTypes":[] }]
-},
-{
   "name":"ch.qos.logback.classic.util.DefaultJoranConfigurator",
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
@@ -86,9 +82,6 @@
   "methods":[{"name":"get","parameterTypes":["java.lang.String","java.lang.String[]"] }]
 },
 {
-  "name":"java.security.AlgorithmParametersSpi"
-},
-{
   "name":"java.security.MessageDigestSpi"
 },
 {
@@ -98,19 +91,10 @@
   "name":"java.security.cert.PKIXRevocationChecker"
 },
 {
-  "name":"java.security.interfaces.DSAPrivateKey"
-},
-{
-  "name":"java.security.interfaces.DSAPublicKey"
-},
-{
   "name":"java.security.interfaces.RSAPrivateKey"
 },
 {
   "name":"java.security.interfaces.RSAPublicKey"
-},
-{
-  "name":"java.security.spec.DSAParameterSpec"
 },
 {
   "name":"java.sql.Connection"
@@ -426,13 +410,16 @@
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
-  "name":"org.bouncycastle.jcajce.provider.kdf.HKDF$Mappings"
+  "name":"org.bouncycastle.jcajce.provider.kdf.HKDF$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
-  "name":"org.bouncycastle.jcajce.provider.kdf.PBEPBKDF2$Mappings"
+  "name":"org.bouncycastle.jcajce.provider.kdf.PBKDF2$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
-  "name":"org.bouncycastle.jcajce.provider.kdf.SCRYPT$Mappings"
+  "name":"org.bouncycastle.jcajce.provider.kdf.SCRYPT$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
   "name":"org.bouncycastle.jcajce.provider.keystore.BC$Mappings",
@@ -748,6 +735,15 @@
   "methods":[{"name":"<init>","parameterTypes":[] }, {"name":"createArmoredSignature","parameterTypes":[] }, {"name":"createUnarmoredSignature","parameterTypes":[] }, {"name":"signWithProtectedKey","parameterTypes":[] }, {"name":"signWithProtectedKey_missingPassphraseFails","parameterTypes":[] }, {"name":"signWithProtectedKey_wrongPassphraseFails","parameterTypes":[] }, {"name":"testNotAfter","parameterTypes":[] }, {"name":"testNotBefore","parameterTypes":[] }, {"name":"testSignWithIncapableKey","parameterTypes":[] }, {"name":"testSignatureCreationAndVerification","parameterTypes":[] }, {"name":"unarmorArmoredSigAndVerify","parameterTypes":[] }]
 },
 {
+  "name":"org.pgpainless.cli.commands.ValidateUserIdCmdTest",
+  "allDeclaredFields":true,
+  "allDeclaredClasses":true,
+  "queryAllDeclaredMethods":true,
+  "queryAllPublicMethods":true,
+  "queryAllDeclaredConstructors":true,
+  "methods":[{"name":"<init>","parameterTypes":[] }, {"name":"testValidationOfSelfSignature","parameterTypes":[] }]
+},
+{
   "name":"org.pgpainless.cli.commands.VersionCmdTest",
   "allDeclaredFields":true,
   "allDeclaredClasses":true,
@@ -916,18 +912,6 @@
   "name":"sop.cli.picocli.commands.VersionCmd$Exclusive",
   "allDeclaredFields":true,
   "queryAllDeclaredMethods":true,
-  "methods":[{"name":"<init>","parameterTypes":[] }]
-},
-{
-  "name":"sun.security.provider.DSA$SHA256withDSA",
-  "methods":[{"name":"<init>","parameterTypes":[] }]
-},
-{
-  "name":"sun.security.provider.DSAKeyFactory",
-  "methods":[{"name":"<init>","parameterTypes":[] }]
-},
-{
-  "name":"sun.security.provider.DSAParameters",
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {

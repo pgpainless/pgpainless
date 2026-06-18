@@ -27,11 +27,7 @@
   }, {
     "pattern":"\\Qjunit-platform.properties\\E"
   }, {
-    "pattern":"\\Qlogback-test.scmo\\E"
-  }, {
     "pattern":"\\Qlogback-test.xml\\E"
-  }, {
-    "pattern":"\\Qlogback.scmo\\E"
   }, {
     "pattern":"\\Qorg/slf4j/impl/StaticLoggerBinder.class\\E"
   }, {
