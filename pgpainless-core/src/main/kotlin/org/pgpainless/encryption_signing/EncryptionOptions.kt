@@ -95,7 +95,7 @@ private constructor(private val purpose: EncryptionPurpose, private val api: PGP
         authority
             .lookupByUserId(userId, email, evaluationDate, targetAmount)
             .filter { it.isAuthenticated() }
-            .forEach { addRecipient(it.certificate).also { foundAcceptable = true } }
+            .forEach { addRecipient(it.certificate, userId).also { foundAcceptable = true } }
         require(foundAcceptable) {
             "Could not identify any trust-worthy certificates for '$userId' and target trust amount $targetAmount."
         }
