@@ -27,7 +27,7 @@ import org.pgpainless.util.SessionKey
 class ConsumerOptions(private val api: PGPainless) {
 
     private var ignoreMDCErrors = false
-    var isDisableAsciiArmorCRC = false
+    private var _isDisableAsciiArmorCRC = false
     private var isVerifyIntendedRecipients = true
     private var forceNonOpenPgpData = false
     private var verifyNotBefore: Date? = null
@@ -413,6 +413,13 @@ class ConsumerOptions(private val api: PGPainless) {
     fun getMultiPassStrategy(): MultiPassStrategy {
         return multiPassStrategy
     }
+
+    fun setDisableAsciiArmorCRC(disable: Boolean) = apply {
+        _isDisableAsciiArmorCRC = disable
+    }
+
+    val isDisableAsciiArmorCRC
+    get() = _isDisableAsciiArmorCRC
 
     /**
      * Source for OpenPGP certificates. When verifying signatures on a message, this object holds
