@@ -1170,7 +1170,7 @@ class OpenPgpMessageInputStream(
             }
 
             return if (openPgpIn.isAsciiArmored) {
-                val armorIn = ArmoredInputStreamFactory.get(openPgpIn)
+                val armorIn = ArmoredInputStreamFactory.get(openPgpIn, options)
                 if (armorIn.isClearText) {
                     (metadata as Message).setCleartextSigned()
                     OpenPgpMessageInputStream(
