@@ -487,6 +487,7 @@ class PGPainless(
          * @param inputStream initial [DecryptionStream]
          * @return [InputStream] of integrity verified data along with [MessageMetadata]
          */
+        @JvmStatic
         fun verifyAndOpen(inputStream: DecryptionStream): Pair<InputStream, MessageMetadata> {
             val bytes = inputStream.readAllBytes()
             inputStream.close()
