@@ -12,43 +12,29 @@ import org.pgpainless.key.protection.KeyRingProtectionSettings
 import org.pgpainless.util.DateUtil
 import org.pgpainless.util.NotationRegistry
 
-class Policy {
-
-    val certificationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy
-    val revocationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy
-    val dataSignatureHashAlgorithmPolicy: HashAlgorithmPolicy
-    val messageEncryptionAlgorithmPolicy: MessageEncryptionMechanismPolicy
-    val messageDecryptionAlgorithmPolicy: MessageEncryptionMechanismPolicy
-    val compressionAlgorithmPolicy: CompressionAlgorithmPolicy
-    val publicKeyAlgorithmPolicy: PublicKeyAlgorithmPolicy
-    val featurePolicy: FeaturePolicy = FeaturePolicy.defaultFeaturePolicy()
-    val keyProtectionSettings: KeyRingProtectionSettings
-    val notationRegistry: NotationRegistry
-    val keyGenerationAlgorithmSuite: AlgorithmSuite
-
-    constructor(
-        certificationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
-        revocationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
-        dataSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
-        messageEncryptionMechanismPolicy: MessageEncryptionMechanismPolicy,
-        messageDecryptionMechanismPolicy: MessageEncryptionMechanismPolicy,
-        compressionAlgorithmPolicy: CompressionAlgorithmPolicy,
-        publicKeyAlgorithmPolicy: PublicKeyAlgorithmPolicy,
-        keyProtectionSettings: KeyRingProtectionSettings,
-        notationRegistry: NotationRegistry,
-        keyGenerationAlgorithmSuite: AlgorithmSuite
-    ) {
-        this.certificationSignatureHashAlgorithmPolicy = certificationSignatureHashAlgorithmPolicy
-        this.revocationSignatureHashAlgorithmPolicy = revocationSignatureHashAlgorithmPolicy
-        this.dataSignatureHashAlgorithmPolicy = dataSignatureHashAlgorithmPolicy
-        this.messageEncryptionAlgorithmPolicy = messageEncryptionMechanismPolicy
-        this.messageDecryptionAlgorithmPolicy = messageDecryptionMechanismPolicy
-        this.compressionAlgorithmPolicy = compressionAlgorithmPolicy
-        this.publicKeyAlgorithmPolicy = publicKeyAlgorithmPolicy
-        this.keyProtectionSettings = keyProtectionSettings
-        this.notationRegistry = notationRegistry
-        this.keyGenerationAlgorithmSuite = keyGenerationAlgorithmSuite
-    }
+class Policy(
+    val certificationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy =
+        HashAlgorithmPolicy.smartCertificationSignatureHashAlgorithmPolicy(),
+    val revocationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy =
+        certificationSignatureHashAlgorithmPolicy,
+    val dataSignatureHashAlgorithmPolicy: HashAlgorithmPolicy =
+        HashAlgorithmPolicy.smartDataSignatureHashAlgorithmPolicy(),
+    val messageEncryptionAlgorithmPolicy: MessageEncryptionMechanismPolicy =
+        MessageEncryptionMechanismPolicy.rfc4880Plus9580PlusLibrePGP(
+            SymmetricKeyAlgorithmPolicy.symmetricKeyEncryptionPolicy2022()),
+    val messageDecryptionAlgorithmPolicy: MessageEncryptionMechanismPolicy =
+        MessageEncryptionMechanismPolicy.rfc4880Plus9580PlusLibrePGP(
+            SymmetricKeyAlgorithmPolicy.symmetricKeyDecryptionPolicy2022()),
+    val compressionAlgorithmPolicy: CompressionAlgorithmPolicy =
+        CompressionAlgorithmPolicy.anyCompressionAlgorithmPolicy(),
+    val publicKeyAlgorithmPolicy: PublicKeyAlgorithmPolicy =
+        PublicKeyAlgorithmPolicy.rfc9580PublicKeyAlgorithmPolicy(),
+    val featurePolicy: FeaturePolicy = FeaturePolicy.defaultFeaturePolicy(),
+    val keyProtectionSettings: KeyRingProtectionSettings =
+        KeyRingProtectionSettings.secureDefaultSettings(),
+    val notationRegistry: NotationRegistry = NotationRegistry(),
+    val keyGenerationAlgorithmSuite: AlgorithmSuite = AlgorithmSuite.defaultAlgorithmSuite
+) {
 
     @Deprecated(
         "Constructors receiving SymmetricKeyAlgorithmPolicy objects are deprecated in favor of ones receiving MessageEncryptionMechanismPolicy objects.")
@@ -63,37 +49,20 @@ class Policy {
         keyProtectionSettings: KeyRingProtectionSettings,
         notationRegistry: NotationRegistry,
         keyGenerationAlgorithmSuite: AlgorithmSuite
-    ) {
-        this.certificationSignatureHashAlgorithmPolicy = certificationSignatureHashAlgorithmPolicy
-        this.revocationSignatureHashAlgorithmPolicy = revocationSignatureHashAlgorithmPolicy
-        this.dataSignatureHashAlgorithmPolicy = dataSignatureHashAlgorithmPolicy
-        this.messageEncryptionAlgorithmPolicy =
-            MessageEncryptionMechanismPolicy.rfc4880Plus9580PlusLibrePGP(
-                symmetricKeyEncryptionAlgorithmPolicy)
-        this.messageDecryptionAlgorithmPolicy =
-            MessageEncryptionMechanismPolicy.rfc4880Plus9580PlusLibrePGP(
-                symmetricKeyDecryptionAlgorithmPolicy)
-        this.compressionAlgorithmPolicy = compressionAlgorithmPolicy
-        this.publicKeyAlgorithmPolicy = publicKeyAlgorithmPolicy
-        this.keyProtectionSettings = keyProtectionSettings
-        this.notationRegistry = notationRegistry
-        this.keyGenerationAlgorithmSuite = keyGenerationAlgorithmSuite
-    }
-
-    @Deprecated(
-        "Constructors receiving SymmetricKeyAlgorithmPolicy objects are deprecated in favor of ones receiving MessageEncryptionMechanismPolicy objects.")
-    constructor() :
-        this(
-            HashAlgorithmPolicy.smartCertificationSignatureHashAlgorithmPolicy(),
-            HashAlgorithmPolicy.smartCertificationSignatureHashAlgorithmPolicy(),
-            HashAlgorithmPolicy.smartDataSignatureHashAlgorithmPolicy(),
-            SymmetricKeyAlgorithmPolicy.symmetricKeyEncryptionPolicy2022(),
-            SymmetricKeyAlgorithmPolicy.symmetricKeyDecryptionPolicy2022(),
-            CompressionAlgorithmPolicy.anyCompressionAlgorithmPolicy(),
-            PublicKeyAlgorithmPolicy.rfc9580PublicKeyAlgorithmPolicy(),
-            KeyRingProtectionSettings.secureDefaultSettings(),
-            NotationRegistry(),
-            AlgorithmSuite.defaultAlgorithmSuite)
+    ) : this(
+        certificationSignatureHashAlgorithmPolicy,
+        revocationSignatureHashAlgorithmPolicy,
+        dataSignatureHashAlgorithmPolicy,
+        MessageEncryptionMechanismPolicy.rfc4880Plus9580PlusLibrePGP(
+            symmetricKeyEncryptionAlgorithmPolicy),
+        MessageEncryptionMechanismPolicy.rfc4880Plus9580PlusLibrePGP(
+            symmetricKeyDecryptionAlgorithmPolicy),
+        compressionAlgorithmPolicy,
+        publicKeyAlgorithmPolicy,
+        FeaturePolicy.defaultFeaturePolicy(),
+        keyProtectionSettings,
+        notationRegistry,
+        keyGenerationAlgorithmSuite)
 
     @Deprecated("Deprecated in favor of messageEncryptionAlgorithmPolicy")
     // TODO: Remove in 2.1
@@ -633,6 +602,7 @@ class Policy {
             origin.compressionAlgorithmPolicy
         private var publicKeyAlgorithmPolicy: PublicKeyAlgorithmPolicy =
             origin.publicKeyAlgorithmPolicy
+        private var featurePolicy: FeaturePolicy = origin.featurePolicy
         private var keyProtectionSettings: KeyRingProtectionSettings = origin.keyProtectionSettings
         private var notationRegistry: NotationRegistry = origin.notationRegistry
         private var keyGenerationAlgorithmSuite: AlgorithmSuite = origin.keyGenerationAlgorithmSuite
@@ -692,6 +662,10 @@ class Policy {
                 this.publicKeyAlgorithmPolicy = publicKeyAlgorithmPolicy
             }
 
+        fun withFeaturePolicy(featurePolicy: FeaturePolicy) = apply {
+            this.featurePolicy = featurePolicy
+        }
+
         fun withKeyProtectionSettings(keyProtectionSettings: KeyRingProtectionSettings) = apply {
             this.keyProtectionSettings = keyProtectionSettings
         }
@@ -713,6 +687,7 @@ class Policy {
                     messageDecryptionMechanismPolicy,
                     compressionAlgorithmPolicy,
                     publicKeyAlgorithmPolicy,
+                    featurePolicy,
                     keyProtectionSettings,
                     notationRegistry,
                     keyGenerationAlgorithmSuite)
@@ -775,6 +750,7 @@ class Policy {
                 },
                 CompressionAlgorithmPolicy.anyCompressionAlgorithmPolicy(),
                 PublicKeyAlgorithmPolicy(PublicKeyAlgorithm.entries.associateWith { 0 }.toMap()),
+                FeaturePolicy.defaultFeaturePolicy(),
                 KeyRingProtectionSettings.secureDefaultSettings(),
                 NotationRegistry(setOf()),
                 AlgorithmSuite.defaultAlgorithmSuite)
