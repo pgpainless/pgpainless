@@ -5,7 +5,6 @@
 package org.pgpainless
 
 import java.io.ByteArrayOutputStream
-import java.io.InputStream
 import java.io.OutputStream
 import java.util.*
 import org.bouncycastle.bcpg.ArmoredOutputStream
@@ -481,17 +480,29 @@ class PGPainless(
         /**
          * Process all the plaintext data from the given [DecryptionStream], reading it into a local
          * buffer. After reaching EOF, close the [DecryptionStream], performing integrity
-         * verification. Lastly, reopen the local buffer as an [InputStream] and return it along
-         * with the extracted [MessageMetadata].
+         * verification. Lastly, reopen the local buffer as a new [DecryptionStream] which exposes
+         * the verified data along with the finished [MessageMetadata].
          *
          * @param inputStream initial [DecryptionStream]
-         * @return [InputStream] of integrity verified data along with [MessageMetadata]
+         * @return verified [DecryptionStream] with finished [MessageMetadata]
          */
         @JvmStatic
-        fun verifyAndOpen(inputStream: DecryptionStream): Pair<InputStream, MessageMetadata> {
+        fun verifyAndOpen(inputStream: DecryptionStream): DecryptionStream {
             val bytes = inputStream.readAllBytes()
             inputStream.close()
-            return bytes.inputStream() to inputStream.metadata
+            val verifiedMetadata = inputStream.metadata
+            val verifiedIn = bytes.inputStream()
+
+            return object : DecryptionStream() {
+                override val metadata: MessageMetadata = verifiedMetadata
+
+                override fun read(): Int = verifiedIn.read()
+
+                override fun read(b: ByteArray): Int = verifiedIn.read(b)
+
+                override fun read(b: ByteArray, off: Int, len: Int): Int =
+                    verifiedIn.read(b, off, len)
+            }
         }
     }
 }

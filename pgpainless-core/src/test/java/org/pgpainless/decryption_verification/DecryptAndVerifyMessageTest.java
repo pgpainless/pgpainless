@@ -186,10 +186,8 @@ public class DecryptAndVerifyMessageTest {
                         .addVerificationCert(key)
                         .addDecryptionKey(key));
 
-        Pair<InputStream, MessageMetadata> verified = PGPainless.verifyAndOpen(dIn);
-        InputStream vIn = verified.component1();
-        MessageMetadata metadata = verified.component2();
-        assertTrue(metadata.isVerifiedSignedBy(key));
-        assertArrayEquals("Hello, World!\n".getBytes(StandardCharsets.UTF_8), vIn.readAllBytes());
+        DecryptionStream verified = PGPainless.verifyAndOpen(dIn);
+        assertTrue(verified.getMetadata().isVerifiedSignedBy(key));
+        assertArrayEquals("Hello, World!\n".getBytes(StandardCharsets.UTF_8), verified.readAllBytes());
     }
 }
