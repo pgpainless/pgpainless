@@ -14,8 +14,10 @@ import org.bouncycastle.openpgp.PGPLiteralData
 import org.bouncycastle.openpgp.PGPOnePassSignatureList
 import org.bouncycastle.openpgp.PGPSignatureList
 import org.bouncycastle.util.io.Streams
+import org.pgpainless.decryption_verification.MessageMetadata.Layer.Companion.MAX_LAYER_DEPTH
 import org.pgpainless.decryption_verification.OpenPgpInputStream
 import org.pgpainless.decryption_verification.cleartext_signatures.ClearsignedMessageUtil
+import org.pgpainless.exception.MalformedOpenPgpMessageException
 import org.pgpainless.exception.WrongConsumingMethodException
 import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.util.ArmoredOutputStreamFactory
@@ -75,7 +77,7 @@ class InlineDetachImpl : InlineDetach {
                     var objectFactory =
                         ImplementationFactory.getInstance().getPGPObjectFactory(pgpIn)
                     var next: Any?
-
+                    var nestingDepth: Int = 0
                     while (objectFactory.nextObject().also { next = it } != null) {
 
                         if (next is PGPOnePassSignatureList) {
@@ -92,6 +94,13 @@ class InlineDetachImpl : InlineDetach {
                         }
 
                         if (next is PGPCompressedData) {
+                            // Guard packet nesting depth
+                            nestingDepth++
+                            if (nestingDepth > MAX_LAYER_DEPTH) {
+                                throw MalformedOpenPgpMessageException(
+                                    "Maximum packet nesting depth ($MAX_LAYER_DEPTH) exceeded.")
+                            }
+
                             // Decompress compressed data
                             try {
                                 objectFactory =

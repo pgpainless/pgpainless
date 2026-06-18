@@ -7,6 +7,8 @@ package org.pgpainless.decryption_verification
 import java.io.IOException
 import java.io.InputStream
 import org.bouncycastle.openpgp.*
+import org.pgpainless.decryption_verification.MessageMetadata.Layer.Companion.MAX_LAYER_DEPTH
+import org.pgpainless.exception.MalformedOpenPgpMessageException
 import org.pgpainless.implementation.ImplementationFactory
 import org.pgpainless.util.ArmorUtils
 
@@ -71,6 +73,7 @@ class MessageInspector {
             var objectFactory = ImplementationFactory.getInstance().getPGPObjectFactory(inputStream)
 
             var n: Any?
+            var nestingDepth: Int = 0
             while (objectFactory.nextObject().also { n = it } != null) {
                 when (val next = n!!) {
                     is PGPOnePassSignatureList -> {
@@ -93,6 +96,12 @@ class MessageInspector {
                         return EncryptionInfo(keyIds, isPassphraseEncrypted, false)
                     }
                     is PGPCompressedData -> {
+                        // Guard packet nesting depth
+                        nestingDepth++
+                        if (nestingDepth > MAX_LAYER_DEPTH) {
+                            throw MalformedOpenPgpMessageException(
+                                "Maximum packet nesting depth ($MAX_LAYER_DEPTH) exceeded.")
+                        }
                         objectFactory =
                             ImplementationFactory.getInstance()
                                 .getPGPObjectFactory(PGPUtil.getDecoderStream(next.dataStream))
