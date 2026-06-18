@@ -13,10 +13,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
+import kotlin.Pair;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,9 +29,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.encryption_signing.EncryptionOptions;
+import org.pgpainless.encryption_signing.EncryptionStream;
+import org.pgpainless.encryption_signing.ProducerOptions;
+import org.pgpainless.encryption_signing.SigningOptions;
 import org.pgpainless.exception.MissingDecryptionMethodException;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.TestKeys;
+import org.pgpainless.key.protection.SecretKeyRingProtector;
 import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.util.Passphrase;
 import org.pgpainless.util.TestAllImplementations;
@@ -154,5 +163,33 @@ public class DecryptAndVerifyMessageTest {
                         .onInputStream(ciphertextIn)
                         .withOptions(ConsumerOptions.get()
                                 .addMessagePassphrase(Passphrase.fromPassword("sw0rdf1sh"))));
+    }
+
+    @Test
+    public void testVerifyAndOpenHelperMethod() throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey key = api.generateKey().modernKeyRing("Alice <alice@pgpainless.org>");
+
+        ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+        EncryptionStream eOut = api.generateMessage()
+                .onOutputStream(bOut)
+                .withOptions(ProducerOptions.signAndEncrypt(
+                        EncryptionOptions.get(api).addRecipient(key),
+                        SigningOptions.get(api).addSignature(SecretKeyRingProtector.unprotectedKeys(), key)));
+        eOut.write("Hello, World!\n".getBytes(StandardCharsets.UTF_8));
+        eOut.close();
+
+        ByteArrayInputStream bIn = new ByteArrayInputStream(bOut.toByteArray());
+        DecryptionStream dIn = api.processMessage()
+                .onInputStream(bIn)
+                .withOptions(ConsumerOptions.get(api)
+                        .addVerificationCert(key)
+                        .addDecryptionKey(key));
+
+        Pair<InputStream, MessageMetadata> verified = PGPainless.verifyAndOpen(dIn);
+        InputStream vIn = verified.component1();
+        MessageMetadata metadata = verified.component2();
+        assertTrue(metadata.isVerifiedSignedBy(key));
+        assertArrayEquals("Hello, World!\n".getBytes(StandardCharsets.UTF_8), vIn.readAllBytes());
     }
 }
