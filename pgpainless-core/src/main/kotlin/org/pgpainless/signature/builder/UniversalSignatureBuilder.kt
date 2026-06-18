@@ -12,6 +12,7 @@ import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.key.protection.SecretKeyRingProtector
+import org.pgpainless.policy.Policy
 import org.pgpainless.signature.subpackets.SignatureSubpackets
 
 /**
@@ -25,20 +26,26 @@ class UniversalSignatureBuilder : AbstractSignatureBuilder<UniversalSignatureBui
         get() = Predicate<SignatureType> { true }
 
     @Throws(PGPException::class)
+    @JvmOverloads
     constructor(
         signatureType: SignatureType,
         signingKey: OpenPGPKey.OpenPGPSecretKey,
         protector: SecretKeyRingProtector,
-        api: PGPainless
-    ) : super(signatureType, signingKey, protector, api)
+        api: PGPainless,
+        hashAlgorithmPolicySelector: Function1<PGPainless, Policy.HashAlgorithmPolicy> =
+            certSigHashPolicy()
+    ) : super(signatureType, signingKey, protector, api, hashAlgorithmPolicySelector)
 
     @Throws(PGPException::class)
+    @JvmOverloads
     constructor(
         signingKey: OpenPGPKey.OpenPGPSecretKey,
         protector: SecretKeyRingProtector,
         archetypeSignature: PGPSignature,
-        api: PGPainless
-    ) : super(signingKey, protector, archetypeSignature, api)
+        api: PGPainless,
+        hashAlgorithmPolicySelector: Function1<PGPainless, Policy.HashAlgorithmPolicy> =
+            certSigHashPolicy()
+    ) : super(signingKey, protector, archetypeSignature, api, hashAlgorithmPolicySelector)
 
     val hashedSubpackets: SignatureSubpackets = _hashedSubpackets
     val unhashedSubpackets: SignatureSubpackets = _unhashedSubpackets

@@ -28,7 +28,7 @@ constructor(
     api: PGPainless
 ) :
     AbstractSignatureBuilder<RevocationSignatureBuilder>(
-        signatureType, signingKey, protector, api) {
+        signatureType, signingKey, protector, api, revSigHashPolicy()) {
 
     override val signatureTypePredicate: Predicate<SignatureType>
         get() =
