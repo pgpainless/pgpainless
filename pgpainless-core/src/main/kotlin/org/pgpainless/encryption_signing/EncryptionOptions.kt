@@ -315,8 +315,7 @@ private constructor(private val purpose: EncryptionPurpose, private val api: PGP
             throw ExpiredKeyException(cert, primaryKeyExpiration)
         }
 
-        var encryptionSubkeys = selector.selectEncryptionSubkeys(info.getEncryptionSubkeys(purpose))
-
+        var encryptionSubkeys = info.getEncryptionSubkeys(purpose)
         // There are some legacy keys around without key flags.
         // If we allow encryption for those keys, we add valid keys without any key flags, if they
         // are
@@ -327,6 +326,9 @@ private constructor(private val purpose: EncryptionPurpose, private val api: PGP
                     .filter { it.pgpPublicKey.isEncryptionKey }
                     .filter { info.getKeyFlagsOf(it.keyIdentifier).isEmpty() }
         }
+
+        // Apply selection by user
+        encryptionSubkeys = selector.selectEncryptionSubkeys(encryptionSubkeys)
 
         if (encryptionSubkeys.isEmpty()) {
             throw UnacceptableEncryptionKeyException(cert)
