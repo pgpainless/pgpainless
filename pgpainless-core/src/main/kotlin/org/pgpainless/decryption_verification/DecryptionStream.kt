@@ -12,8 +12,7 @@ import java.io.InputStream
 abstract class DecryptionStream : InputStream() {
 
     /**
-     * Return [MessageMetadata] about the decrypted / verified message. The [DecryptionStream] MUST
-     * be closed via [close] before the metadata object can be accessed.
+     * Return [MessageMetadata] about the decrypted / verified message.
      *
      * @return message metadata
      */
