@@ -188,4 +188,30 @@ public class DecryptAndVerifyMessageTest {
         assertTrue(verified.getMetadata().isVerifiedSignedBy(key));
         assertArrayEquals("Hello, World!\n".getBytes(StandardCharsets.UTF_8), verified.readAllBytes());
     }
+
+    @Test
+    public void testVerifyAndOpenExceedingPlaintextSizeLimit()
+            throws PGPException, IOException
+    {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey key = api.generateKey().modernKeyRing("Alice <alice@pgpainless.org>");
+
+        ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+        EncryptionStream eOut = api.generateMessage()
+                .onOutputStream(bOut)
+                .withOptions(ProducerOptions.signAndEncrypt(
+                        EncryptionOptions.get(api).addRecipient(key),
+                        SigningOptions.get(api).addSignature(SecretKeyRingProtector.unprotectedKeys(), key)));
+        eOut.write("Hello, World!\n".getBytes(StandardCharsets.UTF_8));
+        eOut.close();
+
+        ByteArrayInputStream bIn = new ByteArrayInputStream(bOut.toByteArray());
+        DecryptionStream dIn = api.processMessage()
+                .onInputStream(bIn)
+                .withOptions(ConsumerOptions.get(api)
+                        .addVerificationCert(key)
+                        .addDecryptionKey(key));
+
+        assertThrows(OutOfMemoryError.class, () -> PGPainless.verifyAndOpen(dIn, 4));
+    }
 }
