@@ -13,19 +13,30 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPApi;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.EncryptionPurpose;
+import org.pgpainless.algorithm.OpenPGPKeyVersion;
+import org.pgpainless.encryption_signing.EncryptionOptions;
+import org.pgpainless.encryption_signing.EncryptionStream;
+import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.exception.MissingDecryptionMethodException;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyRingInfo;
+import org.pgpainless.key.protection.SecretKeyRingProtector;
+import org.pgpainless.key.protection.passphrase_provider.SecretKeyPassphraseProvider;
+import org.pgpainless.util.Passphrase;
 import org.pgpainless.util.TestAllImplementations;
 
 public class DecryptHiddenRecipientMessageTest {
@@ -233,6 +244,45 @@ public class DecryptHiddenRecipientMessageTest {
                 .withOptions(ConsumerOptions.get(api)
                         .setAllowDecryptionWithMissingKeyFlags()
                         .addDecryptionKey(key));
+        Streams.drain(dIn);
+        dIn.close();
+    }
+
+    @Test
+    public void testDecryptHiddenRecipientWithInteractiveCallback()
+            throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey key = api.generateKey()
+                .modernKeyRing("Alice <alice@example.org>", "sw0rdf1sh");
+
+        ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+        EncryptionStream eOut = api.generateMessage()
+                .onOutputStream(bOut)
+                .withOptions(ProducerOptions.encrypt(EncryptionOptions.get(api)
+                        .addHiddenRecipient(key)));
+        eOut.write("Hello, World!\n".getBytes(StandardCharsets.UTF_8));
+        eOut.close();
+
+        SecretKeyPassphraseProvider callback = new SecretKeyPassphraseProvider() {
+            @Override
+            public @Nullable Passphrase getPassphraseFor(@NotNull KeyIdentifier keyIdentifier) {
+                return Passphrase.fromPassword("sw0rdf1sh");
+            }
+
+            @Override
+            public boolean hasPassphrase(@NotNull KeyIdentifier keyIdentifier) {
+                return true;
+            }
+        };
+        SecretKeyRingProtector protector = SecretKeyRingProtector.defaultSecretKeyRingProtector(callback);
+
+        ByteArrayInputStream bIn = new ByteArrayInputStream(bOut.toByteArray());
+        DecryptionStream dIn = api.processMessage()
+                .onInputStream(bIn)
+                .withOptions(ConsumerOptions.get(api)
+                        .setMissingKeyPassphraseStrategy(MissingKeyPassphraseStrategy.INTERACTIVE)
+                        .addDecryptionKey(key, protector));
+
         Streams.drain(dIn);
         dIn.close();
     }
