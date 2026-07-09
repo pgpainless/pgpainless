@@ -13,6 +13,7 @@ import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.key.protection.UnlockSecretKey
+import org.pgpainless.policy.Policy
 
 class BcHashContextSigner {
 
@@ -22,7 +23,8 @@ class BcHashContextSigner {
             hashContext: MessageDigest,
             signatureType: SignatureType,
             secretKey: OpenPGPKey,
-            protector: SecretKeyRingProtector
+            protector: SecretKeyRingProtector,
+            policy: Policy
         ): OpenPGPDocumentSignature {
             val info = PGPainless.getInstance().inspect(secretKey)
             return info.signingSubkeys
@@ -30,7 +32,9 @@ class BcHashContextSigner {
                 .firstOrNull()
                 ?.let {
                     signHashContext(
-                        hashContext, signatureType, UnlockSecretKey.unlockSecretKey(it, protector))
+                        hashContext,
+                        signatureType,
+                        UnlockSecretKey.unlockSecretKey(it, protector, policy))
                 }
                 ?: throw PGPException("Key does not contain suitable signing subkey.")
         }

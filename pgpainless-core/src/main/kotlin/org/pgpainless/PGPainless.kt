@@ -22,6 +22,7 @@ import org.bouncycastle.openpgp.api.OpenPGPKeyGenerator
 import org.bouncycastle.openpgp.api.OpenPGPKeyReader
 import org.bouncycastle.openpgp.api.OpenPGPSignature
 import org.bouncycastle.openpgp.api.bc.BcOpenPGPApi
+import org.bouncycastle.openpgp.api.bc.BcOpenPGPImplementation
 import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.bouncycastle.PolicyAdapter
 import org.pgpainless.bouncycastle.extensions.setAlgorithmSuite
@@ -50,13 +51,11 @@ import org.pgpainless.util.ArmorUtils
  * @param algorithmPolicy policy, deciding acceptable algorithms
  */
 class PGPainless(
-    val implementation: OpenPGPImplementation = OpenPGPImplementation.getInstance(),
+    val implementation: OpenPGPImplementation = createOpenPGPImplementation(),
     val algorithmPolicy: Policy = Policy()
 ) {
 
-    constructor(
-        algorithmPolicy: Policy
-    ) : this(OpenPGPImplementation.getInstance(), algorithmPolicy)
+    constructor(algorithmPolicy: Policy) : this(createOpenPGPImplementation(), algorithmPolicy)
 
     private val api: OpenPGPApi
 
@@ -277,6 +276,11 @@ class PGPainless(
         @JvmStatic
         fun setInstance(api: PGPainless) {
             instance = api
+        }
+
+        @JvmStatic
+        fun createOpenPGPImplementation(): OpenPGPImplementation {
+            return BcOpenPGPImplementation()
         }
 
         /**

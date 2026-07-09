@@ -60,43 +60,47 @@ public class BcHashContextSignerTest {
 
     @Test
     public void signContextWithEdDSAKeys() throws PGPException, NoSuchAlgorithmException, IOException {
-        OpenPGPKey secretKeys = PGPainless.getInstance().readKey().parseKey(KEY);
-        signWithKeys(secretKeys);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.readKey().parseKey(KEY);
+        signWithKeys(secretKeys, api);
     }
 
     @Test
     public void signContextWithRSAKeys() throws PGPException, NoSuchAlgorithmException, IOException {
-        OpenPGPKey secretKeys = PGPainless.getInstance().generateKey()
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey()
                 .simpleRsaKeyRing("Sigfried", RsaLength._3072);
-        signWithKeys(secretKeys);
+        signWithKeys(secretKeys, api);
     }
 
     @Test
     public void signContextWithEcKeys() throws PGPException, NoSuchAlgorithmException, IOException {
-        OpenPGPKey secretKeys = PGPainless.getInstance().generateKey()
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.generateKey()
                 .simpleEcKeyRing("Sigfried");
-        signWithKeys(secretKeys);
+        signWithKeys(secretKeys, api);
     }
 
-    private void signWithKeys(OpenPGPKey secretKeys) throws PGPException, NoSuchAlgorithmException, IOException {
+    private void signWithKeys(OpenPGPKey secretKeys, PGPainless api) throws PGPException, NoSuchAlgorithmException, IOException {
         for (HashAlgorithm hashAlgorithm : new HashAlgorithm[] {
                 HashAlgorithm.SHA256, HashAlgorithm.SHA384, HashAlgorithm.SHA512
         }) {
-            signFromContext(secretKeys, hashAlgorithm);
+            signFromContext(secretKeys, hashAlgorithm, api);
         }
     }
 
-    private void signFromContext(OpenPGPKey secretKeys, HashAlgorithm hashAlgorithm)
+    private void signFromContext(OpenPGPKey secretKeys, HashAlgorithm hashAlgorithm, PGPainless api)
             throws PGPException, NoSuchAlgorithmException, IOException {
         OpenPGPCertificate certificate = secretKeys.toCertificate();
 
         byte[] messageBytes = message.getBytes(StandardCharsets.UTF_8);
         ByteArrayInputStream messageIn = new ByteArrayInputStream(messageBytes);
 
-        OpenPGPSignature.OpenPGPDocumentSignature signature = signMessage(messageBytes, hashAlgorithm, secretKeys);
+        OpenPGPSignature.OpenPGPDocumentSignature signature = signMessage(
+                messageBytes, hashAlgorithm, secretKeys, api);
         assertEquals(hashAlgorithm.getAlgorithmId(), signature.getSignature().getHashAlgorithm());
 
-        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(messageIn)
                 .withOptions(ConsumerOptions.get()
                         .addVerificationCert(certificate)
@@ -110,13 +114,18 @@ public class BcHashContextSignerTest {
         assertTrue(metadata.isVerifiedSigned());
     }
 
-    private OpenPGPSignature.OpenPGPDocumentSignature signMessage(byte[] message, HashAlgorithm hashAlgorithm, OpenPGPKey secretKeys)
+    private OpenPGPSignature.OpenPGPDocumentSignature signMessage(
+            byte[] message,
+            HashAlgorithm hashAlgorithm,
+            OpenPGPKey secretKeys,
+            PGPainless api)
             throws NoSuchAlgorithmException {
         // Prepare the hash context
         // This would be done by the caller application
         MessageDigest messageDigest = MessageDigest.getInstance(hashAlgorithm.getAlgorithmName(), new BouncyCastleProvider());
         messageDigest.update(message);
 
-        return BcHashContextSigner.signHashContext(messageDigest, SignatureType.BINARY_DOCUMENT, secretKeys, SecretKeyRingProtector.unprotectedKeys());
+        return BcHashContextSigner.signHashContext(messageDigest, SignatureType.BINARY_DOCUMENT,
+                secretKeys, SecretKeyRingProtector.unprotectedKeys(), api.getAlgorithmPolicy());
     }
 }

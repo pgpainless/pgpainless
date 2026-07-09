@@ -27,7 +27,8 @@ import org.pgpainless.util.SessionKey
 class ConsumerOptions(private val api: PGPainless) {
 
     private var ignoreMDCErrors = false
-    var isDisableAsciiArmorCRC = false
+    private var _isDisableAsciiArmorCRC = false
+    private var isVerifyIntendedRecipients = true
     private var forceNonOpenPgpData = false
     private var verifyNotBefore: Date? = null
     private var verifyNotAfter: Date? = Date()
@@ -327,6 +328,17 @@ class ConsumerOptions(private val api: PGPainless) {
         this.ignoreMDCErrors = ignoreMDCErrors
     }
 
+    /**
+     * If enabled, PGPainless will reject signatures in encrypted messages that do contain intended
+     * recipient subpackets, if the message was decrypted with a key that is not listed in the
+     * intended recipient subpackets.
+     */
+    fun setVerifyIntendedRecipients(verifyIntendedRecipients: Boolean): ConsumerOptions = apply {
+        this.isVerifyIntendedRecipients = verifyIntendedRecipients
+    }
+
+    fun isVerifyIntendedRecipients() = isVerifyIntendedRecipients
+
     fun isIgnoreMDCErrors(): Boolean = ignoreMDCErrors
 
     fun setAllowDecryptionWithMissingKeyFlags(): ConsumerOptions = apply {
@@ -402,6 +414,11 @@ class ConsumerOptions(private val api: PGPainless) {
         return multiPassStrategy
     }
 
+    fun setDisableAsciiArmorCRC(disable: Boolean) = apply { _isDisableAsciiArmorCRC = disable }
+
+    val isDisableAsciiArmorCRC
+        get() = _isDisableAsciiArmorCRC
+
     /**
      * Source for OpenPGP certificates. When verifying signatures on a message, this object holds
      * available signer certificates.
@@ -468,8 +485,10 @@ class ConsumerOptions(private val api: PGPainless) {
     }
 
     companion object {
-        @JvmOverloads
         @JvmStatic
-        fun get(api: PGPainless = PGPainless.getInstance()) = ConsumerOptions(api)
+        @Deprecated("Deprecated in favor of method taking api instance")
+        fun get() = get(PGPainless.getInstance())
+
+        @JvmStatic fun get(api: PGPainless) = ConsumerOptions(api)
     }
 }

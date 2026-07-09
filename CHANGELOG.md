@@ -9,6 +9,8 @@ SPDX-License-Identifier: CC0-1.0
 - Bump `checkstyle` tool version to `10.26.1`
 - Fix PGPainless silently dropping trailing `0xFF` octet (Thanks to @byteoverride for the report, suggested fix and regression test!)
 - Manually bump transitive dependency `plexus-utils` of `checkstyle` to `3.6.1`
+- Fix missing enforcement for maximum packet nesting depth of compressed data packets in `sop inline-detach` (see [advisory](https://github.com/pgpainless/pgpainless/security/advisories/GHSA-cvx8-9ff6-54xq))
+- Document user responsibility for not exposing decrypted data before successfully closing `OpenPgpMessageInputStream`
 
 ## 2.0.3
 - Bump `bcpg-jdk8on` to `1.84`

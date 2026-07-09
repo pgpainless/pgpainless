@@ -100,7 +100,7 @@ public class S2KUsageFixTest {
         OpenPGPKey keys = api.readKey().parseKey(KEY_WITH_USAGE_CHECKSUM);
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockAnyKeyWith(Passphrase.fromPassword("after"));
 
-        PGPSecretKeyRing fixed = S2KUsageFix.replaceUsageChecksumWithUsageSha1(keys.getPGPSecretKeyRing(), protector);
+        PGPSecretKeyRing fixed = S2KUsageFix.replaceUsageChecksumWithUsageSha1(keys.getPGPSecretKeyRing(), protector, api.getImplementation(), api.getAlgorithmPolicy());
         for (PGPSecretKey key : fixed) {
             assertEquals(SecretKeyPacket.USAGE_SHA1, key.getS2KUsage());
         }

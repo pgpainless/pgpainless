@@ -21,7 +21,7 @@ import sop.operation.ChangeKeyPassword
 /** Implementation of the `change-key-password` operation using PGPainless. */
 class ChangeKeyPasswordImpl(private val api: PGPainless) : ChangeKeyPassword {
 
-    private val oldProtector = MatchMakingSecretKeyRingProtector()
+    private val oldProtector = MatchMakingSecretKeyRingProtector(api)
     private var newPassphrase = Passphrase.emptyPassphrase()
     private var armor = true
 
@@ -40,7 +40,12 @@ class ChangeKeyPasswordImpl(private val api: PGPainless) : ChangeKeyPassword {
                     oldProtector.addSecretKey(it)
                     try {
                         return@map KeyRingUtils.changePassphrase(
-                            null, it.pgpSecretKeyRing, oldProtector, newProtector)
+                            null,
+                            it.pgpSecretKeyRing,
+                            oldProtector,
+                            newProtector,
+                            api.implementation,
+                            api.algorithmPolicy)
                     } catch (e: MissingPassphraseException) {
                         throw SOPGPException.KeyIsProtected(
                             "Cannot unlock key ${it.keyIdentifier}", e)

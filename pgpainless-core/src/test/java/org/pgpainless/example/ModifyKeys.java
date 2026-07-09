@@ -100,9 +100,15 @@ public class ModifyKeys {
 
         // Old passphrase no longer works
         assertThrows(WrongPassphraseException.class, () ->
-                UnlockSecretKey.unlockSecretKey(secretKey.getPGPSecretKeyRing().getSecretKey(), Passphrase.fromPassword(originalPassphrase)));
+                UnlockSecretKey.unlockSecretKey(
+                        secretKey.getPGPSecretKeyRing().getSecretKey(),
+                        Passphrase.fromPassword(originalPassphrase),
+                        api.getAlgorithmPolicy()));
         // But the new one does
-        UnlockSecretKey.unlockSecretKey(secretKey.getPGPSecretKeyRing().getSecretKey(), Passphrase.fromPassword("n3wP4ssW0rD"));
+        UnlockSecretKey.unlockSecretKey(
+                secretKey.getPGPSecretKeyRing().getSecretKey(),
+                Passphrase.fromPassword("n3wP4ssW0rD"),
+                api.getAlgorithmPolicy());
     }
 
     /**
@@ -122,12 +128,18 @@ public class ModifyKeys {
         // encryption key can now only be unlocked using the new passphrase
         assertThrows(WrongPassphraseException.class, () ->
                 UnlockSecretKey.unlockSecretKey(
-                        secretKey.getSecretKey(encryptionSubkeyId).getPGPSecretKey(), Passphrase.fromPassword(originalPassphrase)));
+                        secretKey.getSecretKey(encryptionSubkeyId).getPGPSecretKey(),
+                        Passphrase.fromPassword(originalPassphrase),
+                        api.getAlgorithmPolicy()));
         UnlockSecretKey.unlockSecretKey(
-                secretKey.getSecretKey(encryptionSubkeyId).getPGPSecretKey(), Passphrase.fromPassword("cryptP4ssphr4s3"));
+                secretKey.getSecretKey(encryptionSubkeyId).getPGPSecretKey(),
+                Passphrase.fromPassword("cryptP4ssphr4s3"),
+                api.getAlgorithmPolicy());
         // primary key remains unchanged
         UnlockSecretKey.unlockSecretKey(
-                secretKey.getSecretKey(primaryKeyId).getPGPSecretKey(), Passphrase.fromPassword(originalPassphrase));
+                secretKey.getSecretKey(primaryKeyId).getPGPSecretKey(),
+                Passphrase.fromPassword(originalPassphrase),
+                api.getAlgorithmPolicy());
     }
 
     /**
@@ -165,7 +177,7 @@ public class ModifyKeys {
      * Once the subkey is added, it can be decrypted using the provided subkey passphrase.
      */
     @Test
-    public void addSubkey() {
+    public void addSubkey() throws PGPException {
         PGPainless api = PGPainless.getInstance();
         // Protector for unlocking the existing secret key
         SecretKeyRingProtector protector =
@@ -189,7 +201,10 @@ public class ModifyKeys {
         OpenPGPCertificate.OpenPGPComponentKey addedKey = encryptionSubkeys.stream()
                 .filter(it -> !it.getKeyIdentifier().matchesExplicit(encryptionSubkeyId)).findFirst()
                 .get();
-        UnlockSecretKey.unlockSecretKey(secretKey.getSecretKey(addedKey.getKeyIdentifier()).getPGPSecretKey(), subkeyPassphrase);
+        UnlockSecretKey.unlockSecretKey(
+                secretKey.getSecretKey(addedKey.getKeyIdentifier()).getPGPSecretKey(),
+                subkeyPassphrase,
+                api.getAlgorithmPolicy());
     }
 
     /**

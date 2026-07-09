@@ -314,7 +314,8 @@ class SecretKeyRingEditor(
         val primaryKey = key.primarySecretKey.pgpSecretKey
         val info = api.inspect(key, referenceTime)
         val hashAlgorithm =
-            HashAlgorithmNegotiator.negotiateSignatureHashAlgorithm(api.algorithmPolicy)
+            HashAlgorithmNegotiator.negotiateCertificationSignatureHashAlgorithm(
+                    api.algorithmPolicy)
                 .negotiateHashAlgorithm(info.preferredHashAlgorithms)
 
         var secretSubkey =
@@ -830,7 +831,13 @@ class SecretKeyRingEditor(
                 PasswordBasedSecretKeyRingProtector(
                     newProtectionSettings, SolitaryPassphraseProvider(passphrase))
             val secretKeys =
-                changePassphrase(keyId, editor.key.pgpSecretKeyRing, oldProtector, protector)
+                changePassphrase(
+                    keyId,
+                    editor.key.pgpSecretKeyRing,
+                    oldProtector,
+                    protector,
+                    editor.api.implementation,
+                    editor.api.algorithmPolicy)
             editor.key = editor.api.toKey(secretKeys)
             return editor
         }
@@ -838,7 +845,13 @@ class SecretKeyRingEditor(
         override fun toNoPassphrase(): SecretKeyRingEditorInterface {
             val protector = UnprotectedKeysProtector()
             val secretKeys =
-                changePassphrase(keyId, editor.key.pgpSecretKeyRing, oldProtector, protector)
+                changePassphrase(
+                    keyId,
+                    editor.key.pgpSecretKeyRing,
+                    oldProtector,
+                    protector,
+                    editor.api.implementation,
+                    editor.api.algorithmPolicy)
             editor.key = editor.api.toKey(secretKeys)
             return editor
         }

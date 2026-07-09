@@ -24,7 +24,6 @@ class IntegrityProtectedInputStream(
     override fun close() {
         if (closed) return
 
-        closed = true
         if (encryptedData.isIntegrityProtected && !options.isIgnoreMDCErrors()) {
             try {
                 if (!encryptedData.verify()) throw ModificationDetectionException()
@@ -32,5 +31,6 @@ class IntegrityProtectedInputStream(
                 throw IOException("Data appears to not be integrity protected.", e)
             }
         }
+        closed = true
     }
 }

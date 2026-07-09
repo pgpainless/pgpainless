@@ -21,7 +21,7 @@ import sop.operation.RevokeKey
 
 class RevokeKeyImpl(private val api: PGPainless) : RevokeKey {
 
-    private val protector = MatchMakingSecretKeyRingProtector()
+    private val protector = MatchMakingSecretKeyRingProtector(api)
     private var armor = true
 
     override fun keys(keys: InputStream): Ready {

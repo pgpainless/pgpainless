@@ -6,20 +6,46 @@ package org.pgpainless.policy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.bouncycastle.openpgp.PGPException;
+import org.bouncycastle.openpgp.api.MessageEncryptionMechanism;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.pgpainless.PGPainless;
+import org.pgpainless.algorithm.AEADAlgorithm;
+import org.pgpainless.algorithm.AEADCipherMode;
+import org.pgpainless.algorithm.AlgorithmSuite;
 import org.pgpainless.algorithm.CompressionAlgorithm;
+import org.pgpainless.algorithm.Feature;
 import org.pgpainless.algorithm.HashAlgorithm;
+import org.pgpainless.algorithm.KeyFlag;
+import org.pgpainless.algorithm.OpenPGPKeyVersion;
 import org.pgpainless.algorithm.PublicKeyAlgorithm;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
+import org.pgpainless.decryption_verification.ConsumerOptions;
+import org.pgpainless.encryption_signing.EncryptionOptions;
+import org.pgpainless.encryption_signing.EncryptionResult;
+import org.pgpainless.encryption_signing.EncryptionStream;
+import org.pgpainless.encryption_signing.ProducerOptions;
+import org.pgpainless.exception.UnacceptableAlgorithmException;
+import org.pgpainless.key.generation.KeySpec;
+import org.pgpainless.key.generation.type.KeyType;
+import org.pgpainless.key.generation.type.ecc.EllipticCurve;
+import org.pgpainless.key.generation.type.rsa.RsaLength;
 import org.pgpainless.util.DateUtil;
+import org.pgpainless.util.Passphrase;
 
 public class PolicyTest {
 
@@ -203,5 +229,133 @@ public class PolicyTest {
     @Test
     public void testUnknownPublicKeyAlgorithmIsNotAcceptable() {
         assertFalse(policy.getPublicKeyAlgorithmPolicy().isAcceptable(-1, 4096));
+    }
+
+    @Test
+    public void testRFC4880OnlyPolicyForcesAsymmetricFallbackForAEADOnlyKeys() throws IOException, PGPException {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey key = api.buildKey(OpenPGPKeyVersion.v4)
+                .setPrimaryKey(KeySpec.getBuilder(
+                        KeyType.RSA(RsaLength._3072),
+                        KeyFlag.CERTIFY_OTHER,
+                        KeyFlag.SIGN_DATA,
+                        KeyFlag.ENCRYPT_COMMS,
+                        KeyFlag.ENCRYPT_STORAGE))
+                .withPreferences(AlgorithmSuite.emptyBuilder()
+                        .overrideAeadAlgorithms(new AEADCipherMode(AEADAlgorithm.OCB, SymmetricKeyAlgorithm.AES_128))
+                        .overrideFeatures(Feature.MODIFICATION_DETECTION_2)
+                        .build())
+                .build();
+
+        Policy rfc4880Policy = api.getAlgorithmPolicy()
+                .copy()
+                .withMessageEncryptionAlgorithmPolicy(
+                        Policy.MessageEncryptionMechanismPolicy.rfc4880(
+                                Policy.SymmetricKeyAlgorithmPolicy.symmetricKeyEncryptionPolicy2022()
+                        )).build();
+
+        api = new PGPainless(rfc4880Policy);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        EncryptionStream encOut = api.generateMessage()
+                .onOutputStream(out)
+                .withOptions(ProducerOptions.encrypt(
+                        EncryptionOptions.encryptCommunications(api)
+                                .addRecipient(key.toCertificate())
+                ));
+        encOut.write("Hello, World!\n".getBytes());
+        encOut.close();
+
+        EncryptionResult result = encOut.getResult();
+        assertTrue(result.isEncryptedFor(key.toCertificate()));
+        assertEquals(MessageEncryptionMechanism.integrityProtected(SymmetricKeyAlgorithm.AES_128.getAlgorithmId()),
+                result.getEncryptionMechanism());
+    }
+
+    @Test
+    public void testRFC4880OnlyPolicyRejectsConsumingSEIPDv2Messages()
+            throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        EncryptionStream eOut = api.generateMessage()
+                .onOutputStream(out)
+                .withOptions(ProducerOptions.encrypt(
+                        EncryptionOptions.get(api)
+                                .addMessagePassphrase(Passphrase.fromPassword("sw0rdf1sh"))
+                                .overrideEncryptionMechanism(MessageEncryptionMechanism.aead(
+                                        SymmetricKeyAlgorithm.AES_256.getAlgorithmId(),
+                                        AEADAlgorithm.OCB.getAlgorithmId()
+                                ))));
+
+        eOut.write("Hello, World!\n".getBytes());
+        eOut.close();
+
+        PGPainless rfc4880Only = new PGPainless(api.getAlgorithmPolicy()
+                .copy()
+                .withMessageDecryptionAlgorithmPolicy(
+                        Policy.MessageEncryptionMechanismPolicy.rfc4880(
+                                Policy.SymmetricKeyAlgorithmPolicy.symmetricKeyDecryptionPolicy2022()))
+                .build());
+
+        assertThrows(UnacceptableAlgorithmException.class, () -> rfc4880Only.processMessage()
+                .onInputStream(new ByteArrayInputStream(out.toByteArray()))
+                .withOptions(ConsumerOptions.get(rfc4880Only)
+                        .addMessagePassphrase(Passphrase.fromPassword("sw0rdf1sh"))));
+    }
+
+    @Test
+    public void consumingMessagesRespectsCompressionAlgorithmPolicy() throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey key = api.generateKey()
+                .modernKeyRing("Alice <alice@pgpainless.org>");
+        OpenPGPCertificate cert = key.toCertificate();
+
+        ByteArrayOutputStream mOut = new ByteArrayOutputStream();
+        EncryptionStream eOut = api.generateMessage()
+                .onOutputStream(mOut)
+                .withOptions(ProducerOptions.signAndEncrypt(
+                                EncryptionOptions.get(api)
+                                        .addRecipient(cert),
+                                SigningOptions.get(api)
+                                        .addSignature(SecretKeyRingProtector.unprotectedKeys(), key))
+                        .overrideCompressionAlgorithm(CompressionAlgorithm.ZIP));
+
+        eOut.write("Hello, World!\n".getBytes());
+        eOut.close();
+
+        // Reject compression
+        PGPainless rejectCompression = new PGPainless(api.getAlgorithmPolicy()
+                .copy()
+                .withCompressionAlgorithmPolicy(Policy.CompressionAlgorithmPolicy.rejectCompression())
+                .build());
+
+        ByteArrayInputStream bIn = new ByteArrayInputStream(mOut.toByteArray());
+        assertThrows(UnacceptableAlgorithmException.class, () ->
+                rejectCompression.processMessage()
+                        .onInputStream(bIn)
+                        .withOptions(ConsumerOptions.get(rejectCompression)
+                                .addDecryptionKey(key)
+                                .addVerificationCert(cert)));
+    }
+
+    @Test
+    public void subkeyBindingSignaturesUseProperSignatureHashPolicy() throws IOException {
+        Policy defPol = PGPainless.getInstance().getAlgorithmPolicy();
+        Policy testPol = defPol.copy()
+                .withDataSignatureHashAlgorithmPolicy(new Policy.HashAlgorithmPolicy(HashAlgorithm.SHA256, Collections.singletonList(HashAlgorithm.SHA256)))
+                .withCertificationSignatureHashAlgorithmPolicy(new Policy.HashAlgorithmPolicy(HashAlgorithm.SHA384, Collections.singletonList(HashAlgorithm.SHA384)))
+                .build();
+        PGPainless api = new PGPainless(testPol);
+        OpenPGPKey key = api.generateKey()
+                .simpleEcKeyRing("Alice <alice@pgpainless.org>");
+
+        key = api.modify(key)
+                .addSubKey(KeySpec.getBuilder(
+                        KeyType.ECDSA(EllipticCurve._BRAINPOOLP256R1), KeyFlag.SIGN_DATA).build(),
+                        Passphrase.emptyPassphrase(),
+                        SecretKeyRingProtector.unprotectedKeys())
+                .done();
+        assertEquals(HashAlgorithm.SHA384.getAlgorithmId(),
+                key.getSigningKeys().get(1).getLatestSelfSignature().getSignature().getHashAlgorithm());
     }
 }

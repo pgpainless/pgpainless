@@ -21,30 +21,96 @@ import org.pgpainless.key.util.PublicKeyParameterValidationUtil
 import org.pgpainless.policy.Policy
 import org.pgpainless.util.Passphrase
 
+/**
+ * Methods for unlocking OpenPGP secret keys. Depending on the [Policy] configuration, these helper
+ * functions will check the unlocked OpenPGP key for tampering.
+ *
+ * @see [KOpenPGP attack](https://kopenpgp.com)
+ */
 class UnlockSecretKey {
 
     companion object {
 
+        /**
+         * Unlock the given [PGPSecretKey] with the given [SecretKeyRingProtector].
+         *
+         * Note: This method sources its [Policy] instance from the default singleton instance of
+         * [PGPainless], so in multi-instance setups, this might not be the expected policy.
+         * Therefore, this method is deprecated in favor of a method taking in an additional
+         * [Policy] instance.
+         *
+         * @param secretKey secret key
+         * @param protector protector to unlock the secret key with
+         * @return unlocked private key
+         */
+        // TODO: Remove in 2.2
         @JvmStatic
         @Throws(PGPException::class, KeyIntegrityException::class)
+        @Deprecated("Deprecated in favor of method taking policy instance.")
         fun unlockSecretKey(
             secretKey: PGPSecretKey,
             protector: SecretKeyRingProtector
         ): PGPPrivateKey {
+            return unlockSecretKey(secretKey, protector, PGPainless.getInstance().algorithmPolicy)
+        }
+
+        /**
+         * Unlock the given [PGPSecretKey] with the given [SecretKeyRingProtector].
+         *
+         * @param secretKey secret key
+         * @param protector protector to unlock the secret key with
+         * @return unlocked private key
+         */
+        @JvmStatic
+        @Throws(PGPException::class, KeyIntegrityException::class)
+        fun unlockSecretKey(
+            secretKey: PGPSecretKey,
+            protector: SecretKeyRingProtector,
+            policy: Policy
+        ): PGPPrivateKey {
             return if (secretKey.isEncrypted()) {
-                unlockSecretKey(secretKey, protector.getDecryptor(secretKey.keyIdentifier))
+                unlockSecretKey(secretKey, protector.getDecryptor(secretKey.keyIdentifier), policy)
             } else {
-                unlockSecretKey(secretKey, null as PBESecretKeyDecryptor?)
+                unlockSecretKey(secretKey, null as PBESecretKeyDecryptor?, policy)
             }
         }
 
+        /**
+         * Unlock the given [OpenPGPSecretKey] with the given [SecretKeyRingProtector].
+         *
+         * Note: This method sources its [Policy] instance from the default singleton instance of
+         * [PGPainless], so in multi-instance setups, this might not be the expected policy.
+         * Therefore, this method is deprecated in favor of a method taking in an additional
+         * [Policy] instance.
+         *
+         * @param secretKey secret key
+         * @param protector protector to unlock the secret key with
+         * @return unlocked private key
+         */
+        // TODO: Remove in 2.2
         @JvmStatic
-        @JvmOverloads
-        @Throws(PGPException::class)
+        @Throws(PGPException::class, KeyIntegrityException::class)
+        @Deprecated("Deprecated in favor of method taking policy instance.")
+        fun unlockSecretKey(
+            secretKey: OpenPGPSecretKey,
+            protector: SecretKeyRingProtector
+        ): OpenPGPPrivateKey {
+            return unlockSecretKey(secretKey, protector, PGPainless.getInstance().algorithmPolicy)
+        }
+
+        /**
+         * Unlock the given [OpenPGPSecretKey] with the given [SecretKeyRingProtector].
+         *
+         * @param secretKey secret key
+         * @param protector protector to unlock the secret key with
+         * @return unlocked private key
+         */
+        @JvmStatic
+        @Throws(PGPException::class, KeyIntegrityException::class)
         fun unlockSecretKey(
             secretKey: OpenPGPSecretKey,
             protector: SecretKeyRingProtector,
-            policy: Policy = PGPainless.getInstance().algorithmPolicy
+            policy: Policy
         ): OpenPGPPrivateKey {
             val privateKey =
                 try {
@@ -70,19 +136,48 @@ class UnlockSecretKey {
             return privateKey
         }
 
+        /**
+         * Unlock the given [PGPSecretKey] with the given [PBESecretKeyDecryptor].
+         *
+         * Note: This method sources its [Policy] instance from the default singleton instance of
+         * [PGPainless], so in multi-instance setups, this might not be the expected policy.
+         * Therefore, this method is deprecated in favor of a method taking in an additional
+         * [Policy] instance.
+         *
+         * @param secretKey secret key
+         * @param decryptor decryptor to unlock the secret key with
+         * @return unlocked private key
+         */
+        // TODO: Remove in 2.2
         @JvmStatic
-        @JvmOverloads
-        @Throws(PGPException::class)
+        @Throws(PGPException::class, KeyIntegrityException::class)
+        @Deprecated("Deprecated in favor of method taking policy instance.")
+        fun unlockSecretKey(
+            secretKey: PGPSecretKey,
+            decryptor: PBESecretKeyDecryptor?
+        ): PGPPrivateKey {
+            return unlockSecretKey(secretKey, decryptor, PGPainless.getInstance().algorithmPolicy)
+        }
+
+        /**
+         * Unlock the given [PGPSecretKey] with the given [PBESecretKeyDecryptor].
+         *
+         * @param secretKey secret key
+         * @param decryptor decryptor to unlock the secret key with
+         * @return unlocked private key
+         */
+        @JvmStatic
+        @Throws(PGPException::class, KeyIntegrityException::class)
         fun unlockSecretKey(
             secretKey: PGPSecretKey,
             decryptor: PBESecretKeyDecryptor?,
-            policy: Policy = PGPainless.getInstance().algorithmPolicy
+            policy: Policy
         ): PGPPrivateKey {
             val privateKey =
                 try {
                     secretKey.extractPrivateKey(decryptor)
                 } catch (e: PGPException) {
-                    throw WrongPassphraseException(secretKey.keyID, e)
+                    throw WrongPassphraseException(secretKey.keyIdentifier, e)
                 }
 
             if (privateKey == null) {
@@ -102,21 +197,87 @@ class UnlockSecretKey {
             return privateKey
         }
 
+        /**
+         * Unlock the given [PGPSecretKey] with the given [Passphrase].
+         *
+         * Note: This method sources its [Policy] instance from the default singleton instance of
+         * [PGPainless], so in multi-instance setups, this might not be the expected policy.
+         * Therefore, this method is deprecated in favor of a method taking in an additional
+         * [Policy] instance.
+         *
+         * @param secretKey secret key
+         * @param passphrase passphrase to unlock the secret key with
+         * @return unlocked private key
+         */
+        // TODO: Remove in 2.2
         @JvmStatic
+        @Throws(PGPException::class, KeyIntegrityException::class)
+        @Deprecated("Deprecated in favor of method taking policy.")
         fun unlockSecretKey(secretKey: PGPSecretKey, passphrase: Passphrase?): PGPPrivateKey {
+            return unlockSecretKey(secretKey, passphrase, PGPainless.getInstance().algorithmPolicy)
+        }
+
+        /**
+         * Unlock the given [PGPSecretKey] with the given [Passphrase].
+         *
+         * @param secretKey secret key
+         * @param passphrase passphrase to unlock the secret key with
+         * @return unlocked private key
+         */
+        @JvmStatic
+        @Throws(PGPException::class, KeyIntegrityException::class)
+        fun unlockSecretKey(
+            secretKey: PGPSecretKey,
+            passphrase: Passphrase?,
+            policy: Policy
+        ): PGPPrivateKey {
             return if (passphrase == null) {
-                unlockSecretKey(secretKey, SecretKeyRingProtector.unprotectedKeys())
+                unlockSecretKey(secretKey, SecretKeyRingProtector.unprotectedKeys(), policy)
             } else {
                 unlockSecretKey(
-                    secretKey, SecretKeyRingProtector.unlockSingleKeyWith(passphrase, secretKey))
+                    secretKey,
+                    SecretKeyRingProtector.unlockSingleKeyWith(passphrase, secretKey),
+                    policy)
             }
         }
 
+        /**
+         * Unlock the given [OpenPGPSecretKey] with the given [Passphrase].
+         *
+         * Note: This method sources its [Policy] instance from the default singleton instance of
+         * [PGPainless], so in multi-instance setups, this might not be the expected policy.
+         * Therefore, this method is deprecated in favor of a method taking in an additional
+         * [Policy] instance.
+         *
+         * @param secretKey secret key
+         * @param passphrase passphrase to unlock the secret key with
+         * @return unlocked private key
+         */
+        // TODO: Remove in 2.2
         @JvmStatic
+        @Throws(PGPException::class, KeyIntegrityException::class)
+        @Deprecated("Deprecated in favor of method taking policy.")
         fun unlockSecretKey(
             secretKey: OpenPGPSecretKey,
             passphrase: Passphrase
+        ): OpenPGPPrivateKey {
+            return unlockSecretKey(secretKey, passphrase, PGPainless.getInstance().algorithmPolicy)
+        }
+
+        /**
+         * Unlock the given [OpenPGPSecretKey] with the given [Passphrase].
+         *
+         * @param secretKey secret key
+         * @param passphrase passphrase to unlock the secret key with
+         * @return unlocked private key
+         */
+        @JvmStatic
+        @Throws(PGPException::class, KeyIntegrityException::class)
+        fun unlockSecretKey(
+            secretKey: OpenPGPSecretKey,
+            passphrase: Passphrase,
+            policy: Policy
         ): OpenPGPPrivateKey =
-            unlockSecretKey(secretKey, SecretKeyRingProtector.unlockAnyKeyWith(passphrase))
+            unlockSecretKey(secretKey, SecretKeyRingProtector.unlockAnyKeyWith(passphrase), policy)
     }
 }

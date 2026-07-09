@@ -152,7 +152,9 @@ class KeyRingBuilder(private val version: OpenPGPKeyVersion, private val api: PG
 
         // Attempt to add additional user-ids to the primary public key
         var primaryPubKey = secretKeys.next().publicKey
-        val privateKey = secretKeyRing.secretKey.unlock(secretKeyDecryptor)
+        // here, we don't need to use UnlockSecretKey.unlockSecretKey(),
+        //  as the key is freshly generated, so we can skip optional integrity tests.
+        val privateKey = secretKeyRing.secretKey.unlock(secretKeyDecryptor, api.algorithmPolicy)
         val userIdIterator = userIds.entries.iterator()
         if (userIdIterator.hasNext()) {
             userIdIterator.next() // Skip primary userId

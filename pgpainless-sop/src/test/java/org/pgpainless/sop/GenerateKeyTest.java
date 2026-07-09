@@ -91,6 +91,7 @@ public class GenerateKeyTest {
 
     @Test
     public void protectedMultiUserIdKey() throws IOException, PGPException {
+        PGPainless api = new PGPainless();
         byte[] bytes = sop.generateKey()
                 .userId("Alice")
                 .userId("Bob")
@@ -105,7 +106,7 @@ public class GenerateKeyTest {
         assertTrue(info.getUserIds().contains("Bob"));
 
         for (PGPSecretKey key : secretKey) {
-            assertNotNull(UnlockSecretKey.unlockSecretKey(key, Passphrase.fromPassword("sw0rdf1sh")));
+            assertNotNull(UnlockSecretKey.unlockSecretKey(key, Passphrase.fromPassword("sw0rdf1sh"), api.getAlgorithmPolicy()));
         }
     }
 

@@ -15,43 +15,60 @@ import org.pgpainless.exception.WrongPassphraseException
 import org.pgpainless.key.OpenPgpFingerprint
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.key.protection.UnlockSecretKey
+import org.pgpainless.policy.Policy
 import org.pgpainless.util.Passphrase
+
+/**
+ * Unlock the secret key to get its [PGPPrivateKey]. This method assumes all keys are unprotected.
+ *
+ * @param policy policy
+ * @throws PGPException if the key cannot be unlocked
+ * @throws KeyIntegrityException if the public key part was tampered with
+ */
+@Throws(PGPException::class, KeyIntegrityException::class)
+fun PGPSecretKey.unlock(
+    policy: Policy,
+): PGPPrivateKey =
+    UnlockSecretKey.unlockSecretKey(this, SecretKeyRingProtector.unprotectedKeys(), policy)
 
 /**
  * Unlock the secret key to get its [PGPPrivateKey].
  *
  * @param passphrase passphrase to unlock the secret key with.
+ * @param policy policy
  * @throws PGPException if the key cannot be unlocked
  * @throws KeyIntegrityException if the public key part was tampered with
  * @throws WrongPassphraseException
  */
 @Throws(PGPException::class, KeyIntegrityException::class)
-fun PGPSecretKey.unlock(passphrase: Passphrase): PGPPrivateKey =
-    UnlockSecretKey.unlockSecretKey(this, passphrase)
+fun PGPSecretKey.unlock(passphrase: Passphrase, policy: Policy): PGPPrivateKey =
+    UnlockSecretKey.unlockSecretKey(this, passphrase, policy)
 
 /**
  * Unlock the secret key to get its [PGPPrivateKey].
  *
  * @param protector protector to unlock the secret key.
+ * @param policy policy
  * @throws PGPException if the key cannot be unlocked
  * @throws KeyIntegrityException if the public key part was tampered with
  */
 @Throws(PGPException::class, KeyIntegrityException::class)
-@JvmOverloads
 fun PGPSecretKey.unlock(
-    protector: SecretKeyRingProtector = SecretKeyRingProtector.unprotectedKeys()
-): PGPPrivateKey = UnlockSecretKey.unlockSecretKey(this, protector)
+    protector: SecretKeyRingProtector = SecretKeyRingProtector.unprotectedKeys(),
+    policy: Policy,
+): PGPPrivateKey = UnlockSecretKey.unlockSecretKey(this, protector, policy)
 
 /**
  * Unlock the secret key to get its [PGPPrivateKey].
  *
  * @param decryptor decryptor to unlock the secret key.
+ * @param policy policy
  * @throws PGPException if the key cannot be unlocked
  * @throws KeyIntegrityException if the public key part was tampered with
  */
 @Throws(PGPException::class, KeyIntegrityException::class)
-fun PGPSecretKey.unlock(decryptor: PBESecretKeyDecryptor?): PGPPrivateKey =
-    UnlockSecretKey.unlockSecretKey(this, decryptor)
+fun PGPSecretKey.unlock(decryptor: PBESecretKeyDecryptor?, policy: Policy): PGPPrivateKey =
+    UnlockSecretKey.unlockSecretKey(this, decryptor, policy)
 
 /**
  * Returns indication that the secret key is encrypted.

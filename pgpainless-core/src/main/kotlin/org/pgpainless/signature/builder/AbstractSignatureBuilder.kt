@@ -16,6 +16,7 @@ import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.bouncycastle.extensions.toHashAlgorithms
 import org.pgpainless.key.protection.SecretKeyRingProtector
 import org.pgpainless.key.protection.UnlockSecretKey
+import org.pgpainless.policy.Policy
 import org.pgpainless.signature.subpackets.SignatureSubpackets
 import org.pgpainless.signature.subpackets.SignatureSubpacketsHelper
 
@@ -46,7 +47,7 @@ abstract class AbstractSignatureBuilder<B : AbstractSignatureBuilder<B>>(
         unhashedSubpackets: SignatureSubpackets,
         api: PGPainless
     ) : this(
-        UnlockSecretKey.unlockSecretKey(signingKey, protector),
+        UnlockSecretKey.unlockSecretKey(signingKey, protector, api.algorithmPolicy),
         hashAlgorithm,
         signatureType,
         hashedSubpackets,
@@ -54,16 +55,19 @@ abstract class AbstractSignatureBuilder<B : AbstractSignatureBuilder<B>>(
         api)
 
     @Throws(PGPException::class)
+    @JvmOverloads
     constructor(
         signatureType: SignatureType,
         signingKey: OpenPGPKey.OpenPGPSecretKey,
         protector: SecretKeyRingProtector,
-        api: PGPainless
+        api: PGPainless,
+        hashAlgorithmPolicySelector: Function1<PGPainless, Policy.HashAlgorithmPolicy> =
+            certSigHashPolicy()
     ) : this(
         signatureType,
         signingKey,
         protector,
-        negotiateHashAlgorithm(signingKey, api),
+        negotiateHashAlgorithm(signingKey, hashAlgorithmPolicySelector.invoke(api)),
         SignatureSubpackets.createHashedSubpackets(signingKey.pgpSecretKey.publicKey),
         SignatureSubpackets.createEmptySubpackets(),
         api)
@@ -73,12 +77,14 @@ abstract class AbstractSignatureBuilder<B : AbstractSignatureBuilder<B>>(
         signingKey: OpenPGPKey.OpenPGPSecretKey,
         protector: SecretKeyRingProtector,
         archetypeSignature: PGPSignature,
-        api: PGPainless
+        api: PGPainless,
+        hashAlgorithmPolicySelector: Function1<PGPainless, Policy.HashAlgorithmPolicy> =
+            certSigHashPolicy()
     ) : this(
         SignatureType.requireFromCode(archetypeSignature.signatureType),
         signingKey,
         protector,
-        negotiateHashAlgorithm(signingKey, api),
+        negotiateHashAlgorithm(signingKey, hashAlgorithmPolicySelector.invoke(api)),
         SignatureSubpackets.refreshHashedSubpackets(
             signingKey.publicKey.pgpPublicKey, archetypeSignature),
         SignatureSubpackets.refreshUnhashedSubpackets(archetypeSignature),
@@ -126,10 +132,28 @@ abstract class AbstractSignatureBuilder<B : AbstractSignatureBuilder<B>>(
     companion object {
 
         @JvmStatic
-        fun negotiateHashAlgorithm(key: OpenPGPComponentKey, api: PGPainless): HashAlgorithm =
+        fun certSigHashPolicy(): Function1<PGPainless, Policy.HashAlgorithmPolicy> = { api ->
+            api.algorithmPolicy.certificationSignatureHashAlgorithmPolicy
+        }
+
+        @JvmStatic
+        fun revSigHashPolicy(): Function1<PGPainless, Policy.HashAlgorithmPolicy> = { api ->
+            api.algorithmPolicy.revocationSignatureHashAlgorithmPolicy
+        }
+
+        @JvmStatic
+        fun dataSigHashPolicy(): Function1<PGPainless, Policy.HashAlgorithmPolicy> = { api ->
+            api.algorithmPolicy.dataSignatureHashAlgorithmPolicy
+        }
+
+        @JvmStatic
+        fun negotiateHashAlgorithm(
+            key: OpenPGPComponentKey,
+            hashAlgorithmPolicy: Policy.HashAlgorithmPolicy
+        ): HashAlgorithm =
             key.hashAlgorithmPreferences?.toHashAlgorithms()?.first {
-                api.algorithmPolicy.dataSignatureHashAlgorithmPolicy.isAcceptable(it)
+                hashAlgorithmPolicy.isAcceptable(it)
             }
-                ?: api.algorithmPolicy.dataSignatureHashAlgorithmPolicy.defaultHashAlgorithm
+                ?: hashAlgorithmPolicy.defaultHashAlgorithm
     }
 }

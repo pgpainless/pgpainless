@@ -10,6 +10,7 @@ import java.util.*
 import org.bouncycastle.bcpg.sig.*
 import org.bouncycastle.openpgp.PGPPublicKey
 import org.bouncycastle.openpgp.PGPSignature
+import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.pgpainless.algorithm.HashAlgorithm
 import org.pgpainless.algorithm.OpenPGPKeyVersion
 import org.pgpainless.algorithm.PublicKeyAlgorithm
@@ -103,6 +104,9 @@ interface BaseSignatureSubpackets {
     fun addNotationData(notationData: NotationData): BaseSignatureSubpackets
 
     fun clearNotationData(): BaseSignatureSubpackets
+
+    fun addIntendedRecipientFingerprint(recipientKey: OpenPGPCertificate): BaseSignatureSubpackets =
+        addIntendedRecipientFingerprint(recipientKey.primaryKey.pgpPublicKey)
 
     fun addIntendedRecipientFingerprint(recipientKey: PGPPublicKey): BaseSignatureSubpackets
 

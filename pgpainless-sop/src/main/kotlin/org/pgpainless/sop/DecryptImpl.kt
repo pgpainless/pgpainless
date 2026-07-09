@@ -26,7 +26,7 @@ import sop.operation.Decrypt
 class DecryptImpl(private val api: PGPainless) : Decrypt {
 
     private val consumerOptions = ConsumerOptions.get(api)
-    private val protector = MatchMakingSecretKeyRingProtector()
+    private val protector = MatchMakingSecretKeyRingProtector(api)
 
     override fun ciphertext(ciphertext: InputStream): ReadyWithResult<DecryptionResult> {
         if (consumerOptions.getDecryptionKeys().isEmpty() &&

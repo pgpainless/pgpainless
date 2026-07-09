@@ -17,7 +17,6 @@ import org.pgpainless.algorithm.SymmetricKeyAlgorithm
 import org.pgpainless.algorithm.negotiation.EncryptionMechanismNegotiator
 import org.pgpainless.algorithm.negotiation.SymmetricKeyAlgorithmNegotiator.Companion.byPopularity
 import org.pgpainless.authentication.CertificateAuthority
-import org.pgpainless.encryption_signing.EncryptionOptions.EncryptionKeySelector
 import org.pgpainless.exception.KeyException.ExpiredKeyException
 import org.pgpainless.exception.KeyException.UnacceptableEncryptionKeyException
 import org.pgpainless.exception.KeyException.UnacceptableSelfSignatureException
@@ -26,7 +25,8 @@ import org.pgpainless.key.info.KeyAccessor
 import org.pgpainless.key.info.KeyRingInfo
 import org.pgpainless.util.Passphrase
 
-class EncryptionOptions(private val purpose: EncryptionPurpose, private val api: PGPainless) {
+class EncryptionOptions
+private constructor(private val purpose: EncryptionPurpose, private val api: PGPainless) {
 
     var encryptionMechanismNegotiator: EncryptionMechanismNegotiator =
         EncryptionMechanismNegotiator.modificationDetectionOrBetter(byPopularity())
@@ -95,7 +95,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
         authority
             .lookupByUserId(userId, email, evaluationDate, targetAmount)
             .filter { it.isAuthenticated() }
-            .forEach { addRecipient(it.certificate).also { foundAcceptable = true } }
+            .forEach { addRecipient(it.certificate, userId).also { foundAcceptable = true } }
         require(foundAcceptable) {
             "Could not identify any trust-worthy certificates for '$userId' and target trust amount $targetAmount."
         }
@@ -111,6 +111,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
      * @return this
      */
     @Deprecated("Repeatedly pass OpenPGPCertificate instances instead.")
+    // TODO: Remove in 2.1
     fun addRecipients(keys: Iterable<PGPPublicKeyRing>) = apply {
         keys.toList().let {
             require(it.isNotEmpty()) { "Set of recipient keys cannot be empty." }
@@ -130,6 +131,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
      * @return this
      */
     @Deprecated("Repeatedly pass OpenPGPCertificate instances instead.")
+    // TODO: Remove in 2.1
     fun addRecipients(keys: Iterable<PGPPublicKeyRing>, selector: EncryptionKeySelector) = apply {
         keys.toList().let {
             require(it.isNotEmpty()) { "Set of recipient keys cannot be empty." }
@@ -155,6 +157,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
         "Pass in OpenPGPCertificate instead.",
         replaceWith =
             ReplaceWith("addRecipient(key.toOpenPGPCertificate(), encryptionKeySelector)"))
+    // TODO: Remove in 2.1
     fun addRecipient(key: PGPPublicKeyRing) = addRecipient(key, encryptionKeySelector)
 
     /**
@@ -180,6 +183,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
     @Deprecated(
         "Pass in OpenPGPCertificate instead.",
         replaceWith = ReplaceWith("addRecipient(key.toOpenPGPCertificate(), userId)"))
+    // TODO: Remove in 2.1
     fun addRecipient(key: PGPPublicKeyRing, userId: CharSequence) =
         addRecipient(key, userId, encryptionKeySelector)
 
@@ -228,6 +232,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
         "Pass in OpenPGPCertificate instead.",
         replaceWith =
             ReplaceWith("addRecipient(key.toOpenPGPCertificate(), userId, encryptionKeySelector)"))
+    // TODO: Remove in 2.1
     fun addRecipient(
         key: PGPPublicKeyRing,
         userId: CharSequence,
@@ -257,6 +262,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
         "Pass in OpenPGPCertificate instead.",
         replaceWith =
             ReplaceWith("addRecipient(key.toOpenPGPCertificate(), encryptionKeySelector)"))
+    // TODO: Remove in 2.1
     fun addRecipient(key: PGPPublicKeyRing, encryptionKeySelector: EncryptionKeySelector) =
         addRecipient(api.toCertificate(key), encryptionKeySelector)
 
@@ -286,6 +292,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
     @Deprecated(
         "Pass in an OpenPGPCertificate instead.",
         replaceWith = ReplaceWith("addHiddenRecipient(key.toOpenPGPCertificate(), selector)"))
+    // TODO: Remove in 2.1
     fun addHiddenRecipient(
         key: PGPPublicKeyRing,
         selector: EncryptionKeySelector = encryptionKeySelector
@@ -308,8 +315,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
             throw ExpiredKeyException(cert, primaryKeyExpiration)
         }
 
-        var encryptionSubkeys = selector.selectEncryptionSubkeys(info.getEncryptionSubkeys(purpose))
-
+        var encryptionSubkeys = info.getEncryptionSubkeys(purpose)
         // There are some legacy keys around without key flags.
         // If we allow encryption for those keys, we add valid keys without any key flags, if they
         // are
@@ -320,6 +326,9 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
                     .filter { it.pgpPublicKey.isEncryptionKey }
                     .filter { info.getKeyFlagsOf(it.keyIdentifier).isEmpty() }
         }
+
+        // Apply selection by user
+        encryptionSubkeys = selector.selectEncryptionSubkeys(encryptionSubkeys)
 
         if (encryptionSubkeys.isEmpty()) {
             throw UnacceptableEncryptionKeyException(cert)
@@ -354,6 +363,7 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
     @Deprecated(
         "Deprecated in favor of addMessagePassphrase",
         ReplaceWith("addMessagePassphrase(passphrase)"))
+    // TODO: Remove in 2.1
     fun addPassphrase(passphrase: Passphrase) = addMessagePassphrase(passphrase)
 
     /**
@@ -462,19 +472,29 @@ class EncryptionOptions(private val purpose: EncryptionPurpose, private val api:
     }
 
     companion object {
-        @JvmOverloads
+        // TODO: Remove in 2.2
         @JvmStatic
-        fun get(api: PGPainless = PGPainless.getInstance()) = EncryptionOptions(api)
+        @Deprecated("Deprecated in favor of method taking api instance.")
+        fun get() = get(PGPainless.getInstance())
 
-        @JvmOverloads
+        @JvmStatic fun get(api: PGPainless) = EncryptionOptions(api)
+
+        // TODO: Remove in 2.2
         @JvmStatic
-        fun encryptCommunications(api: PGPainless = PGPainless.getInstance()) =
+        @Deprecated("Deprecated in favor of method taking api instance.")
+        fun encryptCommunications() = encryptCommunications(PGPainless.getInstance())
+
+        @JvmStatic
+        fun encryptCommunications(api: PGPainless) =
             EncryptionOptions(EncryptionPurpose.COMMUNICATIONS, api)
 
-        @JvmOverloads
+        // TODO: Remove in 2.2
         @JvmStatic
-        fun encryptDataAtRest(api: PGPainless = PGPainless.getInstance()) =
-            EncryptionOptions(EncryptionPurpose.STORAGE, api)
+        @Deprecated("Deprecated in favor of method taking api instance.")
+        fun encryptDataAtRest() = encryptDataAtRest(PGPainless.getInstance())
+
+        @JvmStatic
+        fun encryptDataAtRest(api: PGPainless) = EncryptionOptions(EncryptionPurpose.STORAGE, api)
 
         /**
          * Only encrypt to the first valid encryption capable subkey we stumble upon.
