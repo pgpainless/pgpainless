@@ -5,13 +5,13 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 2.0.4-SNAPSHOT
+## 2.0.4
 - Bump `checkstyle` tool version to `10.26.1`
 - Fix PGPainless silently dropping trailing `0xFF` octet (Thanks to @byteoverride for the report, suggested fix and regression test!)
 - Manually bump transitive dependency `plexus-utils` of `checkstyle` to `3.6.1`
 - Fix missing enforcement for maximum packet nesting depth of compressed data packets in `sop inline-detach` (see [advisory](https://github.com/pgpainless/pgpainless/security/advisories/GHSA-cvx8-9ff6-54xq))
 - Document user responsibility for not exposing decrypted data before successfully closing `OpenPgpMessageInputStream`
-- Introduce `PGPainless.verifyAndOpen()` utility method
+- Introduce `PGPainless.verifyAndOpen()` utility method (thanks to @0xEr3n for early advise on hardening)
 - Prevent accidental overwriting internal `Policy` instances when using multiple instances of `PGPainless` (see [advisory](https://github.com/pgpainless/pgpainless/security/advisories/GHSA-5fmp-48ff-rx9p))
 - Prevent KOpenPGP-style attacks on several secret-key unlock code paths (see [advisory](https://github.com/pgpainless/pgpainless/security/advisories/GHSA-5fmp-48ff-rx9p))
 - Fix RFC-4880-only encryption policy still emitting SEIPDv2/AEAD encrypted data (see [advisory](https://github.com/pgpainless/pgpainless/security/advisories/GHSA-5fmp-48ff-rx9p))
@@ -29,7 +29,7 @@ SPDX-License-Identifier: CC0-1.0
 - Chose proper user-id preferences when encrypting to certificate authenticated by CA (see [advisory](https://github.com/pgpainless/pgpainless/security/advisories/GHSA-5fmp-48ff-rx9p))
 - Properly enforce maximum encrypted data packet nesting depth (see [advisory](https://github.com/pgpainless/pgpainless/security/advisories/GHSA-5fmp-48ff-rx9p))
 - Fix NPE in interactive passphrase code-path when decrypting hidden-recipient messages (see [advisory](https://github.com/pgpainless/pgpainless/security/advisories/GHSA-5fmp-48ff-rx9p))
-
+- Emit OnePassSignaturePackets using new packet format
 
 ## 2.0.3
 - Bump `bcpg-jdk8on` to `1.84`
