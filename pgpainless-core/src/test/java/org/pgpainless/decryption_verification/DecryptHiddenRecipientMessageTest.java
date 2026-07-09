@@ -5,6 +5,7 @@
 package org.pgpainless.decryption_verification;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -15,11 +16,14 @@ import java.util.List;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.EncryptionPurpose;
+import org.pgpainless.exception.MissingDecryptionMethodException;
 import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.util.TestAllImplementations;
@@ -150,5 +154,86 @@ public class DecryptHiddenRecipientMessageTest {
 
         assertEquals(new SubkeyIdentifier(secretKeys, encryptionKeys.get(0).getKeyIdentifier()), metadata.getDecryptionKey());
         assertEquals("Hello Recipient :)", out.toString());
+    }
+
+    @Test
+    public void testDecryptionWithWildcardRecipientAndMissingKeyFlag() throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
+        String KEY_WITH_NO_ENC_KEY = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
+                "Comment: D1D3 6EAF BD15 3A37 063C  C1C7 E621 A2B6 0337 D4CF\n" +
+                "\n" +
+                "lQVYBGpPm+oBDAC8weB+1BNqbeiZRiOt37rp9ByjfmQJmhGACwA1rNzbBsXmPrzk\n" +
+                "J+vaOozp45O4JyYMmsu7r9nynnerttf6G0GK1ul/1rJWffZlBgRSiukC7Ykzyit1\n" +
+                "kpSxy881ng4ti4luV5o6a4hsSyiR6Qs0CH5mpZ02oflNff6vbrsYI11w8vhCSAfC\n" +
+                "M7jntPjnd/1L70Dtsp5qdI7qwiMHuyejYjL8LKlpso8WwrH+S7wPJqV2Iwqrf+kf\n" +
+                "6wT8fNDOSH1eLlITNUP7ny4KfSDwaxOXIFkaN+r7x4fR+7hkeQHLCkYq6M8mHNOW\n" +
+                "1ezyQsFy6OkzNI63Gx1DTdfJEfEdjiw8aPJjeFc3ijYwn0pbpzJm3/3+iKBDw4pU\n" +
+                "d2IMYBli4HHuGM8K2/2FhyouNL9SZz0V/ixTQxIng8u/sGFmw+N0bBT6/IHL+BqT\n" +
+                "tzOQIKEWgLcFNGZXuMjQ4mT/7X3xxJ2Z3Rv3X5uTCPiJFc2KvQZk4brPKkQQBsFP\n" +
+                "wA97ap8qi2SLvg8AEQEAAQAL/0FJ/ElSOL8E8kHl+VxgeSoIJknE43xQvsHfzDxE\n" +
+                "pQXbg2M/Cx4N0u4id3BFJ+i4HdiZSGQMkOHzPyh1b6ISgGqyKITv8bKqEipiWOdm\n" +
+                "Je+90snHoZ2izGztNqhwma3WSHySr4WKgV8X5hoGFjpyv6nomgb2IqHTtV7f+bYB\n" +
+                "MYZqfEWM3aYmNsxqk/eYUNRNltNBB7uBwpdf/Dbl3PGN+12vYw/s08KHKILxlkRV\n" +
+                "VUEWINAuR6gjJg/hamYXu8lyUpfGAyBFGL5YRqEBxy4ClnqRfN5uCvCjBmGVxSR5\n" +
+                "Hqy40u2pXvOzu1dtNvwWGiRiBJN1TIwRPAtJ6u25Fp/sr8zR7DeKq6JCaXp2twyB\n" +
+                "WDuqhARNdcBr5eWKsh+ovTDZ6gx+Lx/RpJ0qwKZy/DoQPfgfzxZ3+VlK7W6XL8o9\n" +
+                "o3yp9TNQzjv7a8O4suYTnRjXOhRhrmaYuJ3o2V44UR6SvJPUREUARHtCkByxF5o2\n" +
+                "Wc78PRL0Cjs6YSapfUVFTc3Z6QYAywO5a7C509uI0WsGvMKVpciKdTjmAnTzhQ8y\n" +
+                "YtRMZoLja/GrEURU7k9AkTXGhVZULE6QPuncIt7Awv98t4bRGwOFeOCx74vB3Hp9\n" +
+                "o91niwBPvDuhUurgWGMrvbouLsPsLxPu/u71fs8LRfXC+TfkWtoPn+vSydlRnWs3\n" +
+                "qB0L0Pkf+/sx7n72nqVDELC1r+y3Wgx2mVwkjgRobaIv9ToANooBHXSraStHcD3N\n" +
+                "CNTx2cLE1bs1oZQ4XWe96rMp4AC5BgDuBZEQXdazvLQv6a6RhDSn+NPNSwsw77X/\n" +
+                "kaq/IENGxFMca/aK+G9UctGBjde81d3UtXTIj8bb3xA3o3pmvm9wBQFAApngNsbO\n" +
+                "9Xzi2j1zDiu8+12apLuNnkii13CUlHlDMNKNnDoYw66JBdEgQNFTUT2uKjXT4kpL\n" +
+                "4KX0ZQ+EzjiJ0UnH18evMPMIjn88Zb3HM/u1MxBHKRLoGY8t9V8/EOFZb6wFaoXA\n" +
+                "I0Ka8q42Ztu2FCC2uA1s//7HNydDAQcGALHOC1OQ/HrNLNiyjaQZVoFCDHq4qsN+\n" +
+                "6qgz/nM87aVRNuzMZDiU1WIhA61odbo7SmpN2Tb3qKcUDCpqAvp/95kQMcQgNZT9\n" +
+                "rXeY7hSP07on1CLlw+TyF3bf9ICua7KoMr56SXXfdbWfhZYNsvC6fjX3nMfDoQAI\n" +
+                "TDqtE3rKxhRr4XfXELzziOtNJdJ8SOVGx9Xf5DRoeHQ8kXu/eGA8QYFJtGlwyx2c\n" +
+                "lxOUijjnxTm5mbG82gEV28dF84t7ZzSTpus/wsEaBB8BCgBOBYJqT5vsCRDmIaK2\n" +
+                "AzfUzxahBNHTbq+9FTo3BjzBx+YhorYDN9TPApsBBRUKCQgLBRYCAwEABAsJCAcJ\n" +
+                "JwkBCQIJAwgBAp4JBYkJZgGAAADdLQv/aDtLCIflAb2vmdKC/fIwuWdAAjrvKt+T\n" +
+                "1rwXzRAhwO9GylrRiEf0wsjXuCBPpfecXLPtj1GFRMEp3PYHtgCLy5I3mzgSOZR1\n" +
+                "ezHfX7siAGMgJ10Use2Ivz6IkmsIl2DzxNvTQDQDVxIglY1y5/DTIAhNSuQjg4FY\n" +
+                "ZvINx8zMDRitewEBaO5gyk8kTQUVWl3Dj1p1g9bLHMGuP2uglk1h7Ig53eT0+tgt\n" +
+                "NNke1z1KHT7N7DwiX8BMLm5en5a6zEMy8XqCM4j/P1jXEE0RlxzVOe4fbowm4CR5\n" +
+                "sPnTOIBFWgAgNlDZ5UvRsx9979H1dmPfOEnFHlEtkEOgcKVJHORj1B88gSttSUtK\n" +
+                "LFnOupS1U30I+y7PksTbZ+MOX1ijRZD1BWS3nK++rC0Znov2Uhr6MJxUf2u61OXf\n" +
+                "fhTUlKumk6EDTaLjpsjgGJYoGx4naCwxxOGx4XhiaTe2p3qF/6vmuqRBosyULJxC\n" +
+                "usrFAUnNW/kSkukyZiCYhMpN30ZQut4k\n" +
+                "=7Gz+\n" +
+                "-----END PGP PRIVATE KEY BLOCK-----\n";
+        OpenPGPKey key = api.readKey().parseKey(KEY_WITH_NO_ENC_KEY);
+
+        String ANONYMOUS_MESSAGE = "-----BEGIN PGP MESSAGE-----\n" +
+                "\n" +
+                "wcDMAwAAAAAAAAAAAQv/c6hHJVVJG+0fAA98wPkDnmpe1/RrgWFn7ja4lvINnaAX\n" +
+                "DGmyfDvu5UUO6nFOD7nAyTTxF+dp+CYxZLdgRDQ+fKK7N31eHyrxZueoWMb86f3G\n" +
+                "oNDN+9IiRNHtBLG9joVT+rnRh9fkeI/+co13uROEOKeJ2q7echTwt9SMdygW0Nz4\n" +
+                "RNxXau+6ANkD+UyhztDoEdjE/W27HSz3ZBYqNt4qW0R9OxrOzIj4bMnqa3VTIO2q\n" +
+                "2drSMTTlw7+mblySBukIhW7J204HUESe2O1+JcaK/eSlvuJjugk8HEn/36YSjyt3\n" +
+                "v2IzzWL5o6yPCgBZJe802gehIiF4I17JZ+6uj4g3mFMYFAexhdZ0tJo/rIIK4i9m\n" +
+                "ze7tNTTEAA/ytWjyHFOm+GRU5/aYc1t9BN7kaRr/2GSNCslUOCOVjoUu3PV/2nw5\n" +
+                "QmZ2epdKCwjYB5+C3WEs+6yDEEzwggK/yNcr9fmFElKIwbzKEJ2YBTR6bT8bAG9n\n" +
+                "MprsXuwKsZdR80s896dt0j8BbHvmaVZxzLuIwsIun3bqIV3cJmhjxD8o4ok/FklA\n" +
+                "n7XpeeMMTMyt/5sZ8fGA9imuNUKiWJ1Xl8WzzExoK4g=\n" +
+                "=8WMT\n" +
+                "-----END PGP MESSAGE-----";
+        ByteArrayInputStream bIn = new ByteArrayInputStream(ANONYMOUS_MESSAGE.getBytes(StandardCharsets.UTF_8));
+        ByteArrayInputStream finalBIn = bIn;
+        assertThrows(MissingDecryptionMethodException.class, () ->
+                api.processMessage()
+                        .onInputStream(finalBIn)
+                        .withOptions(ConsumerOptions.get(api)
+                                .addDecryptionKey(key)));
+
+        bIn = new ByteArrayInputStream(ANONYMOUS_MESSAGE.getBytes(StandardCharsets.UTF_8));
+        DecryptionStream dIn = api.processMessage()
+                .onInputStream(bIn)
+                .withOptions(ConsumerOptions.get(api)
+                        .setAllowDecryptionWithMissingKeyFlags()
+                        .addDecryptionKey(key));
+        Streams.drain(dIn);
+        dIn.close();
     }
 }
