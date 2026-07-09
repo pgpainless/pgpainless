@@ -5,6 +5,11 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 1.7.8
+- `sop inline-detach` and `MessageInspector`: Limit maximum nesting depth of compressed data packets
+  Fixes https://github.com/pgpainless/pgpainless/security/advisories/GHSA-cvx8-9ff6-54xq
+
+
 ## 1.7.7
 - Bump `bcpg-jdk8on` to `1.82`
 - Bump `bcprov-jdk18on` to `1.82`
