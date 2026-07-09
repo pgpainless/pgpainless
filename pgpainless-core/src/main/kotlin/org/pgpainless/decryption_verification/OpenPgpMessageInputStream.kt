@@ -738,6 +738,9 @@ class OpenPgpMessageInputStream(
         options.getDecryptionKeys().forEach {
             val info = api.inspect(it)
             for (key in info.decryptionSubkeys) {
+                if (!options.getAllowDecryptionWithNonEncryptionKey() && !key.isEncryptionKey) {
+                    continue
+                }
                 if (key.pgpPublicKey.algorithm == algorithm &&
                     info.isSecretKeyAvailable(key.keyIdentifier)) {
                     candidates.add(it.getSecretKey(key.keyIdentifier))
