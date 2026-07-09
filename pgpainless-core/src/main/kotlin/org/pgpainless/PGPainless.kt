@@ -482,13 +482,12 @@ class PGPainless(
         fun certify(): CertifyCertificate = getInstance().generateCertification()
 
         /**
-         * Utility method for processing smaller OpenPGP messages safely.
-         * Process the plaintext data from the given [DecryptionStream], reading it into a local
-         * buffer of size [maxPlaintextSize]. If the plaintext data exceeds the buffer, this method
-         * throws an [OutOfMemoryError].
-         * After reaching EOF, close the [DecryptionStream], performing integrity
-         * verification. Lastly, reopen the local buffer as a new [DecryptionStream] which exposes
-         * the verified data along with the finished [MessageMetadata].
+         * Utility method for processing smaller OpenPGP messages safely. Process the plaintext data
+         * from the given [DecryptionStream], reading it into a local buffer of size
+         * [maxPlaintextSize]. If the plaintext data exceeds the buffer, this method throws an
+         * [OutOfMemoryError]. After reaching EOF, close the [DecryptionStream], performing
+         * integrity verification. Lastly, reopen the local buffer as a new [DecryptionStream] which
+         * exposes the verified data along with the finished [MessageMetadata].
          *
          * @param inputStream initial [DecryptionStream]
          * @param maxPlaintextSize maximum plaintext size. 32mb by default.
@@ -496,11 +495,14 @@ class PGPainless(
          */
         @JvmStatic
         @JvmOverloads
-        fun verifyAndOpen(inputStream: DecryptionStream, maxPlaintextSize: Int = 32 * 1024 * 1024): DecryptionStream {
+        fun verifyAndOpen(
+            inputStream: DecryptionStream,
+            maxPlaintextSize: Int = 32 * 1024 * 1024
+        ): DecryptionStream {
             val bytes = inputStream.readNBytes(maxPlaintextSize)
-            if (inputStream.read() != -1)
-            {
-                throw OutOfMemoryError("Exceeding maximum plaintext size limit of $maxPlaintextSize bytes")
+            if (inputStream.read() != -1) {
+                throw OutOfMemoryError(
+                    "Exceeding maximum plaintext size limit of $maxPlaintextSize bytes")
             }
             inputStream.close()
             val verifiedMetadata = inputStream.metadata

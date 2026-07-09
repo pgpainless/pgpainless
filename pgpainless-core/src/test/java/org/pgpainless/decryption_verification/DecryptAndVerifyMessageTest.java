@@ -191,8 +191,7 @@ public class DecryptAndVerifyMessageTest {
 
     @Test
     public void testVerifyAndOpenExceedingPlaintextSizeLimit()
-            throws PGPException, IOException
-    {
+            throws PGPException, IOException {
         PGPainless api = PGPainless.getInstance();
         OpenPGPKey key = api.generateKey().modernKeyRing("Alice <alice@pgpainless.org>");
 
