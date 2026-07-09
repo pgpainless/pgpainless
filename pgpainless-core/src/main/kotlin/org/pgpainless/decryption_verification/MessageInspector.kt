@@ -10,6 +10,8 @@ import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.*
 import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.pgpainless.PGPainless
+import org.pgpainless.decryption_verification.MessageMetadata.Layer.Companion.MAX_LAYER_DEPTH
+import org.pgpainless.exception.MalformedOpenPgpMessageException
 import org.pgpainless.util.ArmorUtils
 
 /**
@@ -71,6 +73,7 @@ class MessageInspector(val api: PGPainless = PGPainless.getInstance()) {
         var objectFactory = api.implementation.pgpObjectFactory(inputStream)
 
         var n: Any?
+        var nestingDepth: Int = 0
         while (objectFactory.nextObject().also { n = it } != null) {
             when (val next = n!!) {
                 is PGPOnePassSignatureList -> {
@@ -93,6 +96,13 @@ class MessageInspector(val api: PGPainless = PGPainless.getInstance()) {
                     return EncryptionInfo(keyIdentifiers, isPassphraseEncrypted, false)
                 }
                 is PGPCompressedData -> {
+                    // Guard packet nesting depth
+                    nestingDepth++
+                    if (nestingDepth > MAX_LAYER_DEPTH) {
+                        throw MalformedOpenPgpMessageException(
+                            "Maximum packet nesting depth ($MAX_LAYER_DEPTH) exceeded.")
+                    }
+
                     objectFactory =
                         OpenPGPImplementation.getInstance()
                             .pgpObjectFactory(PGPUtil.getDecoderStream(next.dataStream))
