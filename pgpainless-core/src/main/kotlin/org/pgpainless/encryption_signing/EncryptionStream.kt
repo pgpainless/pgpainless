@@ -9,6 +9,7 @@ import java.io.IOException
 import java.io.OutputStream
 import org.bouncycastle.bcpg.ArmoredOutputStream
 import org.bouncycastle.bcpg.BCPGOutputStream
+import org.bouncycastle.bcpg.PacketFormat
 import org.bouncycastle.openpgp.PGPCompressedDataGenerator
 import org.bouncycastle.openpgp.PGPEncryptedDataGenerator
 import org.bouncycastle.openpgp.PGPException
@@ -100,6 +101,7 @@ class EncryptionStream(
             }
         }
 
+        outermostStream = BCPGOutputStream(outermostStream, PacketFormat.CURRENT)
         publicKeyEncryptedStream =
             encryptedDataGenerator.open(outermostStream, ByteArray(BUFFER_SIZE)).also { stream ->
                 outermostStream = stream
@@ -114,15 +116,15 @@ class EncryptionStream(
             if (it == CompressionAlgorithm.UNCOMPRESSED) return
 
             basicCompressionStream =
-                BCPGOutputStream(compressedDataGenerator!!.open(outermostStream)).also { stream ->
-                    outermostStream = stream
-                }
+                BCPGOutputStream(
+                    compressedDataGenerator!!.open(outermostStream), PacketFormat.CURRENT)
+            outermostStream = basicCompressionStream!!
         }
     }
 
     @Throws(IOException::class, PGPException::class)
     private fun prepareOnePassSignatures() {
-        signatureLayerStream = outermostStream
+        signatureLayerStream = BCPGOutputStream(outermostStream, PacketFormat.CURRENT)
         if (options.signingOptions == null) {
             return
         }
@@ -133,7 +135,9 @@ class EncryptionStream(
             if (!method.isDetached) {
                 // The last sig is not nested, all others are
                 val nested = index + 1 < options.signingOptions.signingMethods.size
-                method.signatureGenerator.generateOnePassVersion(nested).encode(outermostStream)
+                method.signatureGenerator
+                    .generateOnePassVersion(nested)
+                    .encode(signatureLayerStream)
             }
         }
     }
