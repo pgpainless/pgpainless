@@ -703,7 +703,7 @@ class OpenPgpMessageInputStream(
         }
         if (options.isVerifyIntendedRecipients()) {
             if (layerMetadata is EncryptedData) {
-                layerMetadata.decryptionKey?.keyIdentifier?.let {
+                layerMetadata.decryptionKey?.certificateIdentifier?.let {
                     layerMetadata.invalidateSignaturesWithMismatchingIntendedRecipient(it)
                 }
             }
