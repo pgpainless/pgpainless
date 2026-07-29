@@ -5,6 +5,9 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
+## 2.0.5-SNAPSHOT
+- Properly compare IntendedRecipientFingerprint to recipient certificate fingerprint
+
 ## 2.0.4
 - Bump `checkstyle` tool version to `10.26.1`
 - Fix PGPainless silently dropping trailing `0xFF` octet (Thanks to @byteoverride for the report, suggested fix and regression test!)
