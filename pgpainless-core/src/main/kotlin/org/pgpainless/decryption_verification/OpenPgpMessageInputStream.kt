@@ -703,8 +703,14 @@ class OpenPgpMessageInputStream(
         }
         if (options.isVerifyIntendedRecipients()) {
             if (layerMetadata is EncryptedData) {
-                layerMetadata.decryptionKey?.certificateIdentifier?.let {
-                    layerMetadata.invalidateSignaturesWithMismatchingIntendedRecipient(it)
+                if (layerMetadata.decryptionKey != null) {
+                    layerMetadata.decryptionKey!!.certificateIdentifier.let {
+                        layerMetadata.invalidateSignaturesWithMismatchingIntendedRecipient(it)
+                    }
+                } else if (layerMetadata.sessionKey?.equals(options.getSessionKey()) ?: false) {
+                    options.getSessionKeyDecryptionExpectedRecipient()?.let {
+                        layerMetadata.invalidateSignaturesWithMismatchingIntendedRecipient(it)
+                    }
                 }
             }
         }

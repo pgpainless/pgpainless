@@ -38,6 +38,8 @@ class ConsumerOptions(private val api: PGPainless) {
     private var missingCertificateCallback: OpenPGPCertificateProvider? = null
 
     private var sessionKey: SessionKey? = null
+    // expected Intended Recipient Fingerprint for decryption with session-key
+    private var sessionKeyExpectedIRF: KeyIdentifier? = null
     private val customDecryptorFactories =
         mutableMapOf<SubkeyIdentifier, PublicKeyDataDecryptorFactory>()
     private val decryptionKeys = mutableMapOf<OpenPGPKey, SecretKeyRingProtector>()
@@ -173,16 +175,51 @@ class ConsumerOptions(private val api: PGPainless) {
     /**
      * Attempt decryption using a session key.
      *
-     * Note: PGPainless does not yet support decryption with session keys.
-     *
      * See [RFC4880 on Session Keys](https://datatracker.ietf.org/doc/html/rfc4880#section-2.1)
      *
      * @param sessionKey session key
      * @return options
      */
+    @Deprecated(
+        "Additionally pass in the expected recipient certificate or primary key identifier too")
     fun setSessionKey(sessionKey: SessionKey) = apply { this.sessionKey = sessionKey }
 
+    /**
+     * Attempt decryption using a session key. If the message contains a signature with one or more
+     * IntendedRecipientFingerprint subpackets, the signature will be rejected if no subpacket
+     * matching the [expectedRecipientCertificate] is found.
+     *
+     * See [RFC4880 on Session Keys](https://datatracker.ietf.org/doc/html/rfc4880#section-2.1)
+     *
+     * @param sessionKey session key
+     * @param expectedRecipientCertificate expected recipient certificate
+     * @return options
+     */
+    fun setSessionKey(sessionKey: SessionKey, expectedRecipientCertificate: OpenPGPCertificate) =
+        setSessionKey(sessionKey, expectedRecipientCertificate.primaryKey.keyIdentifier)
+
+    /**
+     * Attempt decryption using a session key. If the message contains a signature with one or more
+     * IntendedRecipientFingerprint subpackets, the signature will be rejected if no subpacket
+     * matching the [expectedRecipientFingerprint] is found.
+     *
+     * See [RFC4880 on Session Keys](https://datatracker.ietf.org/doc/html/rfc4880#section-2.1)
+     *
+     * @param sessionKey session key
+     * @param expectedRecipientFingerprint expected recipient certificate fingerprint
+     * @return options
+     */
+    fun setSessionKey(sessionKey: SessionKey, expectedRecipientFingerprint: KeyIdentifier) = apply {
+        require(!expectedRecipientFingerprint.isWildcard) {
+            "Key identifier MUST NOT be a wildcard."
+        }
+        this.sessionKey = sessionKey
+        this.sessionKeyExpectedIRF = expectedRecipientFingerprint
+    }
+
     fun getSessionKey() = sessionKey
+
+    fun getSessionKeyDecryptionExpectedRecipient() = sessionKeyExpectedIRF
 
     @JvmOverloads
     fun addDecryptionKey(
