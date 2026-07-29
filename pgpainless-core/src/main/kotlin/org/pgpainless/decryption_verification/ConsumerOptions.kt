@@ -177,6 +177,11 @@ class ConsumerOptions(private val api: PGPainless) {
      *
      * See [RFC4880 on Session Keys](https://datatracker.ietf.org/doc/html/rfc4880#section-2.1)
      *
+     * Note: Decrypting a message with this method will not reject signatures containing
+     * IntendedRecipientFingerprint subpackets. If you want to verify IRF subpackets, use any of the
+     * [setSessionKey] methods that take a second argument and pass in your recipient primary key
+     * identifier or certificate.
+     *
      * @param sessionKey session key
      * @return options
      */
