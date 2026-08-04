@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.exception.WrongPassphraseException;
 import org.pgpainless.key.protection.UnlockSecretKey;
+import org.pgpainless.policy.Policy;
 import org.pgpainless.util.Passphrase;
 
 public class ModifyStrippedKeyTest {
@@ -45,6 +46,7 @@ public class ModifyStrippedKeyTest {
                         "-----END PGP PRIVATE KEY BLOCK-----\n";
 
         PGPainless api = PGPainless.getInstance();
+        Policy policy = api.getAlgorithmPolicy();
 
         strippedKey = api.readKey().parseKey(strippedKeyString);
 
@@ -60,9 +62,9 @@ public class ModifyStrippedKeyTest {
         // encryption key can now only be unlocked using the new passphrase
         assertThrows(WrongPassphraseException.class, () ->
                 UnlockSecretKey.unlockSecretKey(
-                        strippedKey.getSecretKey(encryptionSubkeyId).getPGPSecretKey(), Passphrase.fromPassword("12345678")));
+                        strippedKey.getSecretKey(encryptionSubkeyId).getPGPSecretKey(), Passphrase.fromPassword("12345678"), policy));
         UnlockSecretKey.unlockSecretKey(
-                strippedKey.getSecretKey(encryptionSubkeyId).getPGPSecretKey(), Passphrase.fromPassword("asdfghjk"));
+                strippedKey.getSecretKey(encryptionSubkeyId).getPGPSecretKey(), Passphrase.fromPassword("asdfghjk"), policy);
     }
 
 }
