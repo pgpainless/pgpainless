@@ -27,14 +27,15 @@ public class MultiPassphraseSymmetricEncryptionTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void encryptDecryptWithMultiplePassphrases() throws IOException, PGPException {
+        PGPainless api = new PGPainless();
         String message = "Here we test if during decryption of a message that was encrypted with two passphrases, " +
                 "the decryptor finds the session key encrypted for the right passphrase.";
         ByteArrayInputStream plaintextIn = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
         ByteArrayOutputStream ciphertextOut = new ByteArrayOutputStream();
-        EncryptionStream encryptor = PGPainless.getInstance().generateMessage()
+        EncryptionStream encryptor = api.generateMessage()
                 .onOutputStream(ciphertextOut)
                 .withOptions(ProducerOptions.encrypt(
-                        EncryptionOptions.encryptCommunications()
+                        EncryptionOptions.encryptCommunications(api)
                         .addMessagePassphrase(Passphrase.fromPassword("p1"))
                         .addMessagePassphrase(Passphrase.fromPassword("p2"))
                 ).setAsciiArmor(false));
@@ -46,9 +47,9 @@ public class MultiPassphraseSymmetricEncryptionTest {
 
         // decrypting the p1 package with p2 first will not work. Test if it is handled correctly.
         for (Passphrase passphrase : new Passphrase[] {Passphrase.fromPassword("p2"), Passphrase.fromPassword("p1")}) {
-            DecryptionStream decryptor = PGPainless.getInstance().processMessage()
+            DecryptionStream decryptor = api.processMessage()
                     .onInputStream(new ByteArrayInputStream(ciphertext))
-                    .withOptions(ConsumerOptions.get()
+                    .withOptions(ConsumerOptions.get(api)
                     .addMessagePassphrase(passphrase));
 
             ByteArrayOutputStream plaintextOut = new ByteArrayOutputStream();
