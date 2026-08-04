@@ -286,9 +286,8 @@ public class CarolKeySignEncryptRoundtripTest {
                         .withPublicKeyAlgorithmPolicy(Policy.PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy())
                         .build()
         );
-        PGPainless.setInstance(relaxedAPI);
 
-        SOPImpl sop = new SOPImpl();
+        SOPImpl sop = new SOPImpl(relaxedAPI);
         byte[] msg = "Hello, World!\n".getBytes();
         ReadyWithResult<EncryptionResult> encryption = sop.encrypt()
                 .signWith(CAROL_KEY.getBytes())
@@ -308,6 +307,5 @@ public class CarolKeySignEncryptRoundtripTest {
                 .hasSingleItem()
                 .issuedBy("71FFDA004409E5DDB0C3E8F19BA789DC76D6849A", "71FFDA004409E5DDB0C3E8F19BA789DC76D6849A");
 
-        PGPainless.setInstance(strictAPI);
     }
 }

@@ -6,6 +6,7 @@ package sop.testsuite.pgpainless.operation;
 
 import org.pgpainless.PGPainless;
 import org.pgpainless.policy.Policy;
+import org.pgpainless.sop.SOPImpl;
 import sop.SOP;
 import sop.testsuite.operation.EncryptDecryptTest;
 
@@ -23,11 +24,8 @@ public class PGPainlessEncryptDecryptTest extends EncryptDecryptTest {
                 strictAPI.getAlgorithmPolicy().copy()
                         .withPublicKeyAlgorithmPolicy(Policy.PublicKeyAlgorithmPolicy.bsi2021PublicKeyAlgorithmPolicy())
                         .build());
-        PGPainless.setInstance(relaxedAPI);
-
-        super.encryptDecryptRoundTripCarolTest(sop);
-
-        PGPainless.setInstance(strictAPI);
+        SOPImpl impl = new SOPImpl(relaxedAPI);
+        super.encryptDecryptRoundTripCarolTest(impl);
     }
 
 }
