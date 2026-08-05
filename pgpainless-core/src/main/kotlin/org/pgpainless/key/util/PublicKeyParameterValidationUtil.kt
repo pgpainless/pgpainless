@@ -9,9 +9,11 @@ import java.io.IOException
 import java.math.BigInteger
 import java.security.SecureRandom
 import org.bouncycastle.bcpg.*
+import org.bouncycastle.crypto.params.Ed25519PublicKeyParameters
 import org.bouncycastle.openpgp.*
 import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.util.Arrays
+import org.bouncycastle.util.BigIntegers
 import org.bouncycastle.util.io.Streams
 import org.pgpainless.algorithm.SignatureType
 import org.pgpainless.bouncycastle.extensions.publicKeyAlgorithm
@@ -92,8 +94,14 @@ class PublicKeyParameterValidationUtil {
             secretKey: EdSecretBCPGKey,
             publicKey: EdDSAPublicBCPGKey
         ): Boolean {
-            // TODO: Implement
-            return true
+            val pointBytes = BigIntegers.asUnsignedByteArray(publicKey.encodedPoint)
+            return try {
+                // legacy EdDSA is only defined for Ed25519
+                Ed25519PublicKeyParameters(pointBytes, 1)
+                true
+            } catch (e: Exception) {
+                throw KeyIntegrityException(e)
+            }
         }
 
         @JvmStatic
