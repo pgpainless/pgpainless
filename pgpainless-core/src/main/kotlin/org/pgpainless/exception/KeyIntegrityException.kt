@@ -10,4 +10,8 @@ import java.lang.AssertionError
  * This exception gets thrown, when the integrity of an OpenPGP key is broken. That could happen on
  * accident, or during an active attack, so take this exception seriously.
  */
-class KeyIntegrityException : AssertionError("Key Integrity Exception")
+class KeyIntegrityException(message: String, e: Exception?) : AssertionError(message, e) {
+    constructor(e: Exception) : this("Key Integrity Exception", e)
+
+    constructor() : this("Key Integrity Exception", null)
+}
