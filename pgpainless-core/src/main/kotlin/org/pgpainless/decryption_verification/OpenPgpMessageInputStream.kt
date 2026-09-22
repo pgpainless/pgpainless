@@ -405,8 +405,16 @@ class OpenPgpMessageInputStream(
         }
 
         // try passwords
-        for (passphrase in options.getDecryptionPassphrases()) {
+        var symmetricAttempts = 0
+        skesk@ for (passphrase in options.getDecryptionPassphrases()) {
             for (skesk in esks.skesks) {
+                if (options.getMaxSymmetricDecryptionAttempts() in 1..<symmetricAttempts)
+                {
+                    LOGGER.debug("Abort message decryption using passphrase: Limit of attempts exceeded.")
+                    break@skesk
+                }
+
+                symmetricAttempts++
                 LOGGER.debug("Attempt decryption with provided passphrase")
 
                 if (decryptSKESKAndStream(esks, skesk, passphrase)) {
@@ -490,12 +498,12 @@ class OpenPgpMessageInputStream(
     ): EncryptedData {
         try {
             val encryptedData = esksAndData.toEncryptedData(sessionKey, layerMetadata.depth + 1)
-            throwIfUnacceptable(encryptedData.mechanism)
             val decryptorFactory =
                 api.implementation.sessionKeyDataDecryptorFactory(
                     PGPSessionKey(sessionKey.algorithm.algorithmId, sessionKey.key))
             val esk = esksAndData.toSessionKeyEncryptedData()
             val decrypted = esk.getDataStream(decryptorFactory)
+            throwIfUnacceptable(encryptedData.mechanism)
             encryptedData.sessionKey = sessionKey
             encryptedData.addRecipients(
                 esksAndData.pkesks.plus(esksAndData.anonPkesks).map { it.keyIdentifier })

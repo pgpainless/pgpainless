@@ -49,6 +49,14 @@ class ConsumerOptions(private val api: PGPainless) {
     private var allowDecryptionWithNonEncryptionKey: Boolean = false
 
     /**
+     * Maximum number of decryption attempts using a message passphrase before giving up on
+     * symmetric message decryption.
+     *
+     * Set to a number less or equal to 0 to remove the limit.
+     */
+    private var maxAttemptsSymmetricDecryption: Int = 16
+
+    /**
      * Consider signatures on the message made before the given timestamp invalid. Null means no
      * limitation.
      *
@@ -312,6 +320,12 @@ class ConsumerOptions(private val api: PGPainless) {
      * @return decryption passphrases
      */
     fun getDecryptionPassphrases(): Set<Passphrase> = decryptionPassphrases.toSet()
+
+    fun getMaxSymmetricDecryptionAttempts(): Int = maxAttemptsSymmetricDecryption
+
+    fun setMaxSymmetricDecryptionAttempts(maxAttempts: Int) = apply {
+        maxAttemptsSymmetricDecryption = if (maxAttempts < 1) 0 else maxAttempts
+    }
 
     /**
      * Return an object holding available certificates for signature verification.
