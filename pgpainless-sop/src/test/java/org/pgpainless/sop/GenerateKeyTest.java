@@ -26,7 +26,6 @@ import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.util.Passphrase;
 import sop.SOP;
 import sop.exception.SOPGPException;
-import sop.operation.GenerateKey;
 
 public class GenerateKeyTest {
 
@@ -135,8 +134,6 @@ public class GenerateKeyTest {
                 .userId("Alice <alice@example.org>")
                 .generate()
                 .getBytes();
-
-        System.out.println(new String(keyBytes));
 
         OpenPGPKey key = PGPainless.getInstance().readKey().parseKey(keyBytes);
         assertNotNull(key.getPrimaryKey().getLatestDirectKeySelfSignature(),
