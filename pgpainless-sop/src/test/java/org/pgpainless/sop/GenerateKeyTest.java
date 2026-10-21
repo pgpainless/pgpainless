@@ -26,6 +26,7 @@ import org.pgpainless.key.protection.UnlockSecretKey;
 import org.pgpainless.util.Passphrase;
 import sop.SOP;
 import sop.exception.SOPGPException;
+import sop.operation.GenerateKey;
 
 public class GenerateKeyTest {
 
@@ -125,5 +126,20 @@ public class GenerateKeyTest {
 
         OpenPGPKey key = PGPainless.getInstance().readKey().parseKey(keyBytes);
         assertTrue(key.getValidUserIds().get(0).getUserId().equals("Foo\n\nBar"));
+    }
+
+    @Test
+    public void generateV6KeyCarriesDirectKeySignature() throws IOException {
+        byte[] keyBytes = sop.generateKey()
+                .profile(GenerateKeyImpl.RFC9580_CURVE25519_PROFILE)
+                .userId("Alice <alice@example.org>")
+                .generate()
+                .getBytes();
+
+        System.out.println(new String(keyBytes));
+
+        OpenPGPKey key = PGPainless.getInstance().readKey().parseKey(keyBytes);
+        assertNotNull(key.getPrimaryKey().getLatestDirectKeySelfSignature(),
+                "Expected Direct-Key self-signature on v6-key.");
     }
 }
