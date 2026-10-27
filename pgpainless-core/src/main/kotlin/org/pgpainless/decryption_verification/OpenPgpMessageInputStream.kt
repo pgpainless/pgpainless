@@ -5,7 +5,6 @@
 package org.pgpainless.decryption_verification
 
 import java.io.EOFException
-import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.zip.Inflater
@@ -626,12 +625,7 @@ class OpenPgpMessageInputStream(
             return -1
         }
 
-        val r: Int =
-            try {
-                nestedInputStream!!.read()
-            } catch (e: IOException) {
-                -1
-            }
+        val r: Int = nestedInputStream!!.read()
         if (r != -1) {
             signatures.updateLiteral(r.toByte())
         } else {
