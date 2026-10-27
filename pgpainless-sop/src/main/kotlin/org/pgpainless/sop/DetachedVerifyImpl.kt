@@ -27,6 +27,10 @@ class DetachedVerifyImpl(private val api: PGPainless) : DetachedVerify {
     }
 
     override fun data(data: InputStream): List<Verification> {
+        if (options.getCertificateSource().getExplicitCertificates().isEmpty()) {
+            throw SOPGPException.MissingArg("No CERTS supplied.")
+        }
+
         try {
             val verificationStream = api.processMessage().onInputStream(data).withOptions(options)
 
@@ -37,8 +41,7 @@ class DetachedVerifyImpl(private val api: PGPainless) : DetachedVerify {
             val verifications =
                 result.verifiedDetachedSignatures.map { VerificationHelper.mapVerification(it) }
 
-            if (options.getCertificateSource().getExplicitCertificates().isNotEmpty() &&
-                verifications.isEmpty()) {
+            if (verifications.isEmpty()) {
                 throw SOPGPException.NoSignature()
             }
 

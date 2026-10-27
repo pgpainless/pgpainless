@@ -28,6 +28,10 @@ class InlineVerifyImpl(private val api: PGPainless) : InlineVerify {
     }
 
     override fun data(data: InputStream): ReadyWithResult<List<Verification>> {
+        if (options.getCertificateSource().getExplicitCertificates().isEmpty()) {
+            throw SOPGPException.MissingArg("No CERTS supplied.")
+        }
+
         return object : ReadyWithResult<List<Verification>>() {
             override fun writeTo(outputStream: OutputStream): List<Verification> {
                 try {
@@ -46,8 +50,7 @@ class InlineVerifyImpl(private val api: PGPainless) : InlineVerify {
                             }
                             .map { VerificationHelper.mapVerification(it) }
 
-                    if (options.getCertificateSource().getExplicitCertificates().isNotEmpty() &&
-                        verifications.isEmpty()) {
+                    if (verifications.isEmpty()) {
                         throw SOPGPException.NoSignature()
                     }
 
