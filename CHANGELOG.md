@@ -7,6 +7,13 @@ SPDX-License-Identifier: CC0-1.0
 
 ## 2.0.5-SNAPSHOT
 - Properly compare IntendedRecipientFingerprint to recipient certificate fingerprint
+- Do not silently swallow exceptions in `OpenPGPMessageInputStream.read()`
+- `sop inline-verify / sop verify`: Require `CERTS` argument
+- Generate keys with `direct-key` signature by default
+- Implement legacy Ed25519 public key parameter validation
+- Bump `logback` to `1.5.34`
+- Remove unused unsafe `OpenPGPSecretKey.unlock()` extension function
+- Document reason for deprecation of plain `setSessionKey(sk)` method
 
 ## 2.0.4
 - Bump `checkstyle` tool version to `10.26.1`
