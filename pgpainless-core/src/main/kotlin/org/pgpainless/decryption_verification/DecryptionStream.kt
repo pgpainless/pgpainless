@@ -13,6 +13,10 @@ abstract class DecryptionStream : InputStream() {
 
     /**
      * Return [MessageMetadata] about the decrypted / verified message.
+     * Note: The metadata only applies to the output of this [DecryptionStream]!
+     * That means, signatures that are reported as valid only apply to the data
+     * that is emitted by the stream, which is not necessarily the data that you passed
+     * into the stream as input.
      *
      * @return message metadata
      */
