@@ -30,6 +30,7 @@ import org.pgpainless.decryption_verification.DecryptionBuilder
 import org.pgpainless.decryption_verification.DecryptionStream
 import org.pgpainless.decryption_verification.MessageMetadata
 import org.pgpainless.encryption_signing.EncryptionBuilder
+import org.pgpainless.encryption_signing.SignatureReader
 import org.pgpainless.key.certification.CertifyCertificate
 import org.pgpainless.key.generation.KeyRingBuilder
 import org.pgpainless.key.generation.KeyRingTemplates
@@ -186,6 +187,9 @@ class PGPainless(
      * @return [OpenPGPKeyReader] api
      */
     fun readKey(): OpenPGPKeyReader = api.readKeyOrCertificate()
+
+    /** Parse [PGPSignature] material from binary or ascii armored encoding. */
+    fun readSignatures(): SignatureReader = SignatureReader()
 
     /**
      * Convert a [PGPSecretKeyRing] into an [OpenPGPKey].
