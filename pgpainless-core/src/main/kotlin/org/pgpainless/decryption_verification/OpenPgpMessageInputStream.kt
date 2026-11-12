@@ -292,6 +292,10 @@ class OpenPgpMessageInputStream(
                     }
                 }
             else -> compressedData.dataStream
+        }.let {
+            // Prevent ZIP bombs by capping decompression size
+            if (api.algorithmPolicy.maxDecompressedDataSize == null) it
+            else LimitedInputStream(it, api.algorithmPolicy.maxDecompressedDataSize)
         }
     }
 

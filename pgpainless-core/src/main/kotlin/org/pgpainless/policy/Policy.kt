@@ -33,7 +33,8 @@ class Policy(
     val keyProtectionSettings: KeyRingProtectionSettings =
         KeyRingProtectionSettings.secureDefaultSettings(),
     val notationRegistry: NotationRegistry = NotationRegistry(),
-    val keyGenerationAlgorithmSuite: AlgorithmSuite = AlgorithmSuite.defaultAlgorithmSuite
+    val keyGenerationAlgorithmSuite: AlgorithmSuite = AlgorithmSuite.defaultAlgorithmSuite,
+    val maxDecompressedDataSize: Long? = 32 * 1024 * 1024
 ) {
 
     @Deprecated(
@@ -615,6 +616,7 @@ class Policy(
         private var keyProtectionSettings: KeyRingProtectionSettings = origin.keyProtectionSettings
         private var notationRegistry: NotationRegistry = origin.notationRegistry
         private var keyGenerationAlgorithmSuite: AlgorithmSuite = origin.keyGenerationAlgorithmSuite
+        private var maxDecompressedDataSize: Long? = origin.maxDecompressedDataSize
 
         fun withCertificationSignatureHashAlgorithmPolicy(
             certificationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy
@@ -687,6 +689,10 @@ class Policy(
             this.keyGenerationAlgorithmSuite = keyGenerationAlgorithmSuite
         }
 
+        fun withMaxDecompressedDataSize(maxDecompressedDataSize: Long?) = apply {
+            this.maxDecompressedDataSize = maxDecompressedDataSize
+        }
+
         fun build() =
             Policy(
                     certificationSignatureHashAlgorithmPolicy,
@@ -699,7 +705,8 @@ class Policy(
                     featurePolicy,
                     keyProtectionSettings,
                     notationRegistry,
-                    keyGenerationAlgorithmSuite)
+                    keyGenerationAlgorithmSuite,
+                    maxDecompressedDataSize)
                 .apply { enableKeyParameterValidation = origin.enableKeyParameterValidation }
     }
 
