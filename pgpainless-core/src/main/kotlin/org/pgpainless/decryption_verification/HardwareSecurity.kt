@@ -9,6 +9,7 @@ import org.bouncycastle.bcpg.AEADEncDataPacket
 import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.bcpg.SymmetricEncIntegrityPacket
 import org.bouncycastle.openpgp.PGPException
+import org.bouncycastle.openpgp.PGPPrivateKey
 import org.bouncycastle.openpgp.PGPSessionKey
 import org.bouncycastle.openpgp.operator.PGPDataDecryptor
 import org.bouncycastle.openpgp.operator.PublicKeyDataDecryptorFactory
@@ -78,7 +79,8 @@ class HardwareSecurity {
     ) : CustomPublicKeyDataDecryptorFactory() {
 
         // luckily we can instantiate the BcPublicKeyDataDecryptorFactory with null as argument.
-        private val factory: PublicKeyDataDecryptorFactory = BcPublicKeyDataDecryptorFactory(null)
+        private val factory: PublicKeyDataDecryptorFactory =
+            BcPublicKeyDataDecryptorFactory(null as PGPPrivateKey?)
 
         override fun createDataDecryptor(
             withIntegrityPacket: Boolean,
