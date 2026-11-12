@@ -393,7 +393,7 @@ class OpenPgpMessageInputStream(
             val sk = options.getSessionKey()!!
             LOGGER.debug("Attempt decryption with provided session key.")
             try {
-                decryptWithSessionKey(esks, sk)
+                decryptWithSessionKey(esks, sk, true)
                 return true
             } catch (e: PGPException) {
                 // Session key mismatch?
@@ -485,7 +485,8 @@ class OpenPgpMessageInputStream(
 
     private fun decryptWithSessionKey(
         esksAndData: ESKsAndData,
-        sessionKey: SessionKey
+        sessionKey: SessionKey,
+        quickCheck: Boolean
     ): EncryptedData {
         try {
             val encryptedData = esksAndData.toEncryptedData(sessionKey, layerMetadata.depth + 1)
@@ -493,7 +494,7 @@ class OpenPgpMessageInputStream(
             val decryptorFactory =
                 api.implementation.sessionKeyDataDecryptorFactory(
                     PGPSessionKey(sessionKey.algorithm.algorithmId, sessionKey.key))
-            val esk = esksAndData.toSessionKeyEncryptedData()
+            val esk = esksAndData.toSessionKeyEncryptedData(quickCheck)
             val decrypted = esk.getDataStream(decryptorFactory)
             encryptedData.sessionKey = sessionKey
             encryptedData.addRecipients(
@@ -578,7 +579,7 @@ class OpenPgpMessageInputStream(
         try {
             val decryptorFactory = api.implementation.pbeDataDecryptorFactory(passphrase.getChars())
             val sessionKey = SessionKey(skesk.getSessionKey(decryptorFactory))
-            val decrypted = decryptWithSessionKey(esks, sessionKey)
+            val decrypted = decryptWithSessionKey(esks, sessionKey, true)
             decrypted.decryptionPassphrase = passphrase
             LOGGER.debug("Successfully decrypted data with passphrase")
             return true
@@ -602,7 +603,7 @@ class OpenPgpMessageInputStream(
     ): Boolean {
         try {
             val sessionKey = SessionKey(pkesk.getSessionKey(decryptorFactory))
-            val decrypted = decryptWithSessionKey(esks, sessionKey)
+            val decrypted = decryptWithSessionKey(esks, sessionKey, false)
             decrypted.decryptionKey = decryptionKeyId
             LOGGER.debug("Successfully decrypted data with key $decryptionKeyId")
             return true
@@ -776,8 +777,10 @@ class OpenPgpMessageInputStream(
 
     private class ESKsAndData(private val esks: PGPEncryptedDataList) {
 
-        fun toSessionKeyEncryptedData(): PGPSessionKeyEncryptedData =
-            esks.extractSessionKeyEncryptedData()
+        fun toSessionKeyEncryptedData(
+            passwordDerivedSessionKey: Boolean
+        ): PGPSessionKeyEncryptedData =
+            esks.extractSessionKeyEncryptedData(passwordDerivedSessionKey)
 
         fun toEncryptedData(sk: SessionKey, depth: Int): EncryptedData {
             return when (EncryptedDataPacketType.of(esks)!!) {
