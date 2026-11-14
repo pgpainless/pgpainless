@@ -13,6 +13,7 @@ import org.pgpainless.util.ArmorUtils
  * This class describes a logic of handling a collection of different [PGPKeyRing]. The logic was
  * inspired by [PGPSecretKeyRingCollection] and [PGPPublicKeyRingCollection].
  */
+@Deprecated("Use of this class is discouraged.")
 class PGPKeyRingCollection(
     val pgpSecretKeyRingCollection: PGPSecretKeyRingCollection,
     val pgpPublicKeyRingCollection: PGPPublicKeyRingCollection
@@ -41,9 +42,6 @@ class PGPKeyRingCollection(
         get() = pgpSecretKeyRingCollection.size() + pgpPublicKeyRingCollection.size()
 
     fun size() = size
-
-    @Deprecated("Wrong case of PGP -> Pgp", ReplaceWith("getPgpSecretKeyRingCollection()"))
-    fun getPGPSecretKeyRingCollection() = pgpSecretKeyRingCollection
 
     companion object {
         @JvmStatic

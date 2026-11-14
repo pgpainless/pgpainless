@@ -338,13 +338,13 @@ public class OpenPgpMessageInputStreamTest {
     @ParameterizedTest(name = "Process LIT using {0}")
     @MethodSource("provideMessageProcessors")
     void testProcessLIT(Processor processor) throws IOException, PGPException {
-        Result result = processor.process(LIT, ConsumerOptions.get());
+        Result result = processor.process(LIT, ConsumerOptions.get(api));
         String plain = result.plaintext;
         assertEquals(PLAINTEXT, plain);
 
         MessageMetadata metadata = result.metadata;
         assertNull(metadata.getCompressionAlgorithm());
-        assertNull(metadata.getEncryptionAlgorithm());
+        assertNull(metadata.getEncryptionMechanism());
         assertEquals("", metadata.getFilename());
         JUtils.assertDateEquals(new Date(0L), metadata.getModificationDate());
         assertEquals(StreamEncoding.BINARY, metadata.getLiteralDataEncoding());
@@ -356,14 +356,14 @@ public class OpenPgpMessageInputStreamTest {
     @MethodSource("provideMessageProcessors")
     void testProcessLIT_LIT_fails(Processor processor) {
         assertThrows(MalformedOpenPgpMessageException.class,
-                () -> processor.process(LIT_LIT, ConsumerOptions.get()));
+                () -> processor.process(LIT_LIT, ConsumerOptions.get(api)));
     }
 
     @ParameterizedTest(name = "Process COMP(LIT) using {0}")
     @MethodSource("provideMessageProcessors")
     void testProcessCOMP_LIT(Processor processor)
             throws PGPException, IOException {
-        Result result = processor.process(COMP_LIT, ConsumerOptions.get());
+        Result result = processor.process(COMP_LIT, ConsumerOptions.get(api));
         String plain = result.plaintext;
         assertEquals(PLAINTEXT, plain);
         MessageMetadata metadata = result.metadata;
@@ -376,14 +376,14 @@ public class OpenPgpMessageInputStreamTest {
     @MethodSource("provideMessageProcessors")
     void testProcessCOMP_fails(Processor processor) {
         assertThrows(MalformedOpenPgpMessageException.class,
-                () -> processor.process(COMP, ConsumerOptions.get()));
+                () -> processor.process(COMP, ConsumerOptions.get(api)));
     }
 
     @ParameterizedTest(name = "Process COMP(COMP(LIT)) using {0}")
     @MethodSource("provideMessageProcessors")
     void testProcessCOMP_COMP_LIT(Processor processor)
             throws PGPException, IOException {
-        Result result = processor.process(COMP_COMP_LIT, ConsumerOptions.get());
+        Result result = processor.process(COMP_COMP_LIT, ConsumerOptions.get(api));
         String plain = result.plaintext;
         assertEquals(PLAINTEXT, plain);
         MessageMetadata metadata = result.metadata;
@@ -392,7 +392,7 @@ public class OpenPgpMessageInputStreamTest {
         assertEquals(CompressionAlgorithm.ZIP, compressionAlgorithms.next());
         assertEquals(CompressionAlgorithm.BZIP2, compressionAlgorithms.next());
         assertFalse(compressionAlgorithms.hasNext());
-        assertNull(metadata.getEncryptionAlgorithm());
+        assertNull(metadata.getEncryptionMechanism());
         assertTrue(metadata.getVerifiedInlineSignatures().isEmpty());
         assertTrue(metadata.getRejectedInlineSignatures().isEmpty());
     }
@@ -404,13 +404,13 @@ public class OpenPgpMessageInputStreamTest {
         OpenPGPKey key = api.readKey().parseKey(KEY);
         OpenPGPCertificate cert = key.toCertificate();
 
-        Result result = processor.process(SIG_COMP_LIT, ConsumerOptions.get()
+        Result result = processor.process(SIG_COMP_LIT, ConsumerOptions.get(api)
                 .addVerificationCert(cert));
         String plain = result.plaintext;
         assertEquals(PLAINTEXT, plain);
         MessageMetadata metadata = result.metadata;
         assertEquals(CompressionAlgorithm.ZIP, metadata.getCompressionAlgorithm());
-        assertNull(metadata.getEncryptionAlgorithm());
+        assertNull(metadata.getEncryptionMechanism());
         assertFalse(metadata.getVerifiedInlineSignatures().isEmpty());
         assertTrue(metadata.getRejectedInlineSignatures().isEmpty());
     }
@@ -419,13 +419,13 @@ public class OpenPgpMessageInputStreamTest {
     @MethodSource("provideMessageProcessors")
     void testProcessSENC_LIT(Processor processor)
             throws PGPException, IOException {
-        Result result = processor.process(SENC_LIT, ConsumerOptions.get()
+        Result result = processor.process(SENC_LIT, ConsumerOptions.get(api)
                 .addMessagePassphrase(Passphrase.fromPassword(PASSPHRASE)));
         String plain = result.plaintext;
         assertEquals(PLAINTEXT, plain);
         MessageMetadata metadata = result.metadata;
         assertNull(metadata.getCompressionAlgorithm());
-        assertEquals(SymmetricKeyAlgorithm.AES_256, metadata.getEncryptionAlgorithm());
+        assertEquals(SymmetricKeyAlgorithm.AES_256.getAlgorithmId(), metadata.getEncryptionMechanism().getSymmetricKeyAlgorithm());
         assertTrue(metadata.getVerifiedInlineSignatures().isEmpty());
         assertTrue(metadata.getRejectedInlineSignatures().isEmpty());
     }
@@ -441,7 +441,7 @@ public class OpenPgpMessageInputStreamTest {
         assertEquals(PLAINTEXT, plain);
         MessageMetadata metadata = result.metadata;
         assertEquals(CompressionAlgorithm.ZLIB, metadata.getCompressionAlgorithm());
-        assertEquals(SymmetricKeyAlgorithm.AES_256, metadata.getEncryptionAlgorithm());
+        assertEquals(SymmetricKeyAlgorithm.AES_256.getAlgorithmId(), metadata.getEncryptionMechanism().getSymmetricKeyAlgorithm());
         assertTrue(metadata.getVerifiedInlineSignatures().isEmpty());
         assertTrue(metadata.getRejectedInlineSignatures().isEmpty());
     }
@@ -452,12 +452,12 @@ public class OpenPgpMessageInputStreamTest {
             throws IOException, PGPException {
         OpenPGPKey key = api.readKey().parseKey(KEY);
         OpenPGPCertificate cert = key.toCertificate();
-        Result result = processor.process(OPS_LIT_SIG, ConsumerOptions.get()
+        Result result = processor.process(OPS_LIT_SIG, ConsumerOptions.get(api)
                 .addVerificationCert(cert));
         String plain = result.plaintext;
         assertEquals(PLAINTEXT, plain);
         MessageMetadata metadata = result.metadata;
-        assertNull(metadata.getEncryptionAlgorithm());
+        assertNull(metadata.getEncryptionMechanism());
         assertNull(metadata.getCompressionAlgorithm());
         assertFalse(metadata.getVerifiedInlineSignatures().isEmpty());
         assertTrue(metadata.getRejectedInlineSignatures().isEmpty());
@@ -594,7 +594,7 @@ public class OpenPgpMessageInputStreamTest {
         String plain = result.plaintext;
         assertEquals("encrypt ∘ sign ∘ sign", plain);
         MessageMetadata metadata = result.metadata;
-        assertEquals(SymmetricKeyAlgorithm.AES_256, metadata.getEncryptionAlgorithm());
+        assertEquals(SymmetricKeyAlgorithm.AES_256.getAlgorithmId(), metadata.getEncryptionMechanism().getSymmetricKeyAlgorithm());
         assertNull(metadata.getCompressionAlgorithm());
         assertFalse(metadata.getVerifiedInlineSignatures().isEmpty());
         assertTrue(metadata.getRejectedInlineSignatures().isEmpty());
@@ -659,7 +659,7 @@ public class OpenPgpMessageInputStreamTest {
         String plain = result.plaintext;
         assertEquals("encrypt ∘ sign ∘ sign ∘ sign", plain);
         MessageMetadata metadata = result.metadata;
-        assertEquals(SymmetricKeyAlgorithm.AES_256, metadata.getEncryptionAlgorithm());
+        assertEquals(SymmetricKeyAlgorithm.AES_256.getAlgorithmId(), metadata.getEncryptionMechanism().getSymmetricKeyAlgorithm());
         assertNull(metadata.getCompressionAlgorithm());
         assertFalse(metadata.getVerifiedInlineSignatures().isEmpty());
         assertTrue(metadata.getRejectedInlineSignatures().isEmpty());
@@ -667,7 +667,7 @@ public class OpenPgpMessageInputStreamTest {
 
     @Test
     void readAfterCloseTest() throws IOException {
-        OpenPgpMessageInputStream pgpIn = get(SENC_LIT, ConsumerOptions.get()
+        OpenPgpMessageInputStream pgpIn = get(SENC_LIT, ConsumerOptions.get(api)
                 .addMessagePassphrase(Passphrase.fromPassword(PASSPHRASE)));
         Streams.drain(pgpIn); // read all
 

@@ -37,34 +37,6 @@ class Policy(
     val maxDecompressedDataSize: Long? = 32 * 1024 * 1024
 ) {
 
-    @Deprecated(
-        "Constructors receiving SymmetricKeyAlgorithmPolicy objects are deprecated in favor of ones receiving MessageEncryptionMechanismPolicy objects.")
-    constructor(
-        certificationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
-        revocationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
-        dataSignatureHashAlgorithmPolicy: HashAlgorithmPolicy,
-        symmetricKeyEncryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy,
-        symmetricKeyDecryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy,
-        compressionAlgorithmPolicy: CompressionAlgorithmPolicy,
-        publicKeyAlgorithmPolicy: PublicKeyAlgorithmPolicy,
-        keyProtectionSettings: KeyRingProtectionSettings,
-        notationRegistry: NotationRegistry,
-        keyGenerationAlgorithmSuite: AlgorithmSuite
-    ) : this(
-        certificationSignatureHashAlgorithmPolicy,
-        revocationSignatureHashAlgorithmPolicy,
-        dataSignatureHashAlgorithmPolicy,
-        MessageEncryptionMechanismPolicy.rfc4880Plus9580PlusLibrePGP(
-            symmetricKeyEncryptionAlgorithmPolicy),
-        MessageEncryptionMechanismPolicy.rfc4880Plus9580PlusLibrePGP(
-            symmetricKeyDecryptionAlgorithmPolicy),
-        compressionAlgorithmPolicy,
-        publicKeyAlgorithmPolicy,
-        FeaturePolicy.defaultFeaturePolicy(),
-        keyProtectionSettings,
-        notationRegistry,
-        keyGenerationAlgorithmSuite)
-
     /**
      * Decide, whether to sanitize public key parameters when unlocking OpenPGP secret keys. OpenPGP
      * v4 keys are susceptible to a class of attacks, where an attacker with access to the locked
@@ -375,18 +347,6 @@ class Policy(
         companion object {
 
             /**
-             * The default symmetric encryption algorithm policy of PGPainless.
-             *
-             * @return default symmetric encryption algorithm policy
-             * @deprecated not expressive - will be removed in a future release
-             */
-            @JvmStatic
-            @Deprecated(
-                "Not expressive - will be removed in a future release",
-                ReplaceWith("symmetricKeyEncryptionPolicy2022"))
-            fun defaultSymmetricKeyEncryptionAlgorithmPolicy() = symmetricKeyEncryptionPolicy2022()
-
-            /**
              * Policy for symmetric encryption algorithms in the context of message production
              * (encryption). This suite contains algorithms that are deemed safe to use in 2022.
              *
@@ -405,18 +365,6 @@ class Policy(
                         SymmetricKeyAlgorithm.CAMELLIA_256,
                         SymmetricKeyAlgorithm.CAMELLIA_192,
                         SymmetricKeyAlgorithm.CAMELLIA_128))
-
-            /**
-             * The default symmetric decryption algorithm policy of PGPainless.
-             *
-             * @return default symmetric decryption algorithm policy
-             * @deprecated not expressive - will be removed in a future update
-             */
-            @JvmStatic
-            @Deprecated(
-                "not expressive - will be removed in a future update",
-                ReplaceWith("symmetricKeyDecryptionPolicy2022()"))
-            fun defaultSymmetricKeyDecryptionAlgorithmPolicy() = symmetricKeyDecryptionPolicy2022()
 
             /**
              * Policy for symmetric key encryption algorithms in the context of message consumption
@@ -459,19 +407,6 @@ class Policy(
         companion object {
 
             /**
-             * Default [CompressionAlgorithmPolicy] of PGPainless. The default compression algorithm
-             * policy accepts any compression algorithm.
-             *
-             * @return default algorithm policy
-             * @deprecated not expressive - might be removed in a future release
-             */
-            @JvmStatic
-            @Deprecated(
-                "not expressive - might be removed in a future release",
-                ReplaceWith("anyCompressionAlgorithmPolicy()"))
-            fun defaultCompressionAlgorithmPolicy() = anyCompressionAlgorithmPolicy()
-
-            /**
              * Policy that accepts any known compression algorithm and offers
              * [CompressionAlgorithm.ZIP] as default algorithm.
              *
@@ -510,18 +445,6 @@ class Policy(
         }
 
         companion object {
-
-            /**
-             * Return PGPainless' default public key algorithm policy.
-             *
-             * @return default algorithm policy
-             * @deprecated not expressive - might be removed in a future release
-             */
-            @JvmStatic
-            @Deprecated(
-                "not expressive - might be removed in a future release",
-                ReplaceWith("rfc9580PublicKeyAlgorithmPolicy()"))
-            fun defaultPublicKeyAlgorithmPolicy() = rfc9580PublicKeyAlgorithmPolicy()
 
             /**
              * This policy is based upon recommendations made by the German Federal Office for

@@ -49,17 +49,8 @@ class KeyRingInfo(
     /** Primary [OpenPGPCertificate.OpenPGPPrimaryKey]. */
     val primaryKey: OpenPGPCertificate.OpenPGPPrimaryKey = keys.primaryKey
 
-    /** Primary [OpenPGPCertificate.OpenPGPPrimaryKey]. */
-    @Deprecated("Use primaryKey instead.", replaceWith = ReplaceWith("primaryKey"))
-    val publicKey: OpenPGPCertificate.OpenPGPPrimaryKey = primaryKey
-
     /** Primary key ID. */
     val keyIdentifier: KeyIdentifier = primaryKey.keyIdentifier
-
-    @Deprecated(
-        "Use of raw key-ids is deprecated in favor of key-identifiers",
-        replaceWith = ReplaceWith("keyIdentifier"))
-    val keyId: Long = keyIdentifier.keyId
 
     /** Primary key fingerprint. */
     val fingerprint: OpenPgpFingerprint = OpenPgpFingerprint.of(primaryKey.pgpPublicKey)
@@ -293,17 +284,6 @@ class KeyRingInfo(
     }
 
     /**
-     * Return the expiration date of the subkey with the provided keyId.
-     *
-     * @param keyId subkey keyId
-     * @return expiration date
-     */
-    @Deprecated("Pass in a KeyIdentifer instead.")
-    fun getSubkeyExpirationDate(keyId: Long): Date? {
-        return getSubkeyExpirationDate(KeyIdentifier(keyId))
-    }
-
-    /**
      * Return the date after which the key can no longer be used to perform the given use-case,
      * caused by expiration.
      *
@@ -490,16 +470,6 @@ class KeyRingInfo(
         keys.getKey(keyIdentifier)?.getCertification(referenceDate)?.signature
 
     /**
-     * Return the current binding signature for the subkey with the given key-ID.
-     *
-     * @param keyId key-ID
-     * @return current subkey binding signature
-     */
-    @Deprecated("Pass in a KeyIdentifier instead.")
-    fun getCurrentSubkeyBindingSignature(keyId: Long): PGPSignature? =
-        getCurrentSubkeyBindingSignature(KeyIdentifier(keyId))
-
-    /**
      * Return the current revocation signature for the subkey with the given [keyIdentifier].
      *
      * @param keyIdentifier subkey identifier
@@ -507,15 +477,6 @@ class KeyRingInfo(
      */
     fun getSubkeyRevocationSignature(keyIdentifier: KeyIdentifier): PGPSignature? =
         keys.getKey(keyIdentifier)?.getRevocation(referenceDate)?.signature
-
-    /**
-     * Return the current revocation signature for the subkey with the given key-ID.
-     *
-     * @return current subkey revocation signature
-     */
-    @Deprecated("Pass in a KeyIdentifier instead.")
-    fun getSubkeyRevocationSignature(keyId: Long): PGPSignature? =
-        getSubkeyRevocationSignature(KeyIdentifier(keyId))
 
     /**
      * Return a list of [KeyFlags][KeyFlag] that apply to the subkey with the provided
@@ -549,15 +510,6 @@ class KeyRingInfo(
         }
 
     /**
-     * Return a list of [KeyFlags][KeyFlag] that apply to the subkey with the provided key id.
-     *
-     * @param keyId key-id
-     * @return list of key flags
-     */
-    @Deprecated("Pass in a KeyIdentifier instead.")
-    fun getKeyFlagsOf(keyId: Long): List<KeyFlag> = getKeyFlagsOf(KeyIdentifier(keyId))
-
-    /**
      * Return a list of [KeyFlags][KeyFlag] that apply to the given user-id.
      *
      * @param userId user-id
@@ -585,15 +537,6 @@ class KeyRingInfo(
         keys.getKey(keyIdentifier)
 
     /**
-     * Return the public key with the given key id from the provided key ring.
-     *
-     * @param keyId key id
-     * @return public key or null
-     */
-    @Deprecated("Pass in a KeyIdentifier instead.")
-    fun getPublicKey(keyId: Long): OpenPGPComponentKey? = getPublicKey(KeyIdentifier(keyId))
-
-    /**
      * Return the [OpenPGPSecretKey] component with the given [keyIdentifier].
      *
      * @param keyIdentifier keyIdentifier
@@ -603,15 +546,6 @@ class KeyRingInfo(
         if (keys.isSecretKey) {
             (keys as OpenPGPKey).getSecretKey(keyIdentifier)
         } else null
-
-    /**
-     * Return the secret key with the given key id.
-     *
-     * @param keyId key id
-     * @return secret key or null
-     */
-    @Deprecated("Pass in a KeyIdentifier instead.")
-    fun getSecretKey(keyId: Long): OpenPGPSecretKey? = getSecretKey(KeyIdentifier(keyId))
 
     /**
      * Return true, if the secret-key with the given [keyIdentifier] is available (i.e. part of the
@@ -625,11 +559,6 @@ class KeyRingInfo(
             else it.pgpSecretKey.s2K.type !in 100..110 // Secret key on smart-card
         }
             ?: false // Missing secret key
-    }
-
-    @Deprecated("Pass in a KeyIdentifier instead.")
-    fun isSecretKeyAvailable(keyId: Long): Boolean {
-        return isSecretKeyAvailable(KeyIdentifier(keyId))
     }
 
     /**
@@ -688,15 +617,6 @@ class KeyRingInfo(
     fun isKeyValidlyBound(keyIdentifier: KeyIdentifier): Boolean {
         return keys.getKey(keyIdentifier)?.isBoundAt(referenceDate) ?: false
     }
-
-    /**
-     * Return true if the public key with the given key id is bound to the key ring properly.
-     *
-     * @param keyId key id
-     * @return true if key is bound validly
-     */
-    @Deprecated("Pass in a KeyIdentifier instead.")
-    fun isKeyValidlyBound(keyId: Long): Boolean = isKeyValidlyBound(KeyIdentifier(keyId))
 
     /**
      * Return the current primary user-id of the key ring.
@@ -761,12 +681,6 @@ class KeyRingInfo(
             ?.toHashAlgorithms()
     }
 
-    /** [HashAlgorithm] preferences of the given key. */
-    @Deprecated("Pass KeyIdentifier instead.")
-    fun getPreferredHashAlgorithms(keyId: Long): Set<HashAlgorithm>? {
-        return getPreferredHashAlgorithms(KeyIdentifier(keyId))
-    }
-
     /**
      * Return the [SymmetricKeyAlgorithm] preferences of the given [userId].
      *
@@ -797,12 +711,6 @@ class KeyRingInfo(
                     "No subkey with key-id $keyIdentifier found on this key."))
             .getSymmetricCipherPreferences(referenceDate)
             ?.toSymmetricKeyAlgorithms()
-    }
-
-    /** [SymmetricKeyAlgorithm] preferences of the given key. */
-    @Deprecated("Pass KeyIdentifier instead.")
-    fun getPreferredSymmetricKeyAlgorithms(keyId: Long): Set<SymmetricKeyAlgorithm>? {
-        return getPreferredSymmetricKeyAlgorithms(KeyIdentifier(keyId))
     }
 
     /**
@@ -837,12 +745,6 @@ class KeyRingInfo(
             ?.toCompressionAlgorithms()
     }
 
-    /** [CompressionAlgorithm] preferences of the given key. */
-    @Deprecated("Pass in a KeyIdentifier instead.")
-    fun getPreferredCompressionAlgorithms(keyId: Long): Set<CompressionAlgorithm>? {
-        return getPreferredCompressionAlgorithms(KeyIdentifier(keyId))
-    }
-
     /**
      * Return the [AEADCipherMode] preferences of the given [userId].
      *
@@ -871,11 +773,6 @@ class KeyRingInfo(
                     "No subkey with key-id $keyIdentifier found on this key."))
             .getAEADCipherSuitePreferences(referenceDate)
             ?.toAEADCipherModes()
-    }
-
-    @Deprecated("Pass KeyIdentifier instead.")
-    fun getPreferredAEADCipherSuites(keyId: Long): Set<AEADCipherMode>? {
-        return getPreferredAEADCipherSuites(KeyIdentifier(keyId))
     }
 
     companion object {

@@ -48,13 +48,13 @@ public class PassphraseProtectedKeyTest {
     @Test
     public void testReturnsNonNullDecryptorEncryptorForPassword() throws IOException {
         assertNotNull(protector.getEncryptor(TestKeys.getCryptiePublicKeyRing().getPublicKey(TestKeys.CRYPTIE_KEY_ID)));
-        assertNotNull(protector.getDecryptor(TestKeys.CRYPTIE_KEY_ID));
+        assertNotNull(protector.getDecryptor(TestKeys.CRYPTIE_FINGERPRINT.getKeyIdentifier()));
     }
 
     @Test
     public void testReturnsNullDecryptorEncryptorForNoPassword() throws IOException {
         assertNull(protector.getEncryptor(TestKeys.getJulietPublicKeyRing().getPublicKey(TestKeys.JULIET_KEY_ID)));
-        assertNull(protector.getDecryptor(TestKeys.JULIET_KEY_ID));
+        assertNull(protector.getDecryptor(TestKeys.JULIET_FINGERPRINT.getKeyIdentifier()));
     }
 
     @Test
@@ -66,7 +66,6 @@ public class PassphraseProtectedKeyTest {
         for (OpenPGPCertificate.OpenPGPComponentKey subkey : key.getPublicKeys().values()) {
             assertNotNull(protector.getEncryptor(subkey));
             assertNotNull(protector.getDecryptor(subkey.getKeyIdentifier()));
-            assertNotNull(protector.getDecryptor(subkey.getKeyIdentifier().getKeyId()));
         }
     }
 }

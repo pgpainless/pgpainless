@@ -13,21 +13,11 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.openpgp.api.OpenPGPKey
-import org.pgpainless.PGPainless
 import org.pgpainless.key.OpenPgpFingerprint
 
 /** OpenPGP certificate containing the public keys of this OpenPGP key. */
 val PGPSecretKeyRing.certificate: PGPPublicKeyRing
     get() = PGPPublicKeyRing(this.publicKeys.asSequence().toList())
-
-/**
- * Return true, if the [PGPSecretKeyRing] contains a [PGPSecretKey] with the given key-ID.
- *
- * @param keyId keyId of the secret key
- * @return true, if the [PGPSecretKeyRing] has a matching [PGPSecretKey], false otherwise
- */
-@Deprecated("Pass in a KeyIdentifier instead.")
-fun PGPSecretKeyRing.hasSecretKey(keyId: Long): Boolean = hasSecretKey(KeyIdentifier(keyId))
 
 /**
  * Return true, if the [PGPSecretKeyRing] contains a [PGPSecretKey] with the given [keyIdentifier].
@@ -55,16 +45,6 @@ fun PGPSecretKeyRing.hasSecretKey(fingerprint: OpenPgpFingerprint): Boolean =
  */
 fun PGPSecretKeyRing.getSecretKey(fingerprint: OpenPgpFingerprint): PGPSecretKey? =
     this.getSecretKey(fingerprint.keyIdentifier)
-
-/**
- * Return the [PGPSecretKey] with the given key-ID.
- *
- * @throws NoSuchElementException if the OpenPGP key doesn't contain a secret key with the given
- *   key-ID
- */
-@Deprecated("Pass in a KeyIdentifier instead.")
-fun PGPSecretKeyRing.requireSecretKey(keyId: Long): PGPSecretKey =
-    requireSecretKey(KeyIdentifier(keyId))
 
 /**
  * Return the [PGPSecretKey] with the given [keyIdentifier].
@@ -107,15 +87,6 @@ fun PGPSecretKeyRing.getSecretKeyFor(onePassSignature: PGPOnePassSignature): PGP
  */
 fun PGPSecretKeyRing.getSecretKeyFor(pkesk: PGPPublicKeyEncryptedData): PGPSecretKey? =
     this.getSecretKey(pkesk.keyIdentifier)
-
-/**
- * Convert the [PGPSecretKeyRing] into an [OpenPGPKey].
- *
- * @return key
- */
-@Deprecated("Use toOpenPGPKey(implementation) instead.")
-fun PGPSecretKeyRing.toOpenPGPKey(): OpenPGPKey =
-    toOpenPGPKey(PGPainless.getInstance().implementation)
 
 /**
  * Convert the [PGPSecretKeyRing] into an [OpenPGPKey] using the given [OpenPGPImplementation].

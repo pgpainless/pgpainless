@@ -86,31 +86,6 @@ class ConsumerOptions(private val api: PGPainless) {
         }
 
     /**
-     * Add a certificate (public key ring) for signature verification.
-     *
-     * @param verificationCert certificate for signature verification
-     * @return options
-     */
-    @Deprecated("Pass OpenPGPCertificate instead.")
-    fun addVerificationCert(verificationCert: PGPPublicKeyRing): ConsumerOptions = apply {
-        this.certificates.addCertificate(api.toCertificate(verificationCert))
-    }
-
-    /**
-     * Add a set of certificates (public key rings) for signature verification.
-     *
-     * @param verificationCerts certificates for signature verification
-     * @return options
-     */
-    @Deprecated("Use of methods taking PGPPublicKeyRingCollections is discouraged.")
-    fun addVerificationCerts(verificationCerts: PGPPublicKeyRingCollection): ConsumerOptions =
-        apply {
-            for (cert in verificationCerts) {
-                addVerificationCert(api.toCertificate(cert))
-            }
-        }
-
-    /**
      * Add some detached signatures from the given [InputStream] for verification.
      *
      * @param signatureInputStream input stream of detached signatures
@@ -231,39 +206,6 @@ class ConsumerOptions(private val api: PGPainless) {
         key: OpenPGPKey,
         protector: SecretKeyRingProtector = SecretKeyRingProtector.unprotectedKeys()
     ) = apply { decryptionKeys[key] = protector }
-
-    /**
-     * Add a key for message decryption. If the key is encrypted, the [SecretKeyRingProtector] is
-     * used to decrypt it when needed.
-     *
-     * @param key key
-     * @param protector protector for the secret key
-     * @return options
-     */
-    @JvmOverloads
-    @Deprecated("Pass OpenPGPKey instead.")
-    fun addDecryptionKey(
-        key: PGPSecretKeyRing,
-        protector: SecretKeyRingProtector = SecretKeyRingProtector.unprotectedKeys()
-    ) = addDecryptionKey(api.toKey(key), protector)
-
-    /**
-     * Add the keys in the provided key collection for message decryption.
-     *
-     * @param keys key collection
-     * @param protector protector for encrypted secret keys
-     * @return options
-     */
-    @JvmOverloads
-    @Deprecated("Pass OpenPGPKey instances instead.")
-    fun addDecryptionKeys(
-        keys: PGPSecretKeyRingCollection,
-        protector: SecretKeyRingProtector = SecretKeyRingProtector.unprotectedKeys()
-    ) = apply {
-        for (key in keys) {
-            addDecryptionKey(api.toKey(key), protector)
-        }
-    }
 
     /**
      * Add a passphrase for message decryption. This passphrase will be used to try to decrypt
@@ -469,16 +411,6 @@ class ConsumerOptions(private val api: PGPainless) {
         private val explicitCertificates: MutableSet<OpenPGPCertificate> = mutableSetOf()
 
         /**
-         * Add a certificate as verification cert explicitly.
-         *
-         * @param certificate certificate
-         */
-        @Deprecated("Pass in an OpenPGPCertificate instead.")
-        fun addCertificate(certificate: PGPPublicKeyRing) {
-            explicitCertificates.add(api.toCertificate(certificate))
-        }
-
-        /**
          * Add a certificate as explicitly provided verification cert.
          *
          * @param certificate explicit verification cert
@@ -494,19 +426,6 @@ class ConsumerOptions(private val api: PGPainless) {
          */
         fun getExplicitCertificates(): Set<OpenPGPCertificate> {
             return explicitCertificates.toSet()
-        }
-
-        /**
-         * Return a certificate which contains a subkey with the given keyId. This method first
-         * checks all explicitly set verification certs and if no cert is found it consults the
-         * certificate stores.
-         *
-         * @param keyId key id
-         * @return certificate
-         */
-        @Deprecated("Pass in a KeyIdentifier instead.")
-        fun getCertificate(keyId: Long): OpenPGPCertificate? {
-            return getCertificate(KeyIdentifier(keyId))
         }
 
         /**

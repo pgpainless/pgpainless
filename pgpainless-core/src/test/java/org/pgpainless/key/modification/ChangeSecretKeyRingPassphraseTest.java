@@ -171,14 +171,14 @@ public class ChangeSecretKeyRingPassphraseTest {
                         .provide()
                         .build(passphrase.getChars());
 
-        UnlockSecretKey.unlockSecretKey(secretKey, decryptor);
+        UnlockSecretKey.unlockSecretKey(secretKey, decryptor, PGPainless.getInstance().getAlgorithmPolicy());
     }
 
     private void signDummyMessageWithKeysAndPassphrase(PGPainless api, OpenPGPKey key, Passphrase passphrase) throws IOException, PGPException {
         String dummyMessage = "dummy";
         ByteArrayOutputStream dummy = new ByteArrayOutputStream();
         EncryptionStream stream = api.generateMessage().onOutputStream(dummy)
-                .withOptions(ProducerOptions.sign(SigningOptions.get()
+                .withOptions(ProducerOptions.sign(SigningOptions.get(api)
                         .addInlineSignature(PasswordBasedSecretKeyRingProtector.forKey(key, passphrase),
                                 key, DocumentSignatureType.BINARY_DOCUMENT)));
 

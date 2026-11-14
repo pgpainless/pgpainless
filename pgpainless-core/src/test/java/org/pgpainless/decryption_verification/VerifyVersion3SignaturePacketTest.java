@@ -33,13 +33,14 @@ class VerifyVersion3SignaturePacketTest {
 
     @Test
     void verifyDetachedVersion3Signature() throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
         PGPSignature version3Signature = generateV3Signature();
 
-        ConsumerOptions options = ConsumerOptions.get()
-                .addVerificationCert(TestKeys.getEmilPublicKeyRing())
+        ConsumerOptions options = ConsumerOptions.get(api)
+                .addVerificationCert(api.toCertificate(TestKeys.getEmilPublicKeyRing()))
                 .addVerificationOfDetachedSignatures(new ByteArrayInputStream(version3Signature.getEncoded()));
 
-        DecryptionStream verifier = PGPainless.getInstance().processMessage()
+        DecryptionStream verifier = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(DATA))
                 .withOptions(options);
 
@@ -53,7 +54,8 @@ class VerifyVersion3SignaturePacketTest {
 
         PGPSecretKeyRing secretKeys = TestKeys.getEmilSecretKeyRing();
         SecretKeyRingProtector protector = SecretKeyRingProtector.unprotectedKeys();
-        PGPPrivateKey privateKey = secretKeys.getSecretKey().extractPrivateKey(protector.getDecryptor(secretKeys.getSecretKey().getKeyID()));
+        PGPPrivateKey privateKey = secretKeys.getSecretKey().extractPrivateKey(
+                protector.getDecryptor(secretKeys.getSecretKey().getKeyIdentifier()));
 
         signatureGenerator.init(SignatureType.CANONICAL_TEXT_DOCUMENT.getCode(), privateKey);
         signatureGenerator.update(DATA);

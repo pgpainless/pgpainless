@@ -15,7 +15,6 @@ import org.bouncycastle.openpgp.api.OpenPGPImplementation
 import org.bouncycastle.util.Strings
 import org.pgpainless.bouncycastle.extensions.certificate
 import org.pgpainless.bouncycastle.extensions.isEncrypted
-import org.pgpainless.bouncycastle.extensions.requireSecretKey
 import org.pgpainless.exception.MissingPassphraseException
 import org.pgpainless.key.SubkeyIdentifier
 import org.pgpainless.key.protection.SecretKeyRingProtector
@@ -29,34 +28,6 @@ class KeyRingUtils {
     companion object {
 
         @JvmStatic private val LOGGER: Logger = LoggerFactory.getLogger(KeyRingUtils::class.java)
-
-        /**
-         * Return the primary [PGPSecretKey] from the provided [PGPSecretKeyRing]. If it has no
-         * primary secret key, throw a [NoSuchElementException].
-         *
-         * @param secretKeys secret keys
-         * @return primary secret key
-         */
-        @JvmStatic
-        @Deprecated(
-            "Deprecated in favor of PGPSecretKeyRing extension function.",
-            ReplaceWith("secretKeys.requireSecretKey(keyId)"))
-        fun requirePrimarySecretKeyFrom(secretKeys: PGPSecretKeyRing): PGPSecretKey {
-            return secretKeys.requireSecretKey(secretKeys.publicKey.keyIdentifier)
-        }
-
-        /**
-         * Return the primary secret key from the given secret key ring. If the key ring only
-         * contains subkeys (e.g. if the primary secret key is stripped), this method may return
-         * null.
-         *
-         * @param secretKeys secret key ring
-         * @return primary secret key
-         */
-        @JvmStatic
-        fun getPrimarySecretKeyFrom(secretKeys: PGPSecretKeyRing): PGPSecretKey? {
-            return if (secretKeys.secretKey.isMasterKey) secretKeys.secretKey else null
-        }
 
         /**
          * Return the primary [PGPPublicKey] from the provided key ring. Throws a
@@ -119,21 +90,6 @@ class KeyRingUtils {
                 is PGPSecretKeyRing -> keys.certificate
                 else -> throw IllegalArgumentException("Unknown keys class: ${keys.javaClass.name}")
             }
-        }
-
-        /**
-         * Extract a [PGPPublicKeyRing] containing all public keys from the provided
-         * [PGPSecretKeyRing].
-         *
-         * @param secretKeys secret key ring
-         * @return public key ring
-         */
-        @JvmStatic
-        @Deprecated(
-            "Deprecated in favor of PGPSecretKeyRing extension method.",
-            ReplaceWith("secretKeys.certificate", "org.bouncycastle.extensions.certificate"))
-        fun publicKeyRingFrom(secretKeys: PGPSecretKeyRing): PGPPublicKeyRing {
-            return secretKeys.certificate
         }
 
         /**
@@ -390,25 +346,6 @@ class KeyRingUtils {
                 return PGPSecretKey.replacePublicKey(secretKey, it)
             }
         }
-
-        /**
-         * Remove the secret key of the subkey identified by the given secret key id from the key
-         * ring. The public part stays attached to the key ring, so that it can still be used for
-         * encryption / verification of signatures.
-         *
-         * This method is intended to be used to remove secret primary keys from live keys when
-         * those are kept in offline storage.
-         *
-         * @param secretKeys secret key ring
-         * @param keyId id of the secret key to remove
-         * @return secret key ring with removed secret key
-         * @throws IOException in case of an error during serialization / deserialization of the key
-         * @throws PGPException in case of a broken key
-         */
-        @JvmStatic
-        @Deprecated("Pass in a KeyIdentifier instead.")
-        fun stripSecretKey(secretKeys: PGPSecretKeyRing, keyId: Long): PGPSecretKeyRing =
-            stripSecretKey(secretKeys, KeyIdentifier(keyId))
 
         /**
          * Remove the secret key of the subkey identified by the given [keyIdentifier] from the key

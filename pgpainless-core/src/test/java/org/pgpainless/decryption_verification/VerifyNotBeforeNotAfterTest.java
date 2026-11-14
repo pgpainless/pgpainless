@@ -13,12 +13,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
-import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.util.DateUtil;
 
@@ -51,20 +50,19 @@ public class VerifyNotBeforeNotAfterTest {
     private static final Date T0 = DateUtil.parseUTCDate("2021-08-17 12:30:00 UTC");
     private static final Date T1 = signatureCreationDate;
     private static final Date T2 = DateUtil.parseUTCDate("2021-08-17 13:30:00 UTC");
-    private static PGPPublicKeyRing certificate;
-    private static SubkeyIdentifier signingKey;
+    private static final PGPainless api = PGPainless.getInstance();
+    private static OpenPGPCertificate certificate;
 
     @BeforeAll
     public static void setup() throws IOException {
-        certificate = TestKeys.getEmilPublicKeyRing();
-        signingKey = new SubkeyIdentifier(certificate);
+        certificate = api.toCertificate(TestKeys.getEmilPublicKeyRing());
     }
 
     @Test
     public void noConstraintsVerifyInlineSig() throws PGPException, IOException {
-        ConsumerOptions options = ConsumerOptions.get()
+        ConsumerOptions options = ConsumerOptions.get(api)
                 .addVerificationCert(certificate);
-        DecryptionStream verifier = PGPainless.getInstance().processMessage()
+        DecryptionStream verifier = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(inlineSigned))
                 .withOptions(options);
 
@@ -74,10 +72,10 @@ public class VerifyNotBeforeNotAfterTest {
 
     @Test
     public void noConstraintsVerifyDetachedSig() throws PGPException, IOException {
-        ConsumerOptions options = ConsumerOptions.get()
+        ConsumerOptions options = ConsumerOptions.get(api)
                 .addVerificationCert(certificate)
                 .addVerificationOfDetachedSignatures(new ByteArrayInputStream(detachedSignature));
-        DecryptionStream verifier = PGPainless.getInstance().processMessage()
+        DecryptionStream verifier = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(data))
                 .withOptions(options);
 
@@ -87,10 +85,10 @@ public class VerifyNotBeforeNotAfterTest {
 
     @Test
     public void notBeforeT1DoesNotRejectInlineSigMadeAtT1() throws PGPException, IOException {
-        ConsumerOptions options = ConsumerOptions.get()
+        ConsumerOptions options = ConsumerOptions.get(api)
                 .verifyNotBefore(T1)
                 .addVerificationCert(certificate);
-        DecryptionStream verifier = PGPainless.getInstance().processMessage()
+        DecryptionStream verifier = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(inlineSigned))
                 .withOptions(options);
         MessageMetadata metadata = processSignedData(verifier);
@@ -99,11 +97,11 @@ public class VerifyNotBeforeNotAfterTest {
 
     @Test
     public void notBeforeT1DoesNotRejectDetachedSigMadeAtT1() throws PGPException, IOException {
-        ConsumerOptions options = ConsumerOptions.get()
+        ConsumerOptions options = ConsumerOptions.get(api)
                 .verifyNotBefore(T1)
                 .addVerificationCert(certificate)
                 .addVerificationOfDetachedSignatures(new ByteArrayInputStream(detachedSignature));
-        DecryptionStream verifier = PGPainless.getInstance().processMessage()
+        DecryptionStream verifier = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(data))
                 .withOptions(options);
         MessageMetadata metadata = processSignedData(verifier);
@@ -112,10 +110,10 @@ public class VerifyNotBeforeNotAfterTest {
 
     @Test
     public void verifyNotBeforeT2DoesRejectInlineSignatureMadeAtT1() throws PGPException, IOException {
-        ConsumerOptions options = ConsumerOptions.get()
+        ConsumerOptions options = ConsumerOptions.get(api)
                 .verifyNotBefore(T2)
                 .addVerificationCert(certificate);
-        DecryptionStream verifier = PGPainless.getInstance().processMessage()
+        DecryptionStream verifier = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(inlineSigned))
                 .withOptions(options);
         MessageMetadata metadata = processSignedData(verifier);
@@ -124,11 +122,11 @@ public class VerifyNotBeforeNotAfterTest {
 
     @Test
     public void verifyNotBeforeT2DoesRejectDetachedSigMadeAtT1() throws PGPException, IOException {
-        ConsumerOptions options = ConsumerOptions.get()
+        ConsumerOptions options = ConsumerOptions.get(api)
                 .verifyNotBefore(T2)
                 .addVerificationCert(certificate)
                 .addVerificationOfDetachedSignatures(new ByteArrayInputStream(detachedSignature));
-        DecryptionStream verifier = PGPainless.getInstance().processMessage()
+        DecryptionStream verifier = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(data))
                 .withOptions(options);
         MessageMetadata metadata = processSignedData(verifier);
@@ -137,10 +135,10 @@ public class VerifyNotBeforeNotAfterTest {
 
     @Test
     public void verifyNotAfterT1DoesNotRejectInlineSigMadeAtT1() throws PGPException, IOException {
-        ConsumerOptions options = ConsumerOptions.get()
+        ConsumerOptions options = ConsumerOptions.get(api)
                 .verifyNotAfter(T1)
                 .addVerificationCert(certificate);
-        DecryptionStream verifier = PGPainless.getInstance().processMessage()
+        DecryptionStream verifier = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(inlineSigned))
                 .withOptions(options);
         MessageMetadata metadata = processSignedData(verifier);
@@ -149,11 +147,11 @@ public class VerifyNotBeforeNotAfterTest {
 
     @Test
     public void verifyNotAfterT1DoesRejectDetachedSigMadeAtT1() throws PGPException, IOException {
-        ConsumerOptions options = ConsumerOptions.get()
+        ConsumerOptions options = ConsumerOptions.get(api)
                 .verifyNotAfter(T1)
                 .addVerificationCert(certificate)
                 .addVerificationOfDetachedSignatures(new ByteArrayInputStream(detachedSignature));
-        DecryptionStream verifier = PGPainless.getInstance().processMessage()
+        DecryptionStream verifier = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(data))
                 .withOptions(options);
         MessageMetadata metadata = processSignedData(verifier);
@@ -162,10 +160,10 @@ public class VerifyNotBeforeNotAfterTest {
 
     @Test
     public void verifyNotAfterT0DoesRejectInlineSigMadeAtT1() throws PGPException, IOException {
-        ConsumerOptions options = ConsumerOptions.get()
+        ConsumerOptions options = ConsumerOptions.get(api)
                 .verifyNotAfter(T0)
                 .addVerificationCert(certificate);
-        DecryptionStream verifier = PGPainless.getInstance().processMessage()
+        DecryptionStream verifier = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(inlineSigned))
                 .withOptions(options);
         MessageMetadata metadata = processSignedData(verifier);
@@ -174,11 +172,11 @@ public class VerifyNotBeforeNotAfterTest {
 
     @Test
     public void verifyNotAfterT0DoesRejectDetachedSigMadeAtT1() throws PGPException, IOException {
-        ConsumerOptions options = ConsumerOptions.get()
+        ConsumerOptions options = ConsumerOptions.get(api)
                 .verifyNotAfter(T0)
                 .addVerificationCert(certificate)
                 .addVerificationOfDetachedSignatures(new ByteArrayInputStream(detachedSignature));
-        DecryptionStream verifier = PGPainless.getInstance().processMessage()
+        DecryptionStream verifier = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(data))
                 .withOptions(options);
         MessageMetadata metadata = processSignedData(verifier);

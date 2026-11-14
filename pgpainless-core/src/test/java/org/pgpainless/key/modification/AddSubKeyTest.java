@@ -65,7 +65,7 @@ public class AddSubKeyTest {
         OpenPGPKey.OpenPGPSecretKey subKey = secretKeys.getSecretKey(subKeyIdentifier);
         SecretKeyRingProtector protector = SecretKeyRingProtector.unlockEachKeyWith(
                 Passphrase.fromPassword("subKeyPassphrase"), secretKeys);
-        UnlockSecretKey.unlockSecretKey(subKey, protector);
+        UnlockSecretKey.unlockSecretKey(subKey, protector, api.getAlgorithmPolicy());
 
         KeyRingInfo info = api.inspect(secretKeys);
         assertEquals(Collections.singletonList(KeyFlag.SIGN_DATA), info.getKeyFlagsOf(subKeyIdentifier));

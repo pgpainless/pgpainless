@@ -320,7 +320,7 @@ class PGPainless(
          * After making the desired changes in the builder, the modified key can be extracted using
          * [org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditorInterface.done].
          *
-         * @param secretKeys secret key ring
+         * @param secretKey secret key ring
          * @param referenceTime reference time used as signature creation date
          * @return builder
          */

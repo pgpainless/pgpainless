@@ -174,16 +174,6 @@ class GnuPGDummyKeyUtil private constructor() {
             @JvmStatic fun any(): KeyFilter = KeyFilter { true }
 
             /**
-             * Select only the given keyId.
-             *
-             * @param onlyKeyId only acceptable key id
-             * @return filter
-             */
-            @JvmStatic
-            @Deprecated("Use only(KeyIdentifier) instead.")
-            fun only(onlyKeyId: Long) = only(KeyIdentifier(onlyKeyId))
-
-            /**
              * Select only the given keyIdentifier.
              *
              * @param onlyKeyIdentifier only acceptable key identifier

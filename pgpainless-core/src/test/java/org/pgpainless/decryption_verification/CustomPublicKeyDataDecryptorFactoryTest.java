@@ -58,7 +58,7 @@ public class CustomPublicKeyDataDecryptorFactoryTest {
                 // Emulate hardware decryption.
                 try {
                     OpenPGPKey.OpenPGPSecretKey decryptionKey = secretKey.getSecretKey(keyIdentifier);
-                    OpenPGPKey.OpenPGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(decryptionKey, Passphrase.emptyPassphrase());
+                    OpenPGPKey.OpenPGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(decryptionKey, Passphrase.emptyPassphrase(), api.getAlgorithmPolicy());
                     PublicKeyDataDecryptorFactory internal = new BcPublicKeyDataDecryptorFactory(privateKey.getKeyPair().getPrivateKey());
                     return internal.recoverSessionData(keyAlgorithm, new byte[][] {sessionKeyData}, pkeskVersion);
                 } catch (PGPException e) {
@@ -70,7 +70,7 @@ public class CustomPublicKeyDataDecryptorFactoryTest {
         // Decrypt
         DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(ciphertextOut.toByteArray()))
-                .withOptions(ConsumerOptions.get()
+                .withOptions(ConsumerOptions.get(api)
                         .addCustomDecryptorFactory(
                                 new HardwareSecurity.HardwareDataDecryptorFactory(
                                         new SubkeyIdentifier(encryptionKey),

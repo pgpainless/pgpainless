@@ -46,16 +46,6 @@ class SubkeyIdentifier(
     constructor(primaryKey: PGPPublicKey) : this(OpenPgpFingerprint.of(primaryKey))
 
     /**
-     * Constructor for a [SubkeyIdentifier] pointing to a component key (identified by
-     * [componentKeyId]) from the given [certificate].
-     */
-    @Deprecated("Pass in a KeyIdentifier instead of a keyId.")
-    constructor(
-        certificate: PGPKeyRing,
-        componentKeyId: Long
-    ) : this(certificate, KeyIdentifier(componentKeyId))
-
-    /**
      * Constructor for a [SubkeyIdentifier] pointing to the given [componentKey].
      *
      * @param componentKey component key
@@ -96,15 +86,6 @@ class SubkeyIdentifier(
                 ?: throw NoSuchElementException(
                     "OpenPGP key does not contain subkey $componentKeyIdentifier")))
 
-    @Deprecated(
-        "Use certificateFingerprint instead.", replaceWith = ReplaceWith("certificateFingerprint"))
-    val primaryKeyFingerprint: OpenPgpFingerprint = certificateFingerprint
-
-    @Deprecated(
-        "Use componentKeyFingerprint instead.",
-        replaceWith = ReplaceWith("componentKeyFingerprint"))
-    val subkeyFingerprint: OpenPgpFingerprint = componentKeyFingerprint
-
     /** [KeyIdentifier] of the component key. */
     val keyIdentifier = componentKeyFingerprint.keyIdentifier
 
@@ -114,17 +95,8 @@ class SubkeyIdentifier(
     /** [KeyIdentifier] of the primary key of the certificate the component key belongs to. */
     val certificateIdentifier = certificateFingerprint.keyIdentifier
 
-    /** Key-ID of the component key. */
-    @Deprecated("Use of key-ids is discouraged.") val keyId = keyIdentifier.keyId
-
     /** Fingerprint of the component key. */
     val fingerprint = componentKeyFingerprint
-
-    /** Key-ID of the component key. */
-    @Deprecated("Use of key-ids is discouraged.") val subkeyId = componentKeyIdentifier.keyId
-
-    /** Key-ID of the primary key of the certificate the component key belongs to. */
-    @Deprecated("Use of key-ids is discouraged.") val primaryKeyId = certificateIdentifier.keyId
 
     /** True, if the component key is the primary key. */
     val isPrimaryKey = certificateIdentifier.matchesExplicit(componentKeyIdentifier)

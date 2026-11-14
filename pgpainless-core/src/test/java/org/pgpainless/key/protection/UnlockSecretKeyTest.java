@@ -38,14 +38,14 @@ public class UnlockSecretKeyTest {
                 .unlockAnyKeyWith(cleared);
 
         // Correct passphrase works
-        PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKey, correctPassphrase);
+        PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKey, correctPassphrase, api.getAlgorithmPolicy());
         assertNotNull(privateKey);
 
         assertThrows(WrongPassphraseException.class, () ->
-                UnlockSecretKey.unlockSecretKey(secretKey, incorrectPassphrase));
+                UnlockSecretKey.unlockSecretKey(secretKey, incorrectPassphrase, api.getAlgorithmPolicy()));
         assertThrows(WrongPassphraseException.class, () ->
-                UnlockSecretKey.unlockSecretKey(secretKey, emptyPassphrase));
+                UnlockSecretKey.unlockSecretKey(secretKey, emptyPassphrase, api.getAlgorithmPolicy()));
         assertThrows(IllegalStateException.class, () ->
-                UnlockSecretKey.unlockSecretKey(secretKey, invalidPassphrase));
+                UnlockSecretKey.unlockSecretKey(secretKey, invalidPassphrase, api.getAlgorithmPolicy()));
     }
 }

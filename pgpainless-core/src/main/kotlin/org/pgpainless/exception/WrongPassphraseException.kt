@@ -13,9 +13,6 @@ class WrongPassphraseException : PGPException {
 
     constructor(message: String, cause: PGPException) : super(message, cause)
 
-    @Deprecated("Pass in a KeyIdentifier instead.")
-    constructor(keyId: Long, cause: PGPException) : this(KeyIdentifier(keyId), cause)
-
     constructor(
         keyIdentifier: KeyIdentifier,
         cause: PGPException

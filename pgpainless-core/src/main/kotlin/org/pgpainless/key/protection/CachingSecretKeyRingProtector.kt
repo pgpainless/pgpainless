@@ -49,10 +49,6 @@ class CachingSecretKeyRingProtector : SecretKeyRingProtector, SecretKeyPassphras
         this.provider = missingPassphraseCallback
     }
 
-    @Deprecated("Pass KeyIdentifier instead.")
-    fun addPassphrase(keyId: Long, passphrase: Passphrase) =
-        addPassphrase(KeyIdentifier(keyId), passphrase)
-
     /**
      * Add a passphrase to the cache. If the cache already contains a passphrase for the given
      * key-id, a [IllegalArgumentException] is thrown. The reason for this is to prevent accidental
@@ -72,10 +68,6 @@ class CachingSecretKeyRingProtector : SecretKeyRingProtector, SecretKeyPassphras
         }
         cache[keyIdentifier] = passphrase
     }
-
-    @Deprecated("Pass KeyIdentifier instead.")
-    fun replacePassphrase(keyId: Long, passphrase: Passphrase) =
-        replacePassphrase(KeyIdentifier(keyId), passphrase)
 
     /**
      * Replace the passphrase for the given key-id in the cache.
@@ -149,9 +141,6 @@ class CachingSecretKeyRingProtector : SecretKeyRingProtector, SecretKeyPassphras
      */
     fun addPassphrase(fingerprint: OpenPgpFingerprint, passphrase: Passphrase) =
         addPassphrase(fingerprint.keyIdentifier, passphrase)
-
-    @Deprecated("Pass KeyIdentifier instead.")
-    fun forgetPassphrase(keyId: Long) = forgetPassphrase(KeyIdentifier(keyId))
 
     /**
      * Remove a passphrase from the cache. The passphrase will be cleared and then removed.

@@ -32,16 +32,10 @@ interface SecretKeyPassphraseProvider {
      * case of an unprotected secret key, this method must may not return null, but a [Passphrase]
      * with a content of null.
      *
-     * @param keyId if of the secret key
+     * @param keyIdentifier id of the secret key
      * @return passphrase or null, if no passphrase record has been found.
      */
-    @Deprecated("Pass in a KeyIdentifier instead.")
-    fun getPassphraseFor(keyId: Long): Passphrase? = getPassphraseFor(KeyIdentifier(keyId))
-
     fun getPassphraseFor(keyIdentifier: KeyIdentifier): Passphrase?
-
-    @Deprecated("Pass in a KeyIdentifier instead.")
-    fun hasPassphrase(keyId: Long): Boolean = hasPassphrase(KeyIdentifier(keyId))
 
     fun hasPassphrase(keyIdentifier: KeyIdentifier): Boolean
 }

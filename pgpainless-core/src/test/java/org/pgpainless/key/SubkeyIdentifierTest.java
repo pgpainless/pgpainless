@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.util.NoSuchElementException;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -32,8 +33,8 @@ public class SubkeyIdentifierTest {
     public void fromKeyRing() {
         SubkeyIdentifier identifier = new SubkeyIdentifier(CERT);
 
-        assertEquals(PRIMARY_FP, identifier.getPrimaryKeyFingerprint());
-        assertEquals(PRIMARY_FP, identifier.getSubkeyFingerprint());
+        assertEquals(PRIMARY_FP, identifier.getCertificateFingerprint());
+        assertEquals(PRIMARY_FP, identifier.getComponentKeyFingerprint());
         assertEquals(PRIMARY_FP, identifier.getFingerprint());
     }
 
@@ -41,8 +42,8 @@ public class SubkeyIdentifierTest {
     public void fromKeyRingAndSubkeyId() {
         SubkeyIdentifier identifier = new SubkeyIdentifier(CERT, SUBKEY_FP);
 
-        assertEquals(PRIMARY_FP, identifier.getPrimaryKeyFingerprint());
-        assertEquals(SUBKEY_FP, identifier.getSubkeyFingerprint());
+        assertEquals(PRIMARY_FP, identifier.getCertificateFingerprint());
+        assertEquals(SUBKEY_FP, identifier.getComponentKeyFingerprint());
         assertEquals(SUBKEY_FP, identifier.getFingerprint());
     }
 
@@ -50,8 +51,8 @@ public class SubkeyIdentifierTest {
     public void fromFingerprints() {
         SubkeyIdentifier identifier = new SubkeyIdentifier(PRIMARY_FP, SUBKEY_FP);
 
-        assertEquals(PRIMARY_FP, identifier.getPrimaryKeyFingerprint());
-        assertEquals(SUBKEY_FP, identifier.getSubkeyFingerprint());
+        assertEquals(PRIMARY_FP, identifier.getCertificateFingerprint());
+        assertEquals(SUBKEY_FP, identifier.getComponentKeyFingerprint());
         assertEquals(SUBKEY_FP, identifier.getFingerprint());
     }
 
@@ -60,16 +61,16 @@ public class SubkeyIdentifierTest {
         SubkeyIdentifier identifier = new SubkeyIdentifier(PRIMARY_FP);
 
         assertEquals(PRIMARY_FP, identifier.getFingerprint());
-        assertEquals(PRIMARY_FP, identifier.getSubkeyFingerprint());
-        assertEquals(PRIMARY_FP, identifier.getPrimaryKeyFingerprint());
+        assertEquals(PRIMARY_FP, identifier.getComponentKeyFingerprint());
+        assertEquals(PRIMARY_FP, identifier.getCertificateFingerprint());
     }
 
     @Test
     public void testGetKeyIds() {
         SubkeyIdentifier identifier = new SubkeyIdentifier(CERT, SUBKEY_FP);
-        assertEquals(PRIMARY_FP.getKeyId(), identifier.getPrimaryKeyId());
-        assertEquals(SUBKEY_FP.getKeyId(), identifier.getKeyId());
-        assertEquals(SUBKEY_FP.getKeyId(), identifier.getSubkeyId());
+        assertEquals(PRIMARY_FP.getKeyId(), identifier.getCertificateIdentifier().getKeyId());
+        assertEquals(SUBKEY_FP.getKeyId(), identifier.getComponentKeyIdentifier().getKeyId());
+        assertEquals(SUBKEY_FP.getKeyId(), identifier.getComponentKeyIdentifier().getKeyId());
     }
 
     @Test
@@ -115,6 +116,6 @@ public class SubkeyIdentifierTest {
 
     @Test
     public void nonExistentSubkeyThrowsNoSuchElementException() {
-        assertThrows(NoSuchElementException.class, () -> new SubkeyIdentifier(CERT, 123));
+        assertThrows(NoSuchElementException.class, () -> new SubkeyIdentifier(CERT, new KeyIdentifier(123)));
     }
 }

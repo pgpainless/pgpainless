@@ -138,12 +138,6 @@ abstract class KeyException : RuntimeException {
         ) {
             missingSecretKeyIdentifier = keyIdentifier
         }
-
-        @Deprecated("Pass in a KeyIdentifier instead.")
-        constructor(
-            fingerprint: OpenPgpFingerprint,
-            keyId: Long
-        ) : this(fingerprint, KeyIdentifier(keyId))
     }
 
     class PublicKeyAlgorithmPolicyException : KeyException {

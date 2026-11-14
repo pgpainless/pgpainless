@@ -45,15 +45,6 @@ fun PGPKeyRing.hasPublicKey(keyIdentifier: KeyIdentifier): Boolean =
     this.getPublicKey(keyIdentifier) != null
 
 /**
- * Return true, if the [PGPKeyRing] contains a public key with the given key-ID.
- *
- * @param keyId keyId
- * @return true if key with the given key-ID is present, false otherwise
- */
-@Deprecated("Pass in a KeyIdentifier instead.")
-fun PGPKeyRing.hasPublicKey(keyId: Long): Boolean = hasPublicKey(KeyIdentifier(keyId))
-
-/**
  * Return true, if the [PGPKeyRing] contains a public key with the given fingerprint.
  *
  * @param fingerprint fingerprint
@@ -82,17 +73,6 @@ fun PGPKeyRing.getPublicKey(fingerprint: OpenPgpFingerprint): PGPPublicKey? =
 fun PGPKeyRing.requirePublicKey(keyIdentifier: KeyIdentifier): PGPPublicKey =
     getPublicKey(keyIdentifier)
         ?: throw NoSuchElementException("OpenPGP key does not contain key with id $keyIdentifier.")
-
-/**
- * Return the [PGPPublicKey] with the given key-id, or throw a [NoSuchElementException] if no
- * matching public key was found.
- *
- * @param keyId key id
- * @return public key
- * @throws NoSuchElementException if no matching public key was found
- */
-@Deprecated("Pass in a KeyIdentifier instead.")
-fun PGPKeyRing.requirePublicKey(keyId: Long): PGPPublicKey = requirePublicKey(KeyIdentifier(keyId))
 
 /**
  * Return the [PGPPublicKey] with the given [fingerprint], or throw a [NoSuchElementException] if no
@@ -124,15 +104,6 @@ val PGPKeyRing.openPgpFingerprint: OpenPgpFingerprint
 
 /** Return this OpenPGP key as an ASCII armored String. */
 fun PGPKeyRing.toAsciiArmor(): String = PGPainless.asciiArmor(this)
-
-/**
- * Convert the given [PGPKeyRing] into an [OpenPGPCertificate].
- *
- * @return certificate
- */
-@Deprecated("Use toOpenPGPCertificate(implementation) instead.")
-fun PGPKeyRing.toOpenPGPCertificate(): OpenPGPCertificate =
-    toOpenPGPCertificate(PGPainless.getInstance().implementation)
 
 /**
  * Convert the given [PGPKeyRing] into an [OpenPGPCertificate] using the given

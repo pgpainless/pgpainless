@@ -42,16 +42,16 @@ public class MessageMetadataTest {
         MessageMetadata metadata = new MessageMetadata(message);
 
         // Check encryption algs
-        assertEquals(SymmetricKeyAlgorithm.AES_128, metadata.getEncryptionAlgorithm(), "getEncryptionAlgorithm() returns alg of outermost EncryptedData");
-        Iterator<SymmetricKeyAlgorithm> encryptionAlgs = metadata.getEncryptionAlgorithms();
-        assertTrue(encryptionAlgs.hasNext(), "There is at least one EncryptedData child");
-        assertTrue(encryptionAlgs.hasNext(), "The child is still there");
-        assertEquals(SymmetricKeyAlgorithm.AES_128, encryptionAlgs.next(), "The first algo is AES128");
-        assertTrue(encryptionAlgs.hasNext(), "There is another EncryptedData");
-        assertTrue(encryptionAlgs.hasNext(), "There is *still* another EncryptedData");
-        assertEquals(SymmetricKeyAlgorithm.AES_256, encryptionAlgs.next(), "The second algo is AES256");
-        assertFalse(encryptionAlgs.hasNext(), "There is no more EncryptedData");
-        assertFalse(encryptionAlgs.hasNext(), "There *still* is no more EncryptedData");
+        assertEquals(SymmetricKeyAlgorithm.AES_128.getAlgorithmId(), metadata.getEncryptionMechanism().getSymmetricKeyAlgorithm(), "getEncryptionMechanism() returns alg of outermost EncryptedData");
+        Iterator<MessageEncryptionMechanism> mechanisms = metadata.getEncryptionMechanisms();
+        assertTrue(mechanisms.hasNext(), "There is at least one EncryptedData child");
+        assertTrue(mechanisms.hasNext(), "The child is still there");
+        assertEquals(SymmetricKeyAlgorithm.AES_128.getAlgorithmId(), mechanisms.next().getSymmetricKeyAlgorithm(), "The first algo is AES128");
+        assertTrue(mechanisms.hasNext(), "There is another EncryptedData");
+        assertTrue(mechanisms.hasNext(), "There is *still* another EncryptedData");
+        assertEquals(SymmetricKeyAlgorithm.AES_256.getAlgorithmId(), mechanisms.next().getSymmetricKeyAlgorithm(), "The second algo is AES256");
+        assertFalse(mechanisms.hasNext(), "There is no more EncryptedData");
+        assertFalse(mechanisms.hasNext(), "There *still* is no more EncryptedData");
 
         assertEquals(CompressionAlgorithm.ZIP, metadata.getCompressionAlgorithm(), "getCompressionAlgorithm() returns alg of outermost CompressedData");
         Iterator<CompressionAlgorithm> compAlgs = metadata.getCompressionAlgorithms();
@@ -77,7 +77,7 @@ public class MessageMetadataTest {
 
         MessageMetadata metadata = new MessageMetadata(message);
         assertNull(metadata.getCompressionAlgorithm());
-        assertNull(metadata.getEncryptionAlgorithm());
+        assertNull(metadata.getEncryptionMechanism());
         assertEquals("collateral_murder.zip", metadata.getFilename());
         assertEquals(DateUtil.parseUTCDate("2010-04-05 10:12:03 UTC"), metadata.getModificationDate());
         assertEquals(StreamEncoding.BINARY, metadata.getLiteralDataEncoding());
