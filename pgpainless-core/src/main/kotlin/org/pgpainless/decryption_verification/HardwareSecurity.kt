@@ -28,30 +28,6 @@ class HardwareSecurity {
          * If decryption fails for some reason, a subclass of the [HardwareSecurityException] is
          * thrown.
          *
-         * @param keyId id of the key
-         * @param keyAlgorithm algorithm
-         * @param sessionKeyData encrypted session key
-         * @param pkeskVersion version of the Public-Key-Encrypted-Session-Key packet (3 or 6)
-         * @return decrypted session key
-         * @throws HardwareSecurityException exception
-         */
-        @Deprecated("Pass in a KeyIdentifier instead of a Long keyId.")
-        @Throws(HardwareSecurityException::class)
-        fun decryptSessionKey(
-            keyId: Long,
-            keyAlgorithm: Int,
-            sessionKeyData: ByteArray,
-            pkeskVersion: Int
-        ): ByteArray =
-            decryptSessionKey(KeyIdentifier(keyId), keyAlgorithm, sessionKeyData, pkeskVersion)
-
-        /**
-         * Delegate decryption of a Public-Key-Encrypted-Session-Key (PKESK) to an external API for
-         * dealing with hardware security modules such as smartcards or TPMs.
-         *
-         * If decryption fails for some reason, a subclass of the [HardwareSecurityException] is
-         * thrown.
-         *
          * @param keyIdentifier identifier of the encryption component key
          * @param keyAlgorithm algorithm
          * @param sessionKeyData encrypted session key

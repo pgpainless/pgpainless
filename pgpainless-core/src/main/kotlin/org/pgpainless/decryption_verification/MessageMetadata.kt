@@ -32,33 +32,11 @@ class MessageMetadata(val message: Message) {
     // ##########################################################################################################
 
     /**
-     * The [SymmetricKeyAlgorithm] of the outermost encrypted data packet, or null if message is
-     * unencrypted.
-     */
-    @Deprecated(
-        "Deprecated in favor of encryptionMechanism",
-        replaceWith = ReplaceWith("encryptionMechanism"))
-    val encryptionAlgorithm: SymmetricKeyAlgorithm?
-        get() = encryptionAlgorithms.let { if (it.hasNext()) it.next() else null }
-
-    /**
      * The [MessageEncryptionMechanism] of the outermost encrypted data packet, or null if the
      * message is unencrypted.
      */
     val encryptionMechanism: MessageEncryptionMechanism?
         get() = encryptionMechanisms.let { if (it.hasNext()) it.next() else null }
-
-    /**
-     * [Iterator] of each [SymmetricKeyAlgorithm] encountered in the message. The first item
-     * returned by the iterator is the algorithm of the outermost encrypted data packet, the next
-     * item that of the next nested encrypted data packet and so on. The iterator might also be
-     * empty, in case of an unencrypted message.
-     */
-    @Deprecated(
-        "Deprecated in favor of encryptionMechanisms",
-        replaceWith = ReplaceWith("encryptionMechanisms"))
-    val encryptionAlgorithms: Iterator<SymmetricKeyAlgorithm>
-        get() = encryptionLayers.asSequence().map { it.algorithm }.iterator()
 
     /**
      * [Iterator] of each [MessageEncryptionMechanism] encountered in the message. The first item
@@ -114,13 +92,6 @@ class MessageMetadata(val message: Message) {
      */
     val decryptionKey: SubkeyIdentifier?
         get() = encryptionLayers.asSequence().mapNotNull { it.decryptionKey }.firstOrNull()
-
-    /** List containing all recipient keyIDs. */
-    @Deprecated(
-        "Use of key-ids is discouraged in favor of KeyIdentifiers",
-        replaceWith = ReplaceWith("recipientKeyIdentifiers"))
-    val recipientKeyIds: List<Long>
-        get() = recipientKeyIdentifiers.map { it.keyId }.toList()
 
     /** List containing all recipient [KeyIdentifiers][KeyIdentifier]. */
     val recipientKeyIdentifiers: List<KeyIdentifier>

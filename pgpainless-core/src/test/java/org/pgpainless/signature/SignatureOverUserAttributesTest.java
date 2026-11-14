@@ -57,7 +57,8 @@ public class SignatureOverUserAttributesTest {
 
         OpenPGPKey.OpenPGPSecretKey secretKey = secretKeys.getPrimarySecretKey();
         OpenPGPCertificate.OpenPGPComponentKey publicKey = secretKey.getPublicKey();
-        OpenPGPKey.OpenPGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKey, SecretKeyRingProtector.unprotectedKeys());
+        OpenPGPKey.OpenPGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(
+                secretKey, SecretKeyRingProtector.unprotectedKeys(), api.getAlgorithmPolicy());
 
         PGPSignatureGenerator generator = new PGPSignatureGenerator(
                 OpenPGPImplementation.getInstance()
@@ -81,7 +82,8 @@ public class SignatureOverUserAttributesTest {
         OpenPGPKey secretKeys = TestKeys.getEmilKey();
         OpenPGPKey.OpenPGPSecretKey secretKey = secretKeys.getPrimarySecretKey();
         OpenPGPCertificate.OpenPGPComponentKey publicKey = secretKey.getPublicKey();
-        OpenPGPKey.OpenPGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKey, SecretKeyRingProtector.unprotectedKeys());
+        OpenPGPKey.OpenPGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(
+                secretKey, SecretKeyRingProtector.unprotectedKeys(), api.getAlgorithmPolicy());
 
         PGPSignatureGenerator generator = new PGPSignatureGenerator(
                 api.getImplementation()

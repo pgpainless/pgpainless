@@ -62,7 +62,9 @@ public class KeyRingUtilTest {
                 ), key.getPrimaryKey().getPGPPublicKey());
         sigGen.init(
                 SignatureType.POSITIVE_CERTIFICATION.getCode(),
-                UnlockSecretKey.unlockSecretKey(key.getPrimarySecretKey().getPGPSecretKey(), SecretKeyRingProtector.unprotectedKeys()));
+                UnlockSecretKey.unlockSecretKey(
+                        key.getPrimarySecretKey().getPGPSecretKey(), SecretKeyRingProtector.unprotectedKeys(),
+                        api.getAlgorithmPolicy()));
         PGPSignature signature = sigGen.generateCertification(userAttr, key.getPrimaryKey().getPGPPublicKey());
         // inject sig
         PGPSecretKeyRing secretKeys = KeyRingUtils.injectCertification(key.getPGPSecretKeyRing(), userAttr, signature);

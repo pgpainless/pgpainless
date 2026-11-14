@@ -29,10 +29,6 @@ open class BaseSecretKeyRingProtector(
         return passphraseProvider.hasPassphrase(keyIdentifier)
     }
 
-    @Deprecated("Pass in a KeyIdentifier instead.")
-    override fun getDecryptor(keyId: Long): PBESecretKeyDecryptor? =
-        getDecryptor(KeyIdentifier(keyId))
-
     override fun getDecryptor(keyIdentifier: KeyIdentifier): PBESecretKeyDecryptor? =
         passphraseProvider.getPassphraseFor(keyIdentifier)?.let {
             if (it.isEmpty) null

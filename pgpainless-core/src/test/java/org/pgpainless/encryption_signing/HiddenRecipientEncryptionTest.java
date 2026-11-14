@@ -12,6 +12,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
@@ -64,7 +65,7 @@ public class HiddenRecipientEncryptionTest {
         MessageMetadata metadata = decryptionStream.getMetadata();
 
         assertEquals(msg, plaintextOut.toString());
-        assertTrue(metadata.getRecipientKeyIds().contains(0L));
+        assertTrue(metadata.getRecipientKeyIdentifiers().contains(new KeyIdentifier(0L)));
         assertEquals(1, metadata.getRecipientKeyIdentifiers().size());
         assertTrue(metadata.getRecipientKeyIdentifiers().get(0).isWildcard());
         assertEquals(actualEncryptionKey, metadata.getDecryptionKey());

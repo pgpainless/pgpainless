@@ -107,7 +107,9 @@ public class WeirdKeys {
                 .generateKey(OpenPGPKeyVersion.v4)  // v4, since we manually craft the binding sig later on
                 .modernKeyRing(null);
         OpenPGPKey.OpenPGPSecretKey primaryKey = nakedKey.getPrimarySecretKey();
-        OpenPGPKey.OpenPGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(primaryKey, Passphrase.emptyPassphrase());
+        OpenPGPKey.OpenPGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(
+                primaryKey, Passphrase.emptyPassphrase(),
+                PGPainless.getInstance().getAlgorithmPolicy());
 
         // Non-UTF8 User-ID
         ByteArrayOutputStream bOut = new ByteArrayOutputStream();

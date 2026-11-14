@@ -43,6 +43,7 @@ import org.bouncycastle.openpgp.api.OpenPGPImplementation;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.CompressionAlgorithm;
 import org.pgpainless.algorithm.Feature;
 import org.pgpainless.algorithm.HashAlgorithm;
@@ -418,7 +419,8 @@ public class SignatureSubpacketsTest {
                         primaryKey.getPublicKey().getAlgorithm(), HashAlgorithm.SHA512.getAlgorithmId()),
                 primaryKey.getPublicKey());
 
-        PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(primaryKey, (Passphrase) null);
+        PGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(primaryKey, (Passphrase) null,
+                PGPainless.getInstance().getAlgorithmPolicy());
         generator.init(SignatureType.DIRECT_KEY.getCode(), privateKey);
         PGPSignature sig1 = generator.generateCertification(primaryKey.getPublicKey());
 

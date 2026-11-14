@@ -6,8 +6,6 @@ package org.pgpainless.key.certification
 
 import java.util.*
 import org.bouncycastle.openpgp.PGPException
-import org.bouncycastle.openpgp.PGPPublicKeyRing
-import org.bouncycastle.openpgp.PGPSecretKeyRing
 import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.bouncycastle.openpgp.api.OpenPGPKey
@@ -55,34 +53,6 @@ class CertifyCertificate(private val api: PGPainless) {
     ): CertificationOnUserId = CertificationOnUserId(userId, certificate, certificationType, api)
 
     /**
-     * Create a certification over a User-Id. By default, this method will use
-     * [CertificationType.GENERIC] to create the signature.
-     *
-     * @param userId user-id to certify
-     * @param certificate certificate
-     * @return API
-     */
-    @Deprecated(
-        "Pass in an OpenPGPCertificate instead.", replaceWith = ReplaceWith("certifyUserId"))
-    fun userIdOnCertificate(userId: String, certificate: PGPPublicKeyRing): CertificationOnUserId =
-        userIdOnCertificate(userId, certificate, CertificationType.GENERIC)
-
-    /**
-     * Create a certification of the given [CertificationType] over a User-Id.
-     *
-     * @param userId user-id to certify
-     * @param certificate certificate
-     * @param certificationType type of signature
-     * @return API
-     */
-    @Deprecated("Pass in an OpenPGPCertificate instead of PGPPublicKeyRing.")
-    fun userIdOnCertificate(
-        userId: String,
-        certificate: PGPPublicKeyRing,
-        certificationType: CertificationType
-    ) = CertificationOnUserId(userId, certificate, certificationType, api)
-
-    /**
      * Create a certification revocation signature for the given [userId] on the given
      * [certificate].
      *
@@ -105,31 +75,6 @@ class CertifyCertificate(private val api: PGPainless) {
         DelegationOnCertificate(certificate, trustworthiness, api)
 
     /**
-     * Create a delegation (direct key signature) over a certificate. This can be used to mark a
-     * certificate as a trusted introducer (see [certificate] method with [Trustworthiness]
-     * argument).
-     *
-     * @param certificate certificate
-     * @return API
-     */
-    @Deprecated("Pass in an OpenPGPCertificate instead of PGPPublicKeyRing.")
-    fun certificate(certificate: PGPPublicKeyRing): DelegationOnCertificate =
-        certificate(certificate, null)
-
-    /**
-     * Create a delegation (direct key signature) containing a
-     * [org.bouncycastle.bcpg.sig.TrustSignature] packet over a certificate. This can be used to
-     * mark a certificate as a trusted introducer.
-     *
-     * @param certificate certificate
-     * @param trustworthiness trustworthiness of the certificate
-     * @return API
-     */
-    @Deprecated("Pass in an OpenPGPCertificate instead of PGPPublicKeyRing.")
-    fun certificate(certificate: PGPPublicKeyRing, trustworthiness: Trustworthiness?) =
-        DelegationOnCertificate(certificate, trustworthiness, api)
-
-    /**
      * Create a key revocation signature, revoking a delegation over the given [certificate].
      *
      * @param certificate certificate to revoke the delegation to
@@ -144,14 +89,6 @@ class CertifyCertificate(private val api: PGPainless) {
         private val api: PGPainless
     ) {
 
-        @Deprecated("Use primary constructor instead.")
-        constructor(
-            userId: String,
-            certificate: PGPPublicKeyRing,
-            certificationType: CertificationType,
-            api: PGPainless
-        ) : this(userId, api.toCertificate(certificate), certificationType, api)
-
         fun withKey(
             key: OpenPGPKey,
             protector: SecretKeyRingProtector
@@ -163,20 +100,6 @@ class CertifyCertificate(private val api: PGPainless) {
 
             return CertificationOnUserIdWithSubpackets(certificate, userId, sigBuilder, api)
         }
-
-        /**
-         * Create the certification using the given key.
-         *
-         * @param certificationKey key used to create the certification
-         * @param protector protector to unlock the certification key
-         * @return API
-         * @throws PGPException in case of an OpenPGP related error
-         */
-        @Deprecated("Pass in an OpenPGPKey instead of a PGPSecretKeyRing.")
-        fun withKey(
-            certificationKey: PGPSecretKeyRing,
-            protector: SecretKeyRingProtector
-        ): CertificationOnUserIdWithSubpackets = withKey(api.toKey(certificationKey), protector)
     }
 
     class CertificationOnUserIdWithSubpackets(
@@ -185,14 +108,6 @@ class CertifyCertificate(private val api: PGPainless) {
         private val sigBuilder: ThirdPartyCertificationSignatureBuilder,
         private val api: PGPainless
     ) {
-
-        @Deprecated("Pass in an OpenPGPCertificate instead of a PGPPublicKeyRing.")
-        constructor(
-            certificate: PGPPublicKeyRing,
-            userId: String,
-            sigBuilder: ThirdPartyCertificationSignatureBuilder,
-            api: PGPainless
-        ) : this(api.toCertificate(certificate), userId, sigBuilder, api)
 
         /**
          * Apply the given signature subpackets and build the certification.
@@ -288,13 +203,14 @@ class CertifyCertificate(private val api: PGPainless) {
         private val api: PGPainless
     ) {
 
-        @Deprecated("Pass in an OpenPGPCertificate instead of PGPPublicKeyRing.")
-        constructor(
-            certificate: PGPPublicKeyRing,
-            trustworthiness: Trustworthiness?,
-            api: PGPainless
-        ) : this(api.toCertificate(certificate), trustworthiness, api)
-
+        /**
+         * Build the delegation using the given certification key.
+         *
+         * @param key key to create the certification with
+         * @param protector protector to unlock the certification key
+         * @return API
+         * @throws PGPException in case of an OpenPGP related error
+         */
         fun withKey(
             key: OpenPGPKey,
             protector: SecretKeyRingProtector
@@ -307,20 +223,6 @@ class CertifyCertificate(private val api: PGPainless) {
             }
             return DelegationOnCertificateWithSubpackets(certificate, sigBuilder, api)
         }
-
-        /**
-         * Build the delegation using the given certification key.
-         *
-         * @param certificationKey key to create the certification with
-         * @param protector protector to unlock the certification key
-         * @return API
-         * @throws PGPException in case of an OpenPGP related error
-         */
-        @Deprecated("Pass in an OpenPGPKey instead of PGPSecretKeyRing.")
-        fun withKey(
-            certificationKey: PGPSecretKeyRing,
-            protector: SecretKeyRingProtector
-        ): DelegationOnCertificateWithSubpackets = withKey(api.toKey(certificationKey), protector)
     }
 
     class DelegationOnCertificateWithSubpackets(
@@ -328,13 +230,6 @@ class CertifyCertificate(private val api: PGPainless) {
         private val sigBuilder: ThirdPartyDirectKeySignatureBuilder,
         private val api: PGPainless
     ) {
-
-        @Deprecated("Pass in an OpenPGPCertificate instead of a PGPPublicKeyRing.")
-        constructor(
-            certificate: PGPPublicKeyRing,
-            sigBuilder: ThirdPartyDirectKeySignatureBuilder,
-            api: PGPainless
-        ) : this(api.toCertificate(certificate), sigBuilder, api)
 
         /**
          * Apply the given signature subpackets and build the delegation signature.
@@ -434,7 +329,6 @@ class CertifyCertificate(private val api: PGPainless) {
         val certifiedCertificate: OpenPGPCertificate,
         val certification: OpenPGPSignature
     ) {
-        val publicKeyRing: PGPPublicKeyRing = certifiedCertificate.pgpPublicKeyRing
         val pgpSignature: PGPSignature = certification.signature
     }
 

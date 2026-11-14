@@ -156,7 +156,8 @@ public class CachingSecretKeyRingProtectorTest {
         protector.replacePassphrase(secretKeys, TestKeys.CRYPTIE_PASSPHRASE);
 
         for (PGPSecretKey key : secretKeys) {
-            UnlockSecretKey.unlockSecretKey(key, protector);
+            UnlockSecretKey.unlockSecretKey(key, protector,
+                    PGPainless.getInstance().getAlgorithmPolicy());
         }
     }
 

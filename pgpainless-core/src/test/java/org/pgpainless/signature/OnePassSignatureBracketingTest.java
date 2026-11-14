@@ -91,7 +91,8 @@ public class OnePassSignatureBracketingTest {
                     if (encryptedData instanceof PGPPublicKeyEncryptedData) {
                         PGPPublicKeyEncryptedData publicKeyEncryptedData = (PGPPublicKeyEncryptedData) encryptedData;
                         OpenPGPKey.OpenPGPSecretKey secretKey = key1.getSecretKey(publicKeyEncryptedData.getKeyIdentifier());
-                        OpenPGPKey.OpenPGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(secretKey, SecretKeyRingProtector.unprotectedKeys());
+                        OpenPGPKey.OpenPGPPrivateKey privateKey = UnlockSecretKey.unlockSecretKey(
+                                secretKey, SecretKeyRingProtector.unprotectedKeys(), api.getAlgorithmPolicy());
                         PublicKeyDataDecryptorFactory decryptorFactory = api.getImplementation()
                                 .publicKeyDataDecryptorFactory(privateKey.getKeyPair().getPrivateKey());
                         InputStream decryptionStream = publicKeyEncryptedData.getDataStream(decryptorFactory);

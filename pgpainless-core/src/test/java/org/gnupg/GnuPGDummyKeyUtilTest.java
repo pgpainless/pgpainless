@@ -53,9 +53,9 @@ public class GnuPGDummyKeyUtilTest {
             "=+vXp\n" +
             "-----END PGP PRIVATE KEY BLOCK-----\n";
 
-    private static final long primaryKeyId = KeyIdUtil.fromLongKeyId("C312C97DA9F76A4F");
-    private static final long encryptionKeyId = KeyIdUtil.fromLongKeyId("6924D066714CE8C6");
-    private static final long signatureKeyId = KeyIdUtil.fromLongKeyId("94022FA56DC05B49");
+    private static final KeyIdentifier primaryKeyId = new KeyIdentifier(KeyIdUtil.fromLongKeyId("C312C97DA9F76A4F"));
+    private static final KeyIdentifier encryptionKeyId = new KeyIdentifier(KeyIdUtil.fromLongKeyId("6924D066714CE8C6"));
+    private static final KeyIdentifier signatureKeyId = new KeyIdentifier(KeyIdUtil.fromLongKeyId("94022FA56DC05B49"));
     private static final byte[] cardSerial = new byte[] {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f};
 
     public static final String ALL_KEYS_ON_CARD = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
@@ -242,7 +242,7 @@ public class GnuPGDummyKeyUtilTest {
 
         PGPSecretKeyRing onCard = GnuPGDummyKeyUtil.modify(secretKeys)
                 .divertPrivateKeysToCard(GnuPGDummyKeyUtil.KeyFilter.selected(
-                        Arrays.asList(new KeyIdentifier(signatureKeyId)))
+                        Arrays.asList(signatureKeyId))
                         , cardSerial);
 
         assertArrayEquals(expected.getPGPSecretKeyRing().getEncoded(), onCard.getEncoded());

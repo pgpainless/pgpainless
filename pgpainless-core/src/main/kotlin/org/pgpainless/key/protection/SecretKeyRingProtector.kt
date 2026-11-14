@@ -31,32 +31,12 @@ import org.pgpainless.util.Passphrase
 interface SecretKeyRingProtector : KeyPassphraseProvider {
 
     /**
-     * Returns true, if the protector has a passphrase for the key with the given key-id.
-     *
-     * @param keyId key id
-     * @return true if it has a passphrase, false otherwise
-     */
-    @Deprecated("Pass in a KeyIdentifier instead.")
-    fun hasPassphraseFor(keyId: Long): Boolean = hasPassphraseFor(KeyIdentifier(keyId))
-
-    /**
      * Returns true, if the protector has a passphrase for the key with the given [keyIdentifier].
      *
      * @param keyIdentifier key identifier
      * @return true if it has a passphrase, false otherwise
      */
     fun hasPassphraseFor(keyIdentifier: KeyIdentifier): Boolean
-
-    /**
-     * Return a decryptor for the key of id `keyId`. This method returns null if the key is
-     * unprotected.
-     *
-     * @param keyId id of the key
-     * @return decryptor for the key
-     */
-    @Deprecated("Pass in a KeyIdentifier instead.")
-    @Throws(PGPException::class)
-    fun getDecryptor(keyId: Long): PBESecretKeyDecryptor? = getDecryptor(KeyIdentifier(keyId))
 
     @Throws(PGPException::class)
     fun getDecryptor(key: OpenPGPSecretKey): PBESecretKeyDecryptor? =
