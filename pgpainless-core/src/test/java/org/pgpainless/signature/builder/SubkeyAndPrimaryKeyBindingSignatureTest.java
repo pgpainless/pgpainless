@@ -35,7 +35,7 @@ public class SubkeyAndPrimaryKeyBindingSignatureTest {
     public void testRebindSubkey() throws PGPException, IOException {
         PGPainless api = PGPainless.getInstance();
         OpenPGPKey secretKeys = api.toKey(TestKeys.getEmilSecretKeyRing());
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeys);
+        KeyRingInfo info = api.inspect(secretKeys);
 
         OpenPGPKey.OpenPGPSecretKey primaryKey = secretKeys.getPrimarySecretKey();
         OpenPGPCertificate.OpenPGPComponentKey encryptionSubkey =
@@ -60,7 +60,7 @@ public class SubkeyAndPrimaryKeyBindingSignatureTest {
         PGPSignature binding = sbb.build(encryptionSubkey.getPGPPublicKey());
         PGPSecretKeyRing secretKeyRing = KeyRingUtils.injectCertification(secretKeys.getPGPKeyRing(), encryptionSubkey.getPGPPublicKey(), binding);
 
-        info = PGPainless.inspectKeyRing(secretKeyRing);
+        info = api.inspect(api.toKey(secretKeyRing));
         assertEquals(Collections.singleton(HashAlgorithm.SHA512), info.getPreferredHashAlgorithms(encryptionSubkey.getKeyIdentifier()));
     }
 }

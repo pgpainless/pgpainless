@@ -12,8 +12,8 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -331,12 +331,13 @@ public class UnsupportedPacketVersionsTest {
             "=jGpv\n" +
             "-----END PGP MESSAGE-----\n";
 
-    private final PGPSecretKeyRing key;
-    private final PGPPublicKeyRing cert;
+    private final PGPainless api = PGPainless.getInstance();
+    private final OpenPGPKey key;
+    private final OpenPGPCertificate cert;
 
     public UnsupportedPacketVersionsTest() throws IOException {
-        key = PGPainless.readKeyRing().secretKeyRing(KEY);
-        cert = PGPainless.extractCertificate(key);
+        key = api.readKey().parseKey(KEY);
+        cert = key.toCertificate();
     }
 
     @Test
@@ -392,9 +393,9 @@ public class UnsupportedPacketVersionsTest {
     public void decryptAndCompare(String msg, String plain) throws IOException, PGPException {
         // noinspection CharsetObjectCanBeUsed
         ByteArrayInputStream inputStream = new ByteArrayInputStream(msg.getBytes(Charset.forName("UTF8")));
-        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(inputStream)
-                .withOptions(ConsumerOptions.get()
+                .withOptions(ConsumerOptions.get(api)
                         .addDecryptionKey(key)
                         .addVerificationCert(cert));
 

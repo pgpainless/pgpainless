@@ -9,6 +9,8 @@ import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.encoders.Hex;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -162,14 +164,15 @@ public class OpenPgpV6FingerprintTest {
                 "j+VjFM21J0hqWlEg+bdiojWnKfA5AQpWUWtnNwDEM0g12vYxoWM8Y81W+bHBw805\n" +
                 "I8kWVkXU6vFOi+HWvv/ira7ofJu16NnoUkhclkUrk0mXubZvyl4GBg==\n" +
                 "-----END PGP PUBLIC KEY BLOCK-----";
-        PGPPublicKeyRing cert = PGPainless.readKeyRing().publicKeyRing(CERT);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate cert = api.readKey().parseCertificate(CERT);
         assertNotNull(cert);
 
         OpenPgpFingerprint fingerprint = OpenPgpFingerprint.of(cert);
         assertEquals(6, fingerprint.getVersion());
         assertEquals("CB186C4F0609A697E4D52DFA6C722B0C1F1E27C18A56708F6525EC27BAD9ACC9", fingerprint.toString());
 
-        Iterator<PGPPublicKey> keys = cert.getPublicKeys();
+        Iterator<OpenPGPCertificate.OpenPGPComponentKey> keys = cert.getKeys().iterator();
         fingerprint = OpenPgpFingerprint.of(keys.next());
         assertEquals(6, fingerprint.getVersion());
         assertEquals("CB186C4F0609A697E4D52DFA6C722B0C1F1E27C18A56708F6525EC27BAD9ACC9",
@@ -197,14 +200,15 @@ public class OpenPgpV6FingerprintTest {
                 "M0g12vYxoWM8Y81W+bHBw805I8kWVkXU6vFOi+HWvv/ira7ofJu16NnoUkhclkUr\n" +
                 "k0mXubZvyl4GBg==\n" +
                 "-----END PGP PRIVATE KEY BLOCK-----";
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.readKey().parseKey(KEY);
         assertNotNull(secretKeys);
 
         OpenPgpFingerprint fingerprint = OpenPgpFingerprint.of(secretKeys);
         assertEquals(6, fingerprint.getVersion());
         assertEquals("CB186C4F0609A697E4D52DFA6C722B0C1F1E27C18A56708F6525EC27BAD9ACC9", fingerprint.toString());
 
-        Iterator<PGPSecretKey> keys = secretKeys.getSecretKeys();
+        Iterator<OpenPGPKey.OpenPGPSecretKey> keys = secretKeys.getSecretKeys().values().iterator();
         fingerprint = OpenPgpFingerprint.of(keys.next());
         assertEquals(6, fingerprint.getVersion());
         assertEquals("CB186C4F0609A697E4D52DFA6C722B0C1F1E27C18A56708F6525EC27BAD9ACC9",

@@ -73,16 +73,23 @@ public class PolicyTest {
 
         policy = new Policy().copy()
 
-                .withCompressionAlgorithmPolicy(new Policy.CompressionAlgorithmPolicy(CompressionAlgorithm.UNCOMPRESSED,
-                        Arrays.asList(CompressionAlgorithm.ZIP, CompressionAlgorithm.ZLIB, CompressionAlgorithm.UNCOMPRESSED)))
+                .withCompressionAlgorithmPolicy(
+                        new Policy.CompressionAlgorithmPolicy(CompressionAlgorithm.UNCOMPRESSED,
+                        Arrays.asList(CompressionAlgorithm.ZIP, CompressionAlgorithm.ZLIB,
+                                CompressionAlgorithm.UNCOMPRESSED)))
 
-                .withSymmetricKeyEncryptionAlgorithmPolicy(new Policy.SymmetricKeyAlgorithmPolicy(SymmetricKeyAlgorithm.AES_256,
-                        Arrays.asList(SymmetricKeyAlgorithm.AES_256, SymmetricKeyAlgorithm.AES_192, SymmetricKeyAlgorithm.AES_128)))
+                .withMessageEncryptionAlgorithmPolicy(Policy.MessageEncryptionMechanismPolicy.rfc4880(
+                        new Policy.SymmetricKeyAlgorithmPolicy(SymmetricKeyAlgorithm.AES_256,
+                        Arrays.asList(SymmetricKeyAlgorithm.AES_256, SymmetricKeyAlgorithm.AES_192,
+                                SymmetricKeyAlgorithm.AES_128))))
 
-                .withSymmetricKeyDecryptionAlgorithmPolicy(new Policy.SymmetricKeyAlgorithmPolicy(SymmetricKeyAlgorithm.AES_256,
-                        Arrays.asList(SymmetricKeyAlgorithm.AES_256, SymmetricKeyAlgorithm.AES_192, SymmetricKeyAlgorithm.AES_128, SymmetricKeyAlgorithm.BLOWFISH)))
+                .withMessageDecryptionAlgorithmPolicy(Policy.MessageEncryptionMechanismPolicy.rfc4880(
+                        new Policy.SymmetricKeyAlgorithmPolicy(SymmetricKeyAlgorithm.AES_256,
+                        Arrays.asList(SymmetricKeyAlgorithm.AES_256, SymmetricKeyAlgorithm.AES_192,
+                                SymmetricKeyAlgorithm.AES_128, SymmetricKeyAlgorithm.BLOWFISH))))
 
-                .withCertificationSignatureHashAlgorithmPolicy(new Policy.HashAlgorithmPolicy(HashAlgorithm.SHA512, sigHashAlgoMap))
+                .withCertificationSignatureHashAlgorithmPolicy(new Policy.HashAlgorithmPolicy(HashAlgorithm.SHA512,
+                        sigHashAlgoMap))
 
                 .withRevocationSignatureHashAlgorithmPolicy(new Policy.HashAlgorithmPolicy(HashAlgorithm.SHA512,
                         revHashAlgoMap))
@@ -106,36 +113,38 @@ public class PolicyTest {
 
     @Test
     public void testDefaultCompressionAlgorithm() {
-        assertEquals(CompressionAlgorithm.UNCOMPRESSED, policy.getCompressionAlgorithmPolicy().defaultCompressionAlgorithm());
+        assertEquals(CompressionAlgorithm.UNCOMPRESSED,
+                policy.getCompressionAlgorithmPolicy().defaultCompressionAlgorithm());
     }
 
     @Test
     public void testAcceptableSymmetricKeyEncryptionAlgorithm() {
-        assertTrue(policy.getSymmetricKeyEncryptionAlgorithmPolicy().isAcceptable(SymmetricKeyAlgorithm.AES_256));
-        assertTrue(policy.getSymmetricKeyEncryptionAlgorithmPolicy().isAcceptable(SymmetricKeyAlgorithm.AES_256.getAlgorithmId()));
+        assertTrue(policy.getMessageEncryptionAlgorithmPolicy().isAcceptable(
+                MessageEncryptionMechanism.integrityProtected(SymmetricKeyAlgorithm.AES_256.getAlgorithmId())));
     }
 
     @Test
     public void testUnAcceptableSymmetricKeyEncryptionAlgorithm() {
-        assertFalse(policy.getSymmetricKeyEncryptionAlgorithmPolicy().isAcceptable(SymmetricKeyAlgorithm.BLOWFISH));
-        assertFalse(policy.getSymmetricKeyEncryptionAlgorithmPolicy().isAcceptable(SymmetricKeyAlgorithm.BLOWFISH.getAlgorithmId()));
+        assertFalse(policy.getMessageEncryptionAlgorithmPolicy().isAcceptable(
+                MessageEncryptionMechanism.integrityProtected(SymmetricKeyAlgorithm.BLOWFISH.getAlgorithmId())));
     }
 
     @Test
     public void testDefaultSymmetricKeyEncryptionAlgorithm() {
-        assertEquals(SymmetricKeyAlgorithm.AES_256, policy.getSymmetricKeyEncryptionAlgorithmPolicy().getDefaultSymmetricKeyAlgorithm());
+        assertEquals(MessageEncryptionMechanism.integrityProtected(SymmetricKeyAlgorithm.AES_256.getAlgorithmId()),
+                policy.getMessageEncryptionAlgorithmPolicy().getSymmetricFallbackMechanism());
     }
 
     @Test
     public void testAcceptableSymmetricKeyDecryptionAlgorithm() {
-        assertTrue(policy.getSymmetricKeyDecryptionAlgorithmPolicy().isAcceptable(SymmetricKeyAlgorithm.BLOWFISH));
-        assertTrue(policy.getSymmetricKeyDecryptionAlgorithmPolicy().isAcceptable(SymmetricKeyAlgorithm.BLOWFISH.getAlgorithmId()));
+        assertTrue(policy.getMessageDecryptionAlgorithmPolicy().isAcceptable(
+                MessageEncryptionMechanism.integrityProtected(SymmetricKeyAlgorithm.BLOWFISH.getAlgorithmId())));
     }
 
     @Test
     public void testUnAcceptableSymmetricKeyDecryptionAlgorithm() {
-        assertFalse(policy.getSymmetricKeyDecryptionAlgorithmPolicy().isAcceptable(SymmetricKeyAlgorithm.CAMELLIA_128));
-        assertFalse(policy.getSymmetricKeyDecryptionAlgorithmPolicy().isAcceptable(SymmetricKeyAlgorithm.CAMELLIA_128.getAlgorithmId()));
+        assertFalse(policy.getMessageDecryptionAlgorithmPolicy().isAcceptable(
+                MessageEncryptionMechanism.integrityProtected(SymmetricKeyAlgorithm.CAMELLIA_128.getAlgorithmId())));
     }
 
     @Test
@@ -204,12 +213,14 @@ public class PolicyTest {
 
     @Test
     public void testUnknownSymmetricKeyEncryptionAlgorithmIsNotAcceptable() {
-        assertFalse(policy.getSymmetricKeyEncryptionAlgorithmPolicy().isAcceptable(-1));
+        assertFalse(policy.getMessageEncryptionAlgorithmPolicy().isAcceptable(
+                MessageEncryptionMechanism.integrityProtected(-1)));
     }
 
     @Test
     public void testUnknownSymmetricKeyDecryptionAlgorithmIsNotAcceptable() {
-        assertFalse(policy.getSymmetricKeyDecryptionAlgorithmPolicy().isAcceptable(-1));
+        assertFalse(policy.getMessageDecryptionAlgorithmPolicy().isAcceptable(
+                MessageEncryptionMechanism.integrityProtected(-1)));
     }
 
     @Test

@@ -20,6 +20,7 @@ public class VerifyDetachedSignatureTest {
 
     @Test
     public void test1() throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
         String signedContent = "Content-Type: multipart/mixed; boundary=\"OSR6TONWKJD9dgyc2XH5AQPNnAs7pdg1t\"\n" +
                 "\n" +
                 "--OSR6TONWKJD9dgyc2XH5AQPNnAs7pdg1t\n" +
@@ -54,12 +55,12 @@ public class VerifyDetachedSignatureTest {
                 "-----END PGP PUBLIC KEY BLOCK-----\n";
 
 
-        DecryptionStream verifier = PGPainless.getInstance().processMessage()
+        DecryptionStream verifier = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(signedContent.getBytes(StandardCharsets.UTF_8)))
                 .withOptions(
-                        ConsumerOptions.get()
+                        ConsumerOptions.get(api)
                                 .addVerificationOfDetachedSignatures(new ByteArrayInputStream(signature.getBytes(StandardCharsets.UTF_8)))
-                                .addVerificationCerts(PGPainless.readKeyRing().keyRingCollection(pubkey, true).getPgpPublicKeyRingCollection())
+                                .addVerificationCerts(api.readKey().parseCertificates(pubkey))
                                 .setMultiPassStrategy(new InMemoryMultiPassStrategy())
                 );
 
@@ -71,6 +72,7 @@ public class VerifyDetachedSignatureTest {
 
     @Test
     public void test2() throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
         String signedContent = "Content-Type: multipart/mixed; boundary=\"------------26m0wPaTDf7nRDIftnMj4qjE\";\r\n" +
                 " protected-headers=\"v1\"\r\n" +
                 "From: Denys <denbond7@flowcrypt.test>\r\n" +
@@ -129,12 +131,12 @@ public class VerifyDetachedSignatureTest {
                 "=pXF6\n" +
                 "-----END PGP PUBLIC KEY BLOCK-----\n";
 
-        DecryptionStream verifier = PGPainless.getInstance().processMessage()
+        DecryptionStream verifier = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(signedContent.getBytes(StandardCharsets.UTF_8)))
                 .withOptions(
-                        ConsumerOptions.get()
+                        ConsumerOptions.get(api)
                                 .addVerificationOfDetachedSignatures(new ByteArrayInputStream(signature.getBytes(StandardCharsets.UTF_8)))
-                                .addVerificationCerts(PGPainless.readKeyRing().keyRingCollection(pubkey, true).getPgpPublicKeyRingCollection())
+                                .addVerificationCerts(api.readKey().parseCertificates(pubkey))
                                 .setMultiPassStrategy(new InMemoryMultiPassStrategy())
                 );
 

@@ -115,7 +115,8 @@ public class StupidAlgorithmPreferenceEncryptionTest {
 
         EncryptionResult metadata = encryptionStream.getResult();
         assertTrue(metadata.isEncryptedFor(certificate));
-        assertEquals(api.getAlgorithmPolicy().getSymmetricKeyEncryptionAlgorithmPolicy().getDefaultSymmetricKeyAlgorithm(),
-                metadata.getEncryptionAlgorithm());
+        assertEquals(api.getAlgorithmPolicy().getMessageEncryptionAlgorithmPolicy()
+                        .getSymmetricAlgorithmPolicy().getDefaultSymmetricKeyAlgorithm().getAlgorithmId(),
+                metadata.getEncryptionMechanism().getSymmetricKeyAlgorithm());
     }
 }

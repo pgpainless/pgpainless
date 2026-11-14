@@ -6,8 +6,6 @@ package org.pgpainless.key;
 
 import java.io.IOException;
 
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
@@ -47,12 +45,12 @@ public class V6OpenPgpKeyTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void testParseCert() throws IOException {
-        PGPPublicKeyRing cert = PGPainless.readKeyRing().publicKeyRing(CERT);
+        PGPainless.getInstance().readKey().parseCertificate(CERT);
     }
 
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void testParseKey() throws IOException {
-        PGPSecretKeyRing key = PGPainless.readKeyRing().secretKeyRing(KEY);
+        PGPainless.getInstance().readKey().parseKey(KEY);
     }
 }

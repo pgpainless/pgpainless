@@ -4,8 +4,8 @@
 
 package org.pgpainless.key;
 
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 
@@ -54,33 +54,37 @@ public class V3KeyBehaviorTest {
 
     @Test
     public void readV3PublicKey() throws IOException {
-        PGPPublicKeyRing cert = PGPainless.readKeyRing().publicKeyRing(V3Cert);
-        assertEquals(3, cert.getPublicKey().getVersion());
-        assertEquals("John Q. Smith <12345.6789@compuserve.com>", cert.getPublicKey().getUserIDs().next());
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate cert = api.readKey().parseCertificate(V3Cert);
+        assertEquals(3, cert.getPrimaryKey().getVersion());
+        assertEquals("John Q. Smith <12345.6789@compuserve.com>", cert.getAllUserIds().get(0).getUserId());
     }
 
     @Test
     public void readV3SecretKey() throws IOException {
-        PGPSecretKeyRing key = PGPainless.readKeyRing().secretKeyRing(V3Key);
-        assertEquals(3, key.getPublicKey().getVersion());
-        assertEquals("John Q. Smith <12345.6789@compuserve.com>", key.getPublicKey().getUserIDs().next());
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey key = api.readKey().parseKey(V3Key);
+        assertEquals(3, key.getPrimarySecretKey().getVersion());
+        assertEquals("John Q. Smith <12345.6789@compuserve.com>", key.getAllUserIds().get(0).getUserId());
     }
 
     @Test
     public void extractV3Cert() throws IOException {
-        PGPSecretKeyRing key = PGPainless.readKeyRing().secretKeyRing(V3Key);
-        PGPPublicKeyRing cert = PGPainless.readKeyRing().publicKeyRing(V3Cert);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey key = api.readKey().parseKey(V3Key);
+        OpenPGPCertificate cert = api.readKey().parseCertificate(V3Cert);
 
-        PGPPublicKeyRing extractedCert = PGPainless.extractCertificate(key);
+        OpenPGPCertificate extractedCert = key.toCertificate();
         assertArrayEquals(cert.getEncoded(), extractedCert.getEncoded());
     }
 
     @Test
     public void v3FingerprintNotSupported() throws IOException {
-        PGPSecretKeyRing key = PGPainless.readKeyRing().secretKeyRing(V3Key);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey key = api.readKey().parseKey(V3Key);
         assertThrows(IllegalArgumentException.class, () -> OpenPgpFingerprint.of(key));
 
-        PGPPublicKeyRing cert = PGPainless.readKeyRing().publicKeyRing(V3Cert);
+        OpenPGPCertificate cert = api.readKey().parseCertificate(V3Cert);
         assertThrows(IllegalArgumentException.class, () -> OpenPgpFingerprint.of(cert));
     }
 }

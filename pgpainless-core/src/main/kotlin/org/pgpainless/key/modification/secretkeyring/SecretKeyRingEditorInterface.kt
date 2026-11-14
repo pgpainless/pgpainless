@@ -80,23 +80,6 @@ interface SecretKeyRingEditorInterface {
      * revocation will use [RevocationAttributes.Reason.USER_ID_NO_LONGER_VALID], so that the
      * user-id can be re-certified at a later point.
      *
-     * @param selector selector to select user-ids
-     * @param protector protector to unlock the primary key
-     * @return the builder
-     * @throws PGPException in case we cannot generate a revocation signature for the user-id
-     */
-    @Deprecated(
-        "Use of SelectUserId class is deprecated.",
-        ReplaceWith("removeUserId(protector, predicate)"))
-    @Throws(PGPException::class)
-    fun removeUserId(selector: SelectUserId, protector: SecretKeyRingProtector) =
-        removeUserId(protector, selector)
-
-    /**
-     * Convenience method to revoke selected user-ids using soft revocation signatures. The
-     * revocation will use [RevocationAttributes.Reason.USER_ID_NO_LONGER_VALID], so that the
-     * user-id can be re-certified at a later point.
-     *
      * @param protector protector to unlock the primary key
      * @param predicate predicate to select user-ids for revocation
      * @return the builder
@@ -267,10 +250,6 @@ interface SecretKeyRingEditorInterface {
     ): SecretKeyRingEditorInterface =
         revokeSubKey(fingerprint.keyIdentifier, protector, revocationAttributes)
 
-    @Deprecated("Pass in a KeyIdentifier instead of keyId")
-    fun revokeSubKey(subkeyId: Long, protector: SecretKeyRingProtector) =
-        revokeSubKey(KeyIdentifier(subkeyId), protector)
-
     /**
      * Revoke the subkey binding signature of a subkey. The subkey with the provided key-id will be
      * revoked. If no suitable subkey is found, a [NoSuchElementException] will be thrown.
@@ -283,13 +262,6 @@ interface SecretKeyRingEditorInterface {
     @Throws(PGPException::class)
     fun revokeSubKey(subkeyIdentifier: KeyIdentifier, protector: SecretKeyRingProtector) =
         revokeSubKey(subkeyIdentifier, protector, null as RevocationAttributes?)
-
-    @Deprecated("Pass in a KeyIdentifier instead of keyId")
-    fun revokeSubKey(
-        subkeyId: Long,
-        protector: SecretKeyRingProtector,
-        revocationAttributes: RevocationAttributes? = null
-    ) = revokeSubKey(KeyIdentifier(subkeyId), protector, revocationAttributes)
 
     /**
      * Revoke the subkey binding signature of a subkey. The subkey with the provided key-id will be
@@ -307,13 +279,6 @@ interface SecretKeyRingEditorInterface {
         protector: SecretKeyRingProtector,
         revocationAttributes: RevocationAttributes? = null
     ): SecretKeyRingEditorInterface
-
-    @Deprecated("Pass in a KeyIdentifier instead of keyId.")
-    fun revokeSubKey(
-        keyId: Long,
-        protector: SecretKeyRingProtector,
-        callback: RevocationSignatureSubpackets.Callback?
-    ) = revokeSubKey(KeyIdentifier(keyId), protector, callback)
 
     /**
      * Revoke the subkey binding signature of a subkey. The subkey with the provided key-id will be
@@ -390,29 +355,6 @@ interface SecretKeyRingEditorInterface {
      * Note: If you intend to re-certify these user-ids at a later point, make sure to choose a soft
      * revocation reason. See [RevocationAttributes.Reason] for more information.
      *
-     * @param selector user-id selector
-     * @param protector protector to unlock the primary secret key
-     * @param revocationAttributes revocation attributes
-     * @return builder
-     * @throws PGPException in case we cannot generate a revocation signature for the user-id
-     */
-    @Throws(PGPException::class)
-    @Deprecated(
-        "Use of SelectUserId class is deprecated.",
-        ReplaceWith("revokeUserIds(protector, revocationAttributes, predicate)"))
-    fun revokeUserIds(
-        selector: SelectUserId,
-        protector: SecretKeyRingProtector,
-        revocationAttributes: RevocationAttributes?
-    ) = revokeUserIds(protector, revocationAttributes, selector)
-
-    /**
-     * Revoke all user-ids that match the provided [SelectUserId] filter. The provided
-     * [RevocationAttributes] will be set as reason for revocation in each revocation signature.
-     *
-     * Note: If you intend to re-certify these user-ids at a later point, make sure to choose a soft
-     * revocation reason. See [RevocationAttributes.Reason] for more information.
-     *
      * @param protector protector to unlock the primary secret key
      * @param revocationAttributes revocation attributes
      * @param predicate to select user-ids for revocation
@@ -425,32 +367,6 @@ interface SecretKeyRingEditorInterface {
         revocationAttributes: RevocationAttributes?,
         predicate: (String) -> Boolean
     ): SecretKeyRingEditorInterface
-
-    /**
-     * Revoke all user-ids that match the provided [SelectUserId] filter. The provided
-     * [RevocationSignatureSubpackets.Callback] will be used to modify the revocation signatures
-     * subpackets.
-     *
-     * Note: If you intend to re-certify these user-ids at a later point, make sure to set a soft
-     * revocation reason in the revocation signatures hashed subpacket area using the callback.
-     *
-     * See [RevocationAttributes.Reason] for more information.
-     *
-     * @param selector user-id selector
-     * @param protector protector to unlock the primary secret key
-     * @param callback callback to modify the revocations subpackets
-     * @return builder
-     * @throws PGPException in case we cannot generate a revocation signature for the user-id
-     */
-    @Throws(PGPException::class)
-    @Deprecated(
-        "Use of SelectUserId class is deprecated.",
-        ReplaceWith("revokeUserIds(protector, callback, predicate)"))
-    fun revokeUserIds(
-        selector: SelectUserId,
-        protector: SecretKeyRingProtector,
-        callback: RevocationSignatureSubpackets.Callback?
-    ) = revokeUserIds(protector, callback, selector)
 
     /**
      * Revoke all user-ids that match the provided [SelectUserId] filter. The provided
@@ -490,14 +406,6 @@ interface SecretKeyRingEditorInterface {
         expiration: Date?,
         protector: SecretKeyRingProtector
     ): SecretKeyRingEditorInterface
-
-    @Deprecated("Pass in a KeyIdentifier instead of keyId")
-    @Throws(PGPException::class)
-    fun setExpirationDateOfSubkey(
-        expiration: Date?,
-        keyId: Long,
-        protector: SecretKeyRingProtector
-    ) = setExpirationDateOfSubkey(expiration, KeyIdentifier(keyId), protector)
 
     /**
      * Set the expiration date for the subkey identified by the given keyId to the given expiration
@@ -548,14 +456,6 @@ interface SecretKeyRingEditorInterface {
         revocationAttributes: RevocationAttributes?
     ): OpenPGPSignature
 
-    @Throws(PGPException::class)
-    @Deprecated("Pass in a KeyIdentifier instead of a keyId")
-    fun createRevocation(
-        subkeyId: Long,
-        protector: SecretKeyRingProtector,
-        revocationAttributes: RevocationAttributes?
-    ) = createRevocation(KeyIdentifier(subkeyId), protector, revocationAttributes)
-
     /**
      * Create a detached revocation certificate, which can be used to revoke the specified subkey.
      * The original key will not be modified by this method.
@@ -572,14 +472,6 @@ interface SecretKeyRingEditorInterface {
         protector: SecretKeyRingProtector,
         revocationAttributes: RevocationAttributes?
     ): OpenPGPSignature
-
-    @Deprecated("Pass in a KeyIdentifier instead of keyId")
-    @Throws(PGPException::class)
-    fun createRevocation(
-        subkeyId: Long,
-        protector: SecretKeyRingProtector,
-        callback: RevocationSignatureSubpackets.Callback?
-    ) = createRevocation(KeyIdentifier(subkeyId), protector, callback)
 
     /**
      * Create a detached revocation certificate, which can be used to revoke the specified subkey.
@@ -637,10 +529,6 @@ interface SecretKeyRingEditorInterface {
         oldProtectionSettings: KeyRingProtectionSettings =
             KeyRingProtectionSettings.secureDefaultSettings()
     ): WithKeyRingEncryptionSettings
-
-    @Deprecated("Pass KeyIdentifier instead.")
-    fun changeSubKeyPassphraseFromOldPassphrase(keyId: Long, oldPassphrase: Passphrase) =
-        changeSubKeyPassphraseFromOldPassphrase(KeyIdentifier(keyId), oldPassphrase)
 
     /**
      * Change the passphrase of a single subkey in the key ring.

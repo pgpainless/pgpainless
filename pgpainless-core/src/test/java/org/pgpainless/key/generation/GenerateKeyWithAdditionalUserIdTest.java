@@ -10,8 +10,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import java.util.Date;
 import java.util.Iterator;
 
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.JUtils;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,7 +19,6 @@ import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
-import org.pgpainless.key.util.KeyRingUtils;
 import org.pgpainless.key.util.UserId;
 import org.pgpainless.timeframe.TestTimeFrameProvider;
 import org.pgpainless.util.DateUtil;
@@ -30,9 +29,10 @@ public class GenerateKeyWithAdditionalUserIdTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void test() {
+        PGPainless api = PGPainless.getInstance();
         Date now = DateUtil.now();
         Date expiration = TestTimeFrameProvider.defaultExpirationForCreationDate(now);
-        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
+        OpenPGPKey secretKeys = api.buildKey()
                 .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.RSA(RsaLength._3072),
                                 KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA, KeyFlag.ENCRYPT_COMMS)
@@ -42,17 +42,16 @@ public class GenerateKeyWithAdditionalUserIdTest {
                 .addUserId(UserId.onlyEmail("additional2@user.id"))
                 .addUserId("\twithWhitespace@user.id     ")
                 .setExpirationDate(expiration)
-                .build()
-                .getPGPSecretKeyRing();
-        PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
+                .build();
+        OpenPGPCertificate publicKeys = secretKeys.toCertificate();
 
-        JUtils.assertDateEquals(expiration, PGPainless.inspectKeyRing(publicKeys).getPrimaryKeyExpirationDate());
+        JUtils.assertDateEquals(expiration, api.inspect(publicKeys).getPrimaryKeyExpirationDate());
 
-        Iterator<String> userIds = publicKeys.getPublicKey().getUserIDs();
-        assertEquals("<primary@user.id>", userIds.next());
-        assertEquals("<additional@user.id>", userIds.next());
-        assertEquals("<additional2@user.id>", userIds.next());
-        assertEquals("\twithWhitespace@user.id     ", userIds.next());
+        Iterator<OpenPGPCertificate.OpenPGPUserId> userIds = publicKeys.getAllUserIds().iterator();
+        assertEquals("<primary@user.id>", userIds.next().getUserId());
+        assertEquals("<additional@user.id>", userIds.next().getUserId());
+        assertEquals("<additional2@user.id>", userIds.next().getUserId());
+        assertEquals("\twithWhitespace@user.id     ", userIds.next().getUserId());
         assertFalse(userIds.hasNext());
     }
 }

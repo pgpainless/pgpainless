@@ -36,7 +36,6 @@ import org.pgpainless.key.generation.KeyRingBuilder
 import org.pgpainless.key.generation.KeyRingTemplates
 import org.pgpainless.key.info.KeyRingInfo
 import org.pgpainless.key.modification.secretkeyring.SecretKeyRingEditor
-import org.pgpainless.key.parsing.KeyRingReader
 import org.pgpainless.policy.Policy
 import org.pgpainless.util.ArmorUtils
 
@@ -288,69 +287,6 @@ class PGPainless(
         }
 
         /**
-         * Generate a fresh [OpenPGPKey] from predefined templates.
-         *
-         * @return templates
-         */
-        @JvmStatic
-        @JvmOverloads
-        @Deprecated(
-            "Call .generateKey() on an instance of PGPainless instead.",
-            replaceWith = ReplaceWith("generateKey(version)"))
-        fun generateKeyRing(version: OpenPGPKeyVersion = OpenPGPKeyVersion.v4): KeyRingTemplates =
-            getInstance().generateKey(version)
-
-        /**
-         * Build a custom OpenPGP key ring.
-         *
-         * @return builder
-         */
-        @JvmStatic
-        @JvmOverloads
-        @Deprecated(
-            "Call buildKey() on an instance of PGPainless instead.",
-            replaceWith = ReplaceWith("buildKey(version)"))
-        fun buildKeyRing(version: OpenPGPKeyVersion = OpenPGPKeyVersion.v4): KeyRingBuilder =
-            getInstance().buildKey(version)
-
-        /**
-         * Read an existing OpenPGP key ring.
-         *
-         * @return builder
-         */
-        @JvmStatic
-        @Deprecated("Use readKey() instead.", replaceWith = ReplaceWith("readKey()"))
-        fun readKeyRing(): KeyRingReader = KeyRingReader()
-
-        /**
-         * Extract a public key certificate from a secret key.
-         *
-         * @param secretKey secret key
-         * @return public key certificate
-         */
-        @JvmStatic
-        @Deprecated("Use .toKey() and then .toCertificate() instead.")
-        fun extractCertificate(secretKey: PGPSecretKeyRing): PGPPublicKeyRing =
-            secretKey.toCertificate()
-
-        /**
-         * Merge two copies of the same certificate (e.g. an old copy, and one retrieved from a key
-         * server) together.
-         *
-         * @param originalCopy local, older copy of the cert
-         * @param updatedCopy updated, newer copy of the cert
-         * @return merged certificate
-         * @throws PGPException in case of an error
-         */
-        @JvmStatic
-        @Deprecated(
-            "Use mergeCertificate() instead.", replaceWith = ReplaceWith("mergeCertificate()"))
-        fun mergeCertificate(
-            originalCopy: PGPPublicKeyRing,
-            updatedCopy: PGPPublicKeyRing
-        ): PGPPublicKeyRing = PGPPublicKeyRing.join(originalCopy, updatedCopy)
-
-        /**
          * Wrap a key or certificate in ASCII armor.
          *
          * @param key key or certificate
@@ -360,12 +296,6 @@ class PGPainless(
         @JvmStatic
         fun asciiArmor(key: PGPKeyRing): String =
             getInstance().toAsciiArmor(getInstance().toKeyOrCertificate(key))
-
-        @JvmStatic
-        @Deprecated(
-            "Call getInstance().toAsciiArmor(cert) instead.",
-            replaceWith = ReplaceWith("getInstance().toAsciiArmor(cert)"))
-        fun asciiArmor(cert: OpenPGPCertificate): String = getInstance().toAsciiArmor(cert)
 
         /**
          * Wrap a key of certificate in ASCII armor and write the result into the given
@@ -383,43 +313,6 @@ class PGPainless(
         }
 
         /**
-         * Wrap the detached signature in ASCII armor.
-         *
-         * @param signature detached signature
-         * @return ascii armored string
-         * @throws IOException in case of an error during the armoring process
-         */
-        @JvmStatic
-        @Deprecated(
-            "Call toAsciiArmor(signature) on an instance of PGPainless instead.",
-            replaceWith = ReplaceWith("getInstance().toAsciiArmor(signature)"))
-        fun asciiArmor(signature: PGPSignature): String = getInstance().toAsciiArmor(signature)
-
-        /**
-         * Create an [EncryptionBuilder], which can be used to encrypt and/or sign data using
-         * OpenPGP.
-         *
-         * @return builder
-         */
-        @Deprecated(
-            "Call generateMessage() on an instance of PGPainless instead.",
-            replaceWith = ReplaceWith("generateMessage()"))
-        @JvmStatic
-        fun encryptAndOrSign(): EncryptionBuilder = getInstance().generateMessage()
-
-        /**
-         * Create a [DecryptionBuilder], which can be used to decrypt and/or verify data using
-         * OpenPGP.
-         *
-         * @return builder
-         */
-        @Deprecated(
-            "Call processMessage() on an instance of PGPainless instead.",
-            replaceWith = ReplaceWith("processMessage()"))
-        @JvmStatic
-        fun decryptAndOrVerify(): DecryptionBuilder = getInstance().processMessage()
-
-        /**
          * Make changes to a secret key at the given reference time. This method can be used to
          * change key expiration dates and passphrases, or add/revoke user-ids and subkeys.
          *
@@ -433,57 +326,13 @@ class PGPainless(
          */
         @JvmStatic
         @JvmOverloads
+        @Deprecated(
+            "Use .getInstance().modify(key, referenceTime) instead.",
+            replaceWith = ReplaceWith("getInstance().modify(key, referenceTime)"))
         fun modifyKeyRing(
             secretKey: PGPSecretKeyRing,
             referenceTime: Date = Date()
         ): SecretKeyRingEditor = getInstance().modify(getInstance().toKey(secretKey), referenceTime)
-
-        /**
-         * Quickly access information about a [org.bouncycastle.openpgp.PGPPublicKeyRing] /
-         * [PGPSecretKeyRing]. This method can be used to determine expiration dates, key flags and
-         * other information about a key at a specific time.
-         *
-         * @param key key ring
-         * @param referenceTime date of inspection
-         * @return access object
-         */
-        @JvmStatic
-        @JvmOverloads
-        @Deprecated(
-            "Use inspect(key) on an instance of PGPainless instead.",
-            replaceWith = ReplaceWith("inspect(key)"))
-        fun inspectKeyRing(key: PGPKeyRing, referenceTime: Date = Date()): KeyRingInfo =
-            getInstance().inspect(getInstance().toKeyOrCertificate(key), referenceTime)
-
-        @JvmStatic
-        @JvmOverloads
-        @Deprecated(
-            "Use inspect(key) on an instance of PGPainless instead.",
-            replaceWith = ReplaceWith("inspect(key)"))
-        fun inspectKeyRing(key: OpenPGPCertificate, referenceTime: Date = Date()): KeyRingInfo =
-            getInstance().inspect(key, referenceTime)
-
-        /**
-         * Access, and make changes to PGPainless policy on acceptable/default algorithms etc.
-         *
-         * @return policy
-         */
-        @Deprecated(
-            "Use PGPainless.getInstance().getAlgorithmPolicy() instead.",
-            replaceWith = ReplaceWith("getInstance().algorithmPolicy"))
-        @JvmStatic
-        fun getPolicy(): Policy = getInstance().algorithmPolicy
-
-        /**
-         * Create different kinds of signatures on other keys.
-         *
-         * @return builder
-         */
-        @Deprecated(
-            "Call .generateCertification() on an instance of PGPainless instead.",
-            replaceWith = ReplaceWith("generateCertification()"))
-        @JvmStatic
-        fun certify(): CertifyCertificate = getInstance().generateCertification()
 
         /**
          * Utility method for processing smaller OpenPGP messages safely. Process the plaintext data

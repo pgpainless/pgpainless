@@ -619,7 +619,7 @@ public class RoundTripEncryptDecryptCmdTest extends CLITest {
 
         pipeStringToStdin(ciphertext.toString());
         ByteArrayOutputStream plaintext = pipeStdoutToStream();
-        assertSuccess(executeCommand("decrypt", "--with-password", passwordBFile.getAbsolutePath()));
+        assertSuccess(executeCommand("decrypt", "--with-password", passwordBFile.getAbsolutePath()), ciphertext.toString());
 
         assertEquals(msg, plaintext.toString());
     }

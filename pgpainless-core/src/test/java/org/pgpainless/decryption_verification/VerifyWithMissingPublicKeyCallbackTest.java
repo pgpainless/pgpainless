@@ -15,7 +15,6 @@ import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.openpgp.api.OpenPGPKeyMaterialProvider;
@@ -35,7 +34,7 @@ import javax.annotation.Nonnull;
 /**
  * Test functionality of the {@link org.bouncycastle.openpgp.api.OpenPGPKeyMaterialProvider.OpenPGPCertificateProvider}
  * which is called when during signature verification, a signature is encountered which was made by a key that was
- * not provided in {@link ConsumerOptions#addVerificationCert(PGPPublicKeyRing)}.
+ * not provided in {@link ConsumerOptions#addVerificationCert(OpenPGPCertificate)}.
  */
 public class VerifyWithMissingPublicKeyCallbackTest {
 
@@ -47,22 +46,22 @@ public class VerifyWithMissingPublicKeyCallbackTest {
         OpenPGPCertificate.OpenPGPComponentKey signingKey =
                 signingSecKeys.getSigningKeys().get(0);
         OpenPGPCertificate signingPubKeys = signingSecKeys.toCertificate();
-        PGPPublicKeyRing unrelatedKeys = TestKeys.getJulietPublicKeyRing();
+        OpenPGPCertificate unrelatedKeys = api.toCertificate(TestKeys.getJulietPublicKeyRing());
 
         String msg = "Arguing that you don't care about the right to privacy because you have nothing to hide" +
                 "is no different than saying you don't care about free speech because you have nothing to say.";
         ByteArrayOutputStream signOut = new ByteArrayOutputStream();
         EncryptionStream signingStream = api.generateMessage().onOutputStream(signOut)
-                .withOptions(ProducerOptions.sign(SigningOptions.get().addInlineSignature(
+                .withOptions(ProducerOptions.sign(SigningOptions.get(api).addInlineSignature(
                         SecretKeyRingProtector.unprotectedKeys(),
-                        signingSecKeys.getPGPSecretKeyRing(), DocumentSignatureType.CANONICAL_TEXT_DOCUMENT
+                        signingSecKeys, DocumentSignatureType.CANONICAL_TEXT_DOCUMENT
                 )));
         Streams.pipeAll(new ByteArrayInputStream(msg.getBytes(StandardCharsets.UTF_8)), signingStream);
         signingStream.close();
 
         DecryptionStream verificationStream = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(signOut.toByteArray()))
-                .withOptions(ConsumerOptions.get()
+                .withOptions(ConsumerOptions.get(api)
                         .addVerificationCert(unrelatedKeys)
                         .setMissingCertificateCallback(new OpenPGPKeyMaterialProvider.OpenPGPCertificateProvider() {
                             @Override

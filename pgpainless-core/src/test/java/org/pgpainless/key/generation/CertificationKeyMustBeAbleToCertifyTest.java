@@ -25,6 +25,7 @@ public class CertificationKeyMustBeAbleToCertifyTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void testCertificationIncapableKeyTypesThrow() {
+        PGPainless api = PGPainless.getInstance();
         KeyType[] typesIncapableOfCreatingVerifications = new KeyType[] {
                 KeyType.ECDH(EllipticCurve._P256),
                 KeyType.ECDH(EllipticCurve._P384),
@@ -32,8 +33,7 @@ public class CertificationKeyMustBeAbleToCertifyTest {
                 KeyType.XDH_LEGACY(XDHLegacySpec._X25519)
         };
         for (KeyType type : typesIncapableOfCreatingVerifications) {
-            assertThrows(IllegalArgumentException.class, () -> PGPainless
-                    .buildKeyRing()
+            assertThrows(IllegalArgumentException.class, () -> api.buildKey()
                     .setPrimaryKey(KeySpec.getBuilder(type, KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
                     .addUserId("should@throw.ex")
                     .build());

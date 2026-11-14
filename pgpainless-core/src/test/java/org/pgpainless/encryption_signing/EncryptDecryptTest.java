@@ -16,13 +16,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Set;
 
 import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
+import org.bouncycastle.openpgp.api.OpenPGPSignature;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -194,11 +194,11 @@ public class EncryptDecryptTest {
 
         EncryptionResult metadata = signer.getResult();
 
-        Set<PGPSignature> signatureSet = metadata.getDetachedSignatures()
-                .get(metadata.getDetachedSignatures().keySet().iterator().next());
+        OpenPGPSignatureSet<OpenPGPSignature.OpenPGPDocumentSignature> signatureSet = metadata.getDetachedDocumentSignatures();
+        PGPSignature sig = signatureSet.getSignatures().get(0).getSignature();
         ByteArrayOutputStream sigOut = new ByteArrayOutputStream();
         ArmoredOutputStream armorOut = ArmoredOutputStreamFactory.get(sigOut);
-        signatureSet.iterator().next().encode(armorOut);
+        sig.encode(armorOut);
         armorOut.close();
         String armorSig = sigOut.toString();
 

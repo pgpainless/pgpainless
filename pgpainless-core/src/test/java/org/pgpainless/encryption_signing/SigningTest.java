@@ -19,6 +19,7 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
+import org.bouncycastle.openpgp.api.OpenPGPSignature;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestTemplate;
@@ -31,14 +32,12 @@ import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.MessageMetadata;
 import org.pgpainless.exception.KeyException;
-import org.pgpainless.key.SubkeyIdentifier;
 import org.pgpainless.key.TestKeys;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.eddsa_legacy.EdDSALegacyCurve;
 import org.pgpainless.key.info.KeyRingInfo;
 import org.pgpainless.key.protection.SecretKeyRingProtector;
-import org.pgpainless.util.MultiMap;
 import org.pgpainless.util.Passphrase;
 import org.pgpainless.util.TestAllImplementations;
 
@@ -165,11 +164,11 @@ public class SigningTest {
         signer.close();
         EncryptionResult result = signer.getResult();
 
-        MultiMap<SubkeyIdentifier, PGPSignature> sigs = result.getDetachedSignatures();
-        assertEquals(1, sigs.size());
-        SubkeyIdentifier signingKey = sigs.keySet().iterator().next();
-        assertEquals(1, sigs.get(signingKey).size());
-        PGPSignature signature = sigs.get(signingKey).iterator().next();
+        OpenPGPSignatureSet<OpenPGPSignature.OpenPGPDocumentSignature> sigs = result.getDetachedDocumentSignatures();
+        assertEquals(1, sigs.getSignatures().size());
+        OpenPGPCertificate issuer = sigs.getSignatures().get(0).getIssuerCertificate();
+        assertEquals(1, sigs.getSignaturesBy(issuer).size());
+        PGPSignature signature = sigs.getSignaturesBy(issuer).get(0).getSignature();
 
         assertEquals(HashAlgorithm.SHA224.getAlgorithmId(), signature.getHashAlgorithm());
     }
@@ -197,9 +196,9 @@ public class SigningTest {
         Streams.pipeAll(new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)), signer);
         signer.close();
         EncryptionResult result = signer.getResult();
-        MultiMap<SubkeyIdentifier, PGPSignature> sigs = result.getDetachedSignatures();
-        SubkeyIdentifier signingKey = sigs.keySet().iterator().next();
-        PGPSignature signature = sigs.get(signingKey).iterator().next();
+        OpenPGPSignatureSet<OpenPGPSignature.OpenPGPDocumentSignature> sigs = result.getDetachedDocumentSignatures();
+        OpenPGPCertificate issuer = sigs.getSignatures().get(0).getIssuerCertificate();
+        PGPSignature signature = sigs.getSignaturesBy(issuer).get(0).getSignature();
 
         assertEquals(api.getAlgorithmPolicy().getDataSignatureHashAlgorithmPolicy().defaultHashAlgorithm().getAlgorithmId(),
                 signature.getHashAlgorithm());
@@ -228,9 +227,9 @@ public class SigningTest {
         Streams.pipeAll(new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)), signer);
         signer.close();
         EncryptionResult result = signer.getResult();
-        MultiMap<SubkeyIdentifier, PGPSignature> sigs = result.getDetachedSignatures();
-        SubkeyIdentifier signingKey = sigs.keySet().iterator().next();
-        PGPSignature signature = sigs.get(signingKey).iterator().next();
+        OpenPGPSignatureSet<OpenPGPSignature.OpenPGPDocumentSignature> sigs = result.getDetachedDocumentSignatures();
+        OpenPGPCertificate issuer = sigs.getSignatures().get(0).getIssuerCertificate();
+        PGPSignature signature = sigs.getSignaturesBy(issuer).get(0).getSignature();
 
         assertEquals(api.getAlgorithmPolicy().getDataSignatureHashAlgorithmPolicy().defaultHashAlgorithm().getAlgorithmId(),
                 signature.getHashAlgorithm());

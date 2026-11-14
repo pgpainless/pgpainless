@@ -15,8 +15,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -144,12 +144,12 @@ public class EncryptionWithMissingKeyFlagsTest {
     @Test
     public void testEncryptionForKeyWithoutKeyFlagsFailsByDefault()
             throws IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing()
-                .secretKeyRing(KEY_WITHOUT_KEY_FLAGS);
-        PGPPublicKeyRing publicKeys = PGPainless.extractCertificate(secretKeys);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.readKey().parseKey(KEY_WITHOUT_KEY_FLAGS);
+        OpenPGPCertificate publicKeys = secretKeys.toCertificate();
 
         assertThrows(KeyException.UnacceptableEncryptionKeyException.class, () ->
-                EncryptionOptions.get()
+                EncryptionOptions.get(api)
                         .setEvaluationDate(evaluationDate)
                         .addRecipient(publicKeys));
     }
@@ -158,15 +158,15 @@ public class EncryptionWithMissingKeyFlagsTest {
     @Test
     public void testEncryptionForKeyWithoutKeyFlagsSucceedsWithActiveWorkaround()
             throws PGPException, IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing()
-                .secretKeyRing(KEY_WITHOUT_KEY_FLAGS);
-        PGPPublicKeyRing publicKeys = PGPainless.extractCertificate(secretKeys);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.readKey().parseKey(KEY_WITHOUT_KEY_FLAGS);
+        OpenPGPCertificate publicKeys = secretKeys.toCertificate();
 
         // Prepare encryption
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         EncryptionStream encOut = PGPainless.getInstance().generateMessage()
                 .onOutputStream(out)
-                .withOptions(ProducerOptions.encrypt(EncryptionOptions.get()
+                .withOptions(ProducerOptions.encrypt(EncryptionOptions.get(api)
                         .setEvaluationDate(evaluationDate)
                         .setAllowEncryptionWithMissingKeyFlags() // Workaround
                         .addRecipient(publicKeys)));
@@ -179,7 +179,7 @@ public class EncryptionWithMissingKeyFlagsTest {
         ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
         DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
                 .onInputStream(in)
-                .withOptions(ConsumerOptions.get()
+                .withOptions(ConsumerOptions.get(api)
                         .setAllowDecryptionWithMissingKeyFlags()
                         .addDecryptionKey(secretKeys));
         ByteArrayOutputStream plain = new ByteArrayOutputStream();

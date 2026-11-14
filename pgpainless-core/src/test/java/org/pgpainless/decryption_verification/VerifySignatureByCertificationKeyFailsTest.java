@@ -4,7 +4,7 @@
 
 package org.pgpainless.decryption_verification;
 
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -211,12 +211,13 @@ public class VerifySignatureByCertificationKeyFailsTest {
 
     @Test
     public void testSignatureByNonSigningPrimaryKeyIsRejected() throws Exception {
-        PGPSecretKeyRing key = PGPainless.readKeyRing().secretKeyRing(KEY);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey key = api.readKey().parseKey(KEY);
 
-        DecryptionStream verifier = PGPainless.getInstance().processMessage()
+        DecryptionStream verifier = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(DATA))
-                .withOptions(ConsumerOptions.get()
-                        .addVerificationCert(PGPainless.extractCertificate(key))
+                .withOptions(ConsumerOptions.get(api)
+                        .addVerificationCert(key.toCertificate())
                         .addVerificationOfDetachedSignatures(new ByteArrayInputStream(SIG.getBytes(StandardCharsets.UTF_8))));
 
         Streams.drain(verifier);

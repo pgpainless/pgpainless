@@ -15,7 +15,6 @@ import java.util.List;
 
 import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
@@ -42,6 +41,7 @@ public class DecryptHiddenRecipientMessageTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void testDecryptionWithWildcardRecipient() throws IOException, PGPException {
+        PGPainless api = PGPainless.getInstance();
         String secretKeyAscii = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
                 "Comment: Bob's OpenPGP Transferable Secret Key\n" +
                 "\n" +
@@ -124,7 +124,7 @@ public class DecryptHiddenRecipientMessageTest {
                 "xqAY9Bwizt4FWgXuLm1a4+So4V9j1TRCXd12Uc2l2RNmgDE=\n" +
                 "=miES\n" +
                 "-----END PGP PRIVATE KEY BLOCK-----\n";
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(secretKeyAscii);
+        OpenPGPKey secretKeys = api.readKey().parseKey(secretKeyAscii);
 
         String message = "-----BEGIN PGP MESSAGE-----\n" +
                 "\n" +
@@ -141,7 +141,7 @@ public class DecryptHiddenRecipientMessageTest {
                 "=1knQ\n" +
                 "-----END PGP MESSAGE-----\n";
         ByteArrayInputStream messageIn = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
-        ConsumerOptions options = ConsumerOptions.get()
+        ConsumerOptions options = ConsumerOptions.get(api)
                 .addDecryptionKey(secretKeys);
 
         DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
@@ -153,15 +153,15 @@ public class DecryptHiddenRecipientMessageTest {
         decryptionStream.close();
 
         MessageMetadata metadata = decryptionStream.getMetadata();
-        assertEquals(1, metadata.getRecipientKeyIds().size());
-        assertEquals(0L, metadata.getRecipientKeyIds().get(0));
+        assertEquals(1, metadata.getRecipientKeyIdentifiers().size());
+        assertEquals(0L, metadata.getRecipientKeyIdentifiers().get(0).getKeyId());
 
-        KeyRingInfo info = new KeyRingInfo(secretKeys);
+        KeyRingInfo info = api.inspect(secretKeys);
         List<OpenPGPCertificate.OpenPGPComponentKey> encryptionKeys =
                 info.getEncryptionSubkeys(EncryptionPurpose.ANY);
         assertEquals(1, encryptionKeys.size());
 
-        assertEquals(new SubkeyIdentifier(secretKeys, encryptionKeys.get(0).getKeyIdentifier()), metadata.getDecryptionKey());
+        assertEquals(new SubkeyIdentifier(encryptionKeys.get(0)), metadata.getDecryptionKey());
         assertEquals("Hello Recipient :)", out.toString());
     }
 

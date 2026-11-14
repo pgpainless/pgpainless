@@ -5,7 +5,7 @@
 package org.pgpainless.key
 
 import java.util.*
-import org.bouncycastle.openpgp.PGPSecretKeyRing
+import org.bouncycastle.openpgp.api.OpenPGPKey
 import org.junit.jupiter.api.Test
 import org.pgpainless.PGPainless
 import org.pgpainless.key.protection.SecretKeyRingProtector
@@ -14,6 +14,7 @@ class KeyWithUnsupportedSignatureSubpacketTest {
 
     @Test
     fun `can set new expiration date on key containing unknown subpacket 34`() {
+        val api = PGPainless.getInstance()
         val armoredKey =
             """-----BEGIN PGP PRIVATE KEY BLOCK-----
 
@@ -30,9 +31,7 @@ IBYhBM4cucq52WFP4gc2uBtN0kFblqsdBQJlaLI2AhsMAAoJEBtN0kFblqsdRQ0A
 wxfzOAQxXDhgR9xd/Lk3MNJxDg==
 =YAt0
 -----END PGP PRIVATE KEY BLOCK-----"""
-        val key: PGPSecretKeyRing = PGPainless.readKeyRing().secretKeyRing(armoredKey)!!
-        PGPainless.modifyKeyRing(secretKey = key)
-            .setExpirationDate(Date(), SecretKeyRingProtector.unprotectedKeys())
-            .done()
+        val key: OpenPGPKey = api.readKey().parseKey(armoredKey)!!
+        api.modify(key).setExpirationDate(Date(), SecretKeyRingProtector.unprotectedKeys()).done()
     }
 }

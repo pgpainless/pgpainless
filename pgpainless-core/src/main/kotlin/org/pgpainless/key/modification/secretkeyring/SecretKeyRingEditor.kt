@@ -166,21 +166,6 @@ class SecretKeyRingEditor(
         return this
     }
 
-    @Deprecated(
-        "Use of SelectUserId class is deprecated.",
-        replaceWith = ReplaceWith("removeUserId(protector, predicate)"))
-    override fun removeUserId(
-        selector: SelectUserId,
-        protector: SecretKeyRingProtector
-    ): SecretKeyRingEditorInterface {
-        return revokeUserIds(
-            selector,
-            protector,
-            RevocationAttributes.createCertificateRevocation()
-                .withReason(RevocationAttributes.Reason.USER_ID_NO_LONGER_VALID)
-                .withoutDescription())
-    }
-
     override fun removeUserId(
         protector: SecretKeyRingProtector,
         predicate: (String) -> Boolean

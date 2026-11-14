@@ -5,7 +5,6 @@
 package org.pgpainless.encryption_signing
 
 import java.util.*
-import org.bouncycastle.openpgp.PGPPublicKeyRing
 import org.bouncycastle.openpgp.api.MessageEncryptionMechanism
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.bouncycastle.openpgp.api.OpenPGPCertificate.OpenPGPComponentKey
@@ -13,7 +12,6 @@ import org.bouncycastle.openpgp.operator.PBEKeyEncryptionMethodGenerator
 import org.bouncycastle.openpgp.operator.PGPKeyEncryptionMethodGenerator
 import org.pgpainless.PGPainless
 import org.pgpainless.algorithm.EncryptionPurpose
-import org.pgpainless.algorithm.SymmetricKeyAlgorithm
 import org.pgpainless.algorithm.negotiation.EncryptionMechanismNegotiator
 import org.pgpainless.algorithm.negotiation.SymmetricKeyAlgorithmNegotiator.Companion.byPopularity
 import org.pgpainless.authentication.CertificateAuthority
@@ -47,16 +45,6 @@ private constructor(private val purpose: EncryptionPurpose, private val api: PGP
 
     val encryptionKeys
         get() = keysAndAccessors.keys.toSet()
-
-    @Deprecated(
-        "Deprecated in favor of encryptionMechanismOverride",
-        replaceWith = ReplaceWith("encryptionMechanismOverride"))
-    // TODO: Remove in 2.1
-    val encryptionAlgorithmOverride
-        get() =
-            _encryptionMechanismOverride?.let {
-                SymmetricKeyAlgorithm.requireFromId(it.symmetricKeyAlgorithm)
-            }
 
     val encryptionMechanismOverride
         get() = _encryptionMechanismOverride
@@ -102,63 +90,12 @@ private constructor(private val purpose: EncryptionPurpose, private val api: PGP
     }
 
     /**
-     * Add all key rings in the provided [Iterable] (e.g.
-     * [org.bouncycastle.openpgp.PGPPublicKeyRingCollection]) as recipients. Note: This method is
-     * deprecated. Instead, repeatedly call [addRecipient], passing in individual
-     * [OpenPGPCertificate] instances.
-     *
-     * @param keys keys
-     * @return this
-     */
-    @Deprecated("Repeatedly pass OpenPGPCertificate instances instead.")
-    // TODO: Remove in 2.1
-    fun addRecipients(keys: Iterable<PGPPublicKeyRing>) = apply {
-        keys.toList().let {
-            require(it.isNotEmpty()) { "Set of recipient keys cannot be empty." }
-            it.forEach { key -> addRecipient(key) }
-        }
-    }
-
-    /**
-     * Add all key rings in the provided [Iterable] (e.g.
-     * [org.bouncycastle.openpgp.PGPPublicKeyRingCollection]) as recipients. Per key ring, the
-     * selector is applied to select one or more encryption subkeys. Note: This method is
-     * deprecated. Instead, repeatedly call [addRecipient], passing in individual
-     * [OpenPGPCertificate] instances.
-     *
-     * @param keys keys
-     * @param selector encryption key selector
-     * @return this
-     */
-    @Deprecated("Repeatedly pass OpenPGPCertificate instances instead.")
-    // TODO: Remove in 2.1
-    fun addRecipients(keys: Iterable<PGPPublicKeyRing>, selector: EncryptionKeySelector) = apply {
-        keys.toList().let {
-            require(it.isNotEmpty()) { "Set of recipient keys cannot be empty." }
-            it.forEach { key -> addRecipient(key, selector) }
-        }
-    }
-
-    /**
      * Encrypt the message to the recipients [OpenPGPCertificate].
      *
      * @param cert recipient certificate
      * @return this
      */
     fun addRecipient(cert: OpenPGPCertificate) = addRecipient(cert, encryptionKeySelector)
-
-    /**
-     * Add a recipient by providing a key.
-     *
-     * @param key key ring
-     * @return this
-     */
-    @Deprecated(
-        "Pass in OpenPGPCertificate instead.",
-        replaceWith =
-            ReplaceWith("addRecipient(key.toOpenPGPCertificate(), encryptionKeySelector)"))
-    // TODO: Remove in 2.1
-    fun addRecipient(key: PGPPublicKeyRing) = addRecipient(key, encryptionKeySelector)
 
     /**
      * Encrypt the message for the given recipients [OpenPGPCertificate], sourcing algorithm
@@ -170,22 +107,6 @@ private constructor(private val purpose: EncryptionPurpose, private val api: PGP
      */
     fun addRecipient(cert: OpenPGPCertificate, userId: CharSequence) =
         addRecipient(cert, userId, encryptionKeySelector)
-
-    /**
-     * Add a recipient by providing a key and recipient user-id. The user-id is used to determine
-     * the recipients preferences (algorithms etc.). Note: This method is deprecated. Replace the
-     * [PGPPublicKeyRing] instance with an [OpenPGPCertificate].
-     *
-     * @param key key ring
-     * @param userId user id
-     * @return this
-     */
-    @Deprecated(
-        "Pass in OpenPGPCertificate instead.",
-        replaceWith = ReplaceWith("addRecipient(key.toOpenPGPCertificate(), userId)"))
-    // TODO: Remove in 2.1
-    fun addRecipient(key: PGPPublicKeyRing, userId: CharSequence) =
-        addRecipient(key, userId, encryptionKeySelector)
 
     /**
      * Encrypt the message for the given recipients [OpenPGPCertificate], sourcing algorithm
@@ -219,27 +140,6 @@ private constructor(private val purpose: EncryptionPurpose, private val api: PGP
     }
 
     /**
-     * Encrypt the message for the given recipients public key, sourcing algorithm preferences by
-     * inspecting the binding signature on the given [userId] and filtering the recipient subkeys
-     * through the given [EncryptionKeySelector].
-     *
-     * @param key recipient public key
-     * @param userId user-id for sourcing algorithm preferences
-     * @param encryptionKeySelector decides which subkeys to encrypt for
-     * @return this
-     */
-    @Deprecated(
-        "Pass in OpenPGPCertificate instead.",
-        replaceWith =
-            ReplaceWith("addRecipient(key.toOpenPGPCertificate(), userId, encryptionKeySelector)"))
-    // TODO: Remove in 2.1
-    fun addRecipient(
-        key: PGPPublicKeyRing,
-        userId: CharSequence,
-        encryptionKeySelector: EncryptionKeySelector
-    ) = addRecipient(api.toCertificate(key), userId, encryptionKeySelector)
-
-    /**
      * Encrypt the message for the given recipients [OpenPGPCertificate], filtering encryption
      * subkeys through the given [EncryptionKeySelector].
      *
@@ -249,22 +149,6 @@ private constructor(private val purpose: EncryptionPurpose, private val api: PGP
      */
     fun addRecipient(cert: OpenPGPCertificate, encryptionKeySelector: EncryptionKeySelector) =
         addAsRecipient(cert, encryptionKeySelector, false)
-
-    /**
-     * Encrypt the message for the given recipients public key, filtering encryption subkeys through
-     * the given [EncryptionKeySelector].
-     *
-     * @param key recipient public key
-     * @param encryptionKeySelector decides, which subkeys to encrypt for
-     * @return this
-     */
-    @Deprecated(
-        "Pass in OpenPGPCertificate instead.",
-        replaceWith =
-            ReplaceWith("addRecipient(key.toOpenPGPCertificate(), encryptionKeySelector)"))
-    // TODO: Remove in 2.1
-    fun addRecipient(key: PGPPublicKeyRing, encryptionKeySelector: EncryptionKeySelector) =
-        addRecipient(api.toCertificate(key), encryptionKeySelector)
 
     /**
      * Encrypt the message for the recipients [OpenPGPCertificate], keeping the recipient anonymous
@@ -279,24 +163,6 @@ private constructor(private val purpose: EncryptionPurpose, private val api: PGP
         cert: OpenPGPCertificate,
         selector: EncryptionKeySelector = encryptionKeySelector
     ) = addAsRecipient(cert, selector, true)
-
-    /**
-     * Encrypt the message for the recipients public key, keeping the recipient anonymous by setting
-     * a wildcard key-id / fingerprint.
-     *
-     * @param key recipient public key
-     * @param selector decides, which subkeys to encrypt for
-     * @return this
-     */
-    @JvmOverloads
-    @Deprecated(
-        "Pass in an OpenPGPCertificate instead.",
-        replaceWith = ReplaceWith("addHiddenRecipient(key.toOpenPGPCertificate(), selector)"))
-    // TODO: Remove in 2.1
-    fun addHiddenRecipient(
-        key: PGPPublicKeyRing,
-        selector: EncryptionKeySelector = encryptionKeySelector
-    ) = addHiddenRecipient(api.toCertificate(key), selector)
 
     private fun addAsRecipient(
         cert: OpenPGPCertificate,
@@ -360,18 +226,6 @@ private constructor(private val purpose: EncryptionPurpose, private val api: PGP
      * @param passphrase passphrase
      * @return this
      */
-    @Deprecated(
-        "Deprecated in favor of addMessagePassphrase",
-        ReplaceWith("addMessagePassphrase(passphrase)"))
-    // TODO: Remove in 2.1
-    fun addPassphrase(passphrase: Passphrase) = addMessagePassphrase(passphrase)
-
-    /**
-     * Add a symmetric passphrase which the message will be encrypted to.
-     *
-     * @param passphrase passphrase
-     * @return this
-     */
     fun addMessagePassphrase(passphrase: Passphrase) = apply {
         require(!passphrase.isEmpty) { "Passphrase MUST NOT be empty." }
         addEncryptionMethod(
@@ -392,30 +246,6 @@ private constructor(private val purpose: EncryptionPurpose, private val api: PGP
      */
     fun addEncryptionMethod(encryptionMethod: PGPKeyEncryptionMethodGenerator) = apply {
         _encryptionMethods.add(encryptionMethod)
-    }
-
-    /**
-     * Override the used symmetric encryption algorithm. The symmetric encryption algorithm is used
-     * to encrypt the message itself, while the used symmetric key will be encrypted to all
-     * recipients using public key cryptography.
-     *
-     * If the algorithm is not overridden, a suitable algorithm will be negotiated.
-     *
-     * @param encryptionAlgorithm encryption algorithm override
-     * @return this
-     */
-    @Deprecated(
-        "Deprecated in favor of overrideEncryptionMechanism",
-        replaceWith =
-            ReplaceWith(
-                "overrideEncryptionMechanism(MessageEncryptionMechanism.integrityProtected(encryptionAlgorithm.algorithmId))"))
-    // TODO: Remove in 2.1
-    fun overrideEncryptionAlgorithm(encryptionAlgorithm: SymmetricKeyAlgorithm) = apply {
-        require(encryptionAlgorithm != SymmetricKeyAlgorithm.NULL) {
-            "Encryption algorithm override cannot be NULL."
-        }
-        overrideEncryptionMechanism(
-            MessageEncryptionMechanism.integrityProtected(encryptionAlgorithm.algorithmId))
     }
 
     fun overrideEncryptionMechanism(encryptionMechanism: MessageEncryptionMechanism) = apply {

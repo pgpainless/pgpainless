@@ -5,8 +5,9 @@
 package org.pgpainless.key;
 
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.JUtils;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -68,16 +69,17 @@ public class TestMergeCertificate {
 
     @Test
     public void testRevocationStateWithDifferentRevocationsMerged() throws IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
-        PGPPublicKeyRing certificate = PGPainless.extractCertificate(secretKeys);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.readKey().parseKey(KEY);
+        OpenPGPCertificate certificate = secretKeys.toCertificate();
 
-        KeyRingInfo info = PGPainless.inspectKeyRing(certificate);
+        KeyRingInfo info = api.inspect(certificate);
         assertTrue(info.getRevocationState().isNotRevoked());
 
         PGPSignature softRevocation = SignatureUtils.readSignatures(SOFT_REVOCATION).get(0);
-        PGPPublicKeyRing softRevoked = KeyRingUtils.injectCertification(certificate, softRevocation);
+        PGPPublicKeyRing softRevoked = KeyRingUtils.injectCertification(certificate.getPGPPublicKeyRing(), softRevocation);
 
-        info = PGPainless.inspectKeyRing(softRevoked, softRevoked.getPublicKey().getCreationTime());
+        info = api.inspect(api.toCertificate(softRevoked), softRevoked.getPublicKey().getCreationTime());
         assertTrue(info.getRevocationState().isNotRevoked(),
                 "Expect: Cert is not revoked at creation time, although we already added soft revocation");
 
@@ -86,20 +88,20 @@ public class TestMergeCertificate {
         JUtils.assertDateEquals(SOFT_REVOCATION_DATE, info.getRevocationDate());
 
         PGPSignature hardRevocation = SignatureUtils.readSignatures(HARD_REVOCATION).get(0);
-        PGPPublicKeyRing hardRevoked = KeyRingUtils.injectCertification(certificate, hardRevocation);
+        PGPPublicKeyRing hardRevoked = KeyRingUtils.injectCertification(certificate.getPGPPublicKeyRing(), hardRevocation);
 
-        info = PGPainless.inspectKeyRing(hardRevoked);
+        info = api.inspect(api.toCertificate(hardRevoked));
         assertTrue(info.getRevocationState().isHardRevocation());
 
-        info = PGPainless.inspectKeyRing(hardRevoked, hardRevoked.getPublicKey().getCreationTime());
+        info = api.inspect(api.toCertificate(hardRevoked), hardRevoked.getPublicKey().getCreationTime());
         assertTrue(info.getRevocationState().isHardRevocation(), "Expect: Key is hard revoked, no matter reference time");
 
-        PGPPublicKeyRing merged = PGPainless.mergeCertificate(certificate, softRevoked);
-        info = PGPainless.inspectKeyRing(merged);
+        OpenPGPCertificate merged = api.mergeCertificate(certificate, api.toCertificate(softRevoked));
+        info = api.inspect(merged);
         assertTrue(info.getRevocationState().isSoftRevocation());
 
-        merged = PGPainless.mergeCertificate(merged, hardRevoked);
-        info = PGPainless.inspectKeyRing(merged);
+        merged = api.mergeCertificate(merged, api.toCertificate(hardRevoked));
+        info = api.inspect(merged);
         assertTrue(info.getRevocationState().isHardRevocation());
     }
 }

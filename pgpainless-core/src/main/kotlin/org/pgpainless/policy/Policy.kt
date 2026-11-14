@@ -65,16 +65,6 @@ class Policy(
         notationRegistry,
         keyGenerationAlgorithmSuite)
 
-    @Deprecated("Deprecated in favor of messageEncryptionAlgorithmPolicy")
-    // TODO: Remove in 2.1
-    val symmetricKeyEncryptionAlgorithmPolicy
-        get() = messageEncryptionAlgorithmPolicy.symmetricAlgorithmPolicy
-
-    @Deprecated("Deprecated in favor of messageDecryptionAlgorithmPolicy")
-    // TODO: Remove in 2.1
-    val symmetricKeyDecryptionAlgorithmPolicy
-        get() = messageDecryptionAlgorithmPolicy.symmetricAlgorithmPolicy
-
     /**
      * Decide, whether to sanitize public key parameters when unlocking OpenPGP secret keys. OpenPGP
      * v4 keys are susceptible to a class of attacks, where an attacker with access to the locked
@@ -634,26 +624,6 @@ class Policy(
         fun withDataSignatureHashAlgorithmPolicy(
             dataSignatureHashAlgorithmPolicy: HashAlgorithmPolicy
         ) = apply { this.dataSignatureHashAlgorithmPolicy = dataSignatureHashAlgorithmPolicy }
-
-        @Deprecated(
-            "Usage of SymmetricKeyAlgorithmPolicy is deprecated in favor of MessageEncryptionMechanismPolicy.")
-        // TODO: Remove in 2.1
-        fun withSymmetricKeyEncryptionAlgorithmPolicy(
-            symmetricKeyEncryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy
-        ) =
-            withMessageEncryptionAlgorithmPolicy(
-                MessageEncryptionMechanismPolicy.rfc4880Plus9580PlusLibrePGP(
-                    symmetricKeyEncryptionAlgorithmPolicy))
-
-        @Deprecated(
-            "Usage of SymmetricKeyAlgorithmPolicy is deprecated in favor of MessageEncryptionMechanismPolicy.")
-        // TODO: Remove in 2.1
-        fun withSymmetricKeyDecryptionAlgorithmPolicy(
-            symmetricKeyDecryptionAlgorithmPolicy: SymmetricKeyAlgorithmPolicy
-        ) =
-            withMessageDecryptionAlgorithmPolicy(
-                MessageEncryptionMechanismPolicy.rfc4880Plus9580PlusLibrePGP(
-                    symmetricKeyDecryptionAlgorithmPolicy))
 
         fun withMessageEncryptionAlgorithmPolicy(
             encryptionMechanismPolicy: MessageEncryptionMechanismPolicy

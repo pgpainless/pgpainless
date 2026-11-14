@@ -60,8 +60,8 @@ public class BrainpoolKeyGenerationTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void generateEdDSAKeyTest() {
-
-        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
+        PGPainless api = PGPainless.getInstance();
+        PGPSecretKeyRing secretKeys = api.buildKey()
                 .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.ECDSA(EllipticCurve._BRAINPOOLP384R1), KeyFlag.CERTIFY_OTHER))
                 .addSubkey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.SIGN_DATA))
@@ -101,7 +101,7 @@ public class BrainpoolKeyGenerationTest {
     }
 
     public PGPSecretKeyRing generateKey(KeySpec primaryKey, KeySpec subKey, String userId) {
-        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
+        PGPSecretKeyRing secretKeys = PGPainless.getInstance().buildKey()
                 .setPrimaryKey(primaryKey)
                 .addSubkey(subKey)
                 .addUserId(userId)

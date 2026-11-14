@@ -64,7 +64,7 @@ public class ThirdPartyDirectKeySignatureBuilderTest {
                 secretKeys.getPrimaryKey().getPGPPublicKey(),
                 directKeySig.getSignature());
 
-        KeyRingInfo info = PGPainless.inspectKeyRing(secretKeyRing, t1);
+        KeyRingInfo info = api.inspect(api.toKey(secretKeyRing), t1);
         PGPSignature signature = info.getLatestDirectKeySelfSignature();
 
         assertNotNull(signature);

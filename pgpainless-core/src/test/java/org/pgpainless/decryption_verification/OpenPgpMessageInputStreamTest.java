@@ -262,7 +262,7 @@ public class OpenPgpMessageInputStreamTest {
         Streams.pipeAll(new ByteArrayInputStream(PLAINTEXT.getBytes(StandardCharsets.UTF_8)), signer);
         signer.close();
         EncryptionResult result = signer.getResult();
-        PGPSignature detachedSignature = result.getDetachedSignatures().get(result.getDetachedSignatures().keySet().iterator().next()).iterator().next();
+        PGPSignature detachedSignature = result.getDetachedDocumentSignatures().getSignatures().get(0).getSignature();
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ArmoredOutputStream armorOut = new ArmoredOutputStream(out);
