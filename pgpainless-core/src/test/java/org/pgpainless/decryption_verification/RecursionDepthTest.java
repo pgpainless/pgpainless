@@ -11,7 +11,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,6 +30,7 @@ public class RecursionDepthTest {
     @ExtendWith(TestAllImplementations.class)
     public void decryptionAbortsWhenMaximumRecursionDepthReachedTest()
             throws IOException {
+        PGPainless api = PGPainless.getInstance();
         String key = "-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
                 "Comment: Bob's OpenPGP Transferable Secret Key\n" +
                 "\n" +
@@ -112,7 +113,7 @@ public class RecursionDepthTest {
                 "xqAY9Bwizt4FWgXuLm1a4+So4V9j1TRCXd12Uc2l2RNmgDE=\n" +
                 "=miES\n" +
                 "-----END PGP PRIVATE KEY BLOCK-----\n";
-        PGPSecretKeyRing secretKey = PGPainless.readKeyRing().secretKeyRing(key);
+        OpenPGPKey secretKey = api.readKey().parseKey(key);
 
         // message contains compressed data that contains compressed data that contains... 64 times.
         String msg = "-----BEGIN PGP ARMORED FILE-----\n" +
@@ -144,9 +145,9 @@ public class RecursionDepthTest {
 
 
         assertThrows(MalformedOpenPgpMessageException.class, () -> {
-            DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
+            DecryptionStream decryptionStream = api.processMessage()
                     .onInputStream(new ByteArrayInputStream(msg.getBytes(StandardCharsets.UTF_8)))
-                    .withOptions(ConsumerOptions.get().addDecryptionKey(secretKey));
+                    .withOptions(ConsumerOptions.get(api).addDecryptionKey(secretKey));
 
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             Streams.pipeAll(decryptionStream, outputStream);

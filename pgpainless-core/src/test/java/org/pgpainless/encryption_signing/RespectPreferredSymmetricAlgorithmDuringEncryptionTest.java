@@ -10,7 +10,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.api.MessageEncryptionMechanism;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm;
@@ -19,6 +20,7 @@ public class RespectPreferredSymmetricAlgorithmDuringEncryptionTest {
 
     @Test
     public void algorithmPreferencesAreRespectedDependingOnEncryptionTarget() throws IOException, PGPException {
+        PGPainless api = PGPainless.getInstance();
         // Key has AES256, AES192, AES128 as primary user-ids sym algo prefs,
         // and AES128 as secondary user-id prefs
         String key = "-----BEGIN PGP PUBLIC KEY BLOCK-----\n" +
@@ -47,43 +49,48 @@ public class RespectPreferredSymmetricAlgorithmDuringEncryptionTest {
                 "=XwJQ\n" +
                 "-----END PGP PUBLIC KEY BLOCK-----\n";
 
-        PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
-
+        OpenPGPCertificate publicKeys = api.readKey().parseCertificate(key);
 
         // Encrypt without specifying user-id
         // PGPainless now inspects the primary user-ids signature to get sym alg prefs (AES256, AES192, AES128)
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign().onOutputStream(out)
+        EncryptionStream encryptionStream = api.generateMessage().onOutputStream(out)
                 .withOptions(
-                        ProducerOptions.encrypt(EncryptionOptions.get()
+                        ProducerOptions.encrypt(EncryptionOptions.get(api)
                                 .addRecipient(publicKeys) // no user-id passed
                         ));
 
         encryptionStream.close();
-        assertEquals(SymmetricKeyAlgorithm.AES_256, encryptionStream.getResult().getEncryptionAlgorithm());
+        assertEquals(
+                MessageEncryptionMechanism.integrityProtected(SymmetricKeyAlgorithm.AES_256.getAlgorithmId()),
+                encryptionStream.getResult().getEncryptionMechanism());
 
         // Encrypt to the primary user-id
         // PGPainless should extract algorithm preferences from the latest user-id sig in this case (AES-256, AES-192, AES-128)
         out = new ByteArrayOutputStream();
-        encryptionStream = PGPainless.encryptAndOrSign().onOutputStream(out)
+        encryptionStream = api.generateMessage().onOutputStream(out)
                 .withOptions(
-                        ProducerOptions.encrypt(EncryptionOptions.get()
+                        ProducerOptions.encrypt(EncryptionOptions.get(api)
                                 .addRecipient(publicKeys, "Bob Babbage <bob@openpgp.example>")
                         ));
 
         encryptionStream.close();
-        assertEquals(SymmetricKeyAlgorithm.AES_256, encryptionStream.getResult().getEncryptionAlgorithm());
+        assertEquals(
+                MessageEncryptionMechanism.integrityProtected(SymmetricKeyAlgorithm.AES_256.getAlgorithmId()),
+                encryptionStream.getResult().getEncryptionMechanism());
 
         // Encrypt to the secondary user-id
         // PGPainless extracts algorithm preferences from secondary user-id sig, in this case AES-128
         out = new ByteArrayOutputStream();
-        encryptionStream = PGPainless.encryptAndOrSign().onOutputStream(out)
+        encryptionStream = api.generateMessage().onOutputStream(out)
                 .withOptions(
-                        ProducerOptions.encrypt(EncryptionOptions.get()
+                        ProducerOptions.encrypt(EncryptionOptions.get(api)
                                 .addRecipient(publicKeys, "Bobby128 <bobby@aes128.example>")
                         ));
 
         encryptionStream.close();
-        assertEquals(SymmetricKeyAlgorithm.AES_128, encryptionStream.getResult().getEncryptionAlgorithm());
+        assertEquals(
+                MessageEncryptionMechanism.integrityProtected(SymmetricKeyAlgorithm.AES_128.getAlgorithmId()),
+                encryptionStream.getResult().getEncryptionMechanism());
     }
 }

@@ -5,7 +5,6 @@
 package org.pgpainless.decryption_verification;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -13,7 +12,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.exception.UnacceptableAlgorithmException;
@@ -107,17 +106,10 @@ public class RejectWeakSymmetricAlgorithmDuringDecryptionTest {
             "   =miES\n" +
             "   -----END PGP PRIVATE KEY BLOCK-----";
 
-    private static PGPSecretKeyRing secretKeys;
-    static {
-        try {
-            secretKeys = PGPainless.readKeyRing().secretKeyRing(key);
-        } catch (IOException e) {
-            fail("Secret key cannot be parsed.");
-        }
-    }
-
     @Test
-    public void testIDEAAlgorithmIsRejected() {
+    public void testIDEAAlgorithmIsRejected() throws IOException {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.readKey().parseKey(key);
         // Encrypted using IDEA
         String message = "-----BEGIN PGP MESSAGE-----\n" +
                 "Comment: Encrypted using GnuPG 1.4.23.\n" +
@@ -138,14 +130,16 @@ public class RejectWeakSymmetricAlgorithmDuringDecryptionTest {
         InputStream messageIn = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
 
         assertThrows(UnacceptableAlgorithmException.class, () ->
-                PGPainless.getInstance().processMessage()
+                api.processMessage()
                         .onInputStream(messageIn)
-                        .withOptions(ConsumerOptions.get().addDecryptionKey(secretKeys))
+                        .withOptions(ConsumerOptions.get(api).addDecryptionKey(secretKeys))
         );
     }
 
     @Test
-    public void testTripleDESIsRejected() {
+    public void testTripleDESIsRejected() throws IOException {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.readKey().parseKey(key);
         // encrypted using TripleDES
         String message = "-----BEGIN PGP ARMORED FILE-----\n" +
                 "Comment: ASCII Armor added by openpgp-interoperability-test-suite\n" +
@@ -166,14 +160,16 @@ public class RejectWeakSymmetricAlgorithmDuringDecryptionTest {
         InputStream messageIn = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
 
         assertThrows(UnacceptableAlgorithmException.class, () ->
-                PGPainless.getInstance().processMessage()
+                api.processMessage()
                         .onInputStream(messageIn)
-                        .withOptions(ConsumerOptions.get().addDecryptionKey(secretKeys))
+                        .withOptions(ConsumerOptions.get(api).addDecryptionKey(secretKeys))
         );
     }
 
     @Test
-    public void testUnencryptedIsRejected() {
+    public void testUnencryptedIsRejected() throws IOException {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.readKey().parseKey(key);
         // Armored, unencrypted message
         String message = "-----BEGIN PGP ARMORED FILE-----\n" +
                 "Comment: ASCII Armor added by openpgp-interoperability-test-suite\n" +
@@ -193,14 +189,16 @@ public class RejectWeakSymmetricAlgorithmDuringDecryptionTest {
 
         InputStream messageIn = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
         assertThrows(UnacceptableAlgorithmException.class, () ->
-                PGPainless.getInstance().processMessage().onInputStream(messageIn)
-                        .withOptions(ConsumerOptions.get().addDecryptionKey(secretKeys))
+                api.processMessage().onInputStream(messageIn)
+                        .withOptions(ConsumerOptions.get(api).addDecryptionKey(secretKeys))
         );
     }
 
     // Control: In contrast, AES256 is acceptable
     @Test
     public void testAES256IsAccepted() throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.readKey().parseKey(key);
         String message = "-----BEGIN PGP ARMORED FILE-----\n" +
                 "Comment: ASCII Armor added by openpgp-interoperability-test-suite\n" +
                 "\n" +
@@ -218,8 +216,8 @@ public class RejectWeakSymmetricAlgorithmDuringDecryptionTest {
                 "-----END PGP ARMORED FILE-----\n";
         InputStream messageIn = new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
 
-        PGPainless.getInstance().processMessage().onInputStream(messageIn)
-                .withOptions(ConsumerOptions.get().addDecryptionKey(secretKeys));
+        api.processMessage().onInputStream(messageIn)
+                .withOptions(ConsumerOptions.get(api).addDecryptionKey(secretKeys));
     }
 
 }

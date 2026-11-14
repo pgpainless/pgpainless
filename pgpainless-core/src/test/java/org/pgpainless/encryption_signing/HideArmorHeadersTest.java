@@ -18,11 +18,12 @@ public class HideArmorHeadersTest {
 
     @Test
     public void testVersionHeaderIsOmitted() throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+        EncryptionStream encryptionStream = api.generateMessage()
                 .onOutputStream(out)
                 .withOptions(ProducerOptions.encrypt(
-                        EncryptionOptions.get()
+                        EncryptionOptions.get(api)
                                 .addMessagePassphrase(Passphrase.fromPassword("sw0rdf1sh")))
                         .setHideArmorHeaders(true));
 

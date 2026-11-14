@@ -39,7 +39,7 @@ public class UserIdRevocationTest {
     @Test
     public void testRevocationWithoutRevocationAttributes() throws PGPException {
         PGPainless api = PGPainless.getInstance();
-        OpenPGPKey secretKeys = PGPainless.buildKeyRing()
+        OpenPGPKey secretKeys = api.buildKey()
                 .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519),
                         KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER))
@@ -78,7 +78,7 @@ public class UserIdRevocationTest {
     @Test
     public void testRevocationWithRevocationReason() {
         PGPainless api = PGPainless.getInstance();
-        OpenPGPKey secretKeys = PGPainless.buildKeyRing()
+        OpenPGPKey secretKeys = api.buildKey()
                 .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519),
                         KeyFlag.SIGN_DATA, KeyFlag.CERTIFY_OTHER))

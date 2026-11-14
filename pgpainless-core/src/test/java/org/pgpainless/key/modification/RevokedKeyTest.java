@@ -4,7 +4,7 @@
 
 package org.pgpainless.key.modification;
 
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.info.KeyRingInfo;
@@ -35,8 +35,9 @@ public class RevokedKeyTest {
 
     @Test
     public void test() throws IOException {
-        PGPPublicKeyRing cert = PGPainless.readKeyRing().publicKeyRing(REVOKED);
-        KeyRingInfo info = PGPainless.inspectKeyRing(cert);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate cert = api.readKey().parseCertificate(REVOKED);
+        KeyRingInfo info = api.inspect(cert);
 
         assertFalse(info.isUsableForSigning());
         assertFalse(info.isUsableForEncryption());

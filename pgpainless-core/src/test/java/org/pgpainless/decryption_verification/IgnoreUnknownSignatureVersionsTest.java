@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -67,10 +67,10 @@ public class IgnoreUnknownSignatureVersionsTest {
             "-----END PGP PUBLIC KEY BLOCK-----\n";
     private static final String message = "Hello World :)";
 
-    private static PGPPublicKeyRing cert;
+    private static OpenPGPCertificate cert;
     static {
         try {
-            cert = PGPainless.readKeyRing().publicKeyRing(CERT);
+            cert = PGPainless.getInstance().readKey().parseCertificate(CERT);
         } catch (IOException e) {
             fail("Cannot parse certificate.", e);
         }
@@ -175,9 +175,10 @@ public class IgnoreUnknownSignatureVersionsTest {
         assertTrue(metadata.isVerifiedSigned());
     }
 
-    private MessageMetadata verifySignature(PGPPublicKeyRing cert, String BASE_CASE) throws PGPException, IOException {
-        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage().onInputStream(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)))
-                .withOptions(ConsumerOptions.get()
+    private MessageMetadata verifySignature(OpenPGPCertificate cert, String BASE_CASE) throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
+        DecryptionStream decryptionStream = api.processMessage().onInputStream(new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)))
+                .withOptions(ConsumerOptions.get(api)
                         .addVerificationCert(cert)
                         .addVerificationOfDetachedSignatures(new ByteArrayInputStream(BASE_CASE.getBytes(StandardCharsets.UTF_8))));
 

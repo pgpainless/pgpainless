@@ -10,8 +10,8 @@ import java.io.IOException;
 import java.util.List;
 
 import org.bouncycastle.openpgp.PGPPublicKey;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 
@@ -125,8 +125,9 @@ public class SignatureUtilsTest {
         long bobKeyId = 5610053632031231169L;
         long charlieKeyId = -5325245004225622857L;
 
-        PGPPublicKeyRing aliceCert = PGPainless.readKeyRing().publicKeyRing(alice);
-        PGPPublicKey aliceKey = aliceCert.getPublicKey();
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate aliceCert = api.readKey().parseCertificate(alice);
+        PGPPublicKey aliceKey = aliceCert.getPrimaryKey().getPGPPublicKey();
 
         // alice self-signed her user-id
         assertEquals(1, SignatureUtils.getSignaturesOverUserIdBy(aliceKey, aliceId, aliceKeyId).size());

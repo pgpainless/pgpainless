@@ -34,15 +34,15 @@ public class PolicySetterTest {
     }
 
     @Test
-    public void testSetSymmetricKeyEncryptionAlgorithmPolicy_NullFails() {
+    public void testSetMessageEncryptionAlgorithmPolicy_NullFails() {
         Policy policy = new Policy();
-        assertThrows(NullPointerException.class, () -> policy.copy().withSymmetricKeyEncryptionAlgorithmPolicy(null));
+        assertThrows(NullPointerException.class, () -> policy.copy().withMessageEncryptionAlgorithmPolicy(null));
     }
 
     @Test
-    public void testSetSymmetricKeyDecryptionAlgorithmPolicy_NullFails() {
+    public void testSetMessageDecryptionAlgorithmPolicy_NullFails() {
         Policy policy = new Policy();
-        assertThrows(NullPointerException.class, () -> policy.copy().withSymmetricKeyDecryptionAlgorithmPolicy(null));
+        assertThrows(NullPointerException.class, () -> policy.copy().withMessageDecryptionAlgorithmPolicy(null));
     }
 
     @Test

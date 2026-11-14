@@ -24,11 +24,9 @@ import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.BCPGOutputStream;
 import org.bouncycastle.bcpg.MarkerPacket;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
@@ -39,7 +37,6 @@ import org.junit.jupiter.api.Test;
 import org.opentest4j.TestAbortedException;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
-import org.pgpainless.key.collection.PGPKeyRingCollection;
 import org.pgpainless.signature.SignatureUtils;
 import org.pgpainless.util.ArmoredOutputStreamFactory;
 import org.pgpainless.util.TestUtils;
@@ -75,7 +72,7 @@ class KeyRingReaderTest {
     @Test
     void publicKeyRingCollectionFromStream() throws IOException {
         InputStream inputStream = requireResource("pub_keys_10_pieces.asc");
-        PGPPublicKeyRingCollection rings = PGPainless.readKeyRing().publicKeyRingCollection(inputStream);
+        List<OpenPGPCertificate> rings = api.readKey().parseCertificates(inputStream);
         assertEquals(10, rings.size());
     }
 
@@ -94,7 +91,7 @@ class KeyRingReaderTest {
         originalRings.encode(out);
 
         ByteArrayInputStream inputStream = new ByteArrayInputStream(out.toByteArray());
-        PGPPublicKeyRingCollection parsedRings = PGPainless.readKeyRing().publicKeyRingCollection(inputStream);
+        List<OpenPGPCertificate> parsedRings = api.readKey().parseCertificates(inputStream);
         assertEquals(10, parsedRings.size());
     }
 
@@ -102,7 +99,7 @@ class KeyRingReaderTest {
     void publicKeyRingCollectionFromString() throws IOException {
         String armoredString = new String(readFromResource("pub_keys_10_pieces.asc"));
         InputStream inputStream = new ByteArrayInputStream(armoredString.getBytes(StandardCharsets.UTF_8));
-        PGPPublicKeyRingCollection rings = PGPainless.readKeyRing().publicKeyRingCollection(inputStream);
+        List<OpenPGPCertificate> rings = api.readKey().parseCertificates(inputStream);
         assertEquals(10, rings.size());
     }
 
@@ -110,7 +107,7 @@ class KeyRingReaderTest {
     void publicKeyRingCollectionFromBytes() throws IOException {
         byte[] bytes = readFromResource("pub_keys_10_pieces.asc");
         InputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
-        PGPPublicKeyRingCollection rings = PGPainless.readKeyRing().publicKeyRingCollection(byteArrayInputStream);
+        List<OpenPGPCertificate> rings = api.readKey().parseCertificates(byteArrayInputStream);
         assertEquals(10, rings.size());
     }
 
@@ -119,7 +116,7 @@ class KeyRingReaderTest {
      */
     @Test
     void parsePublicKeysSingleArmored() throws IOException {
-        assertEquals(1, getPgpPublicKeyRingsFromResource("single_pub_key_armored.asc").size());
+        assertEquals(1, getCertificatesFromResource("single_pub_key_armored.asc").size());
     }
 
     /**
@@ -127,7 +124,7 @@ class KeyRingReaderTest {
      */
     @Test
     void parsePublicKeysSingleBinary() throws IOException {
-        assertEquals(1, getPgpPublicKeyRingsFromResource("single_pub_key_binary.key").size());
+        assertEquals(1, getCertificatesFromResource("single_pub_key_binary.key").size());
     }
 
     /**
@@ -135,7 +132,7 @@ class KeyRingReaderTest {
      */
     @Test
     void parsePublicKeysMultiplyArmoredSingleHeader() throws IOException {
-        assertEquals(10, getPgpPublicKeyRingsFromResource("10_pub_keys_armored_single_header.asc").size());
+        assertEquals(10, getCertificatesFromResource("10_pub_keys_armored_single_header.asc").size());
     }
 
     /**
@@ -143,7 +140,7 @@ class KeyRingReaderTest {
      */
     @Test
     void parsePublicKeysMultiplyArmoredOwnHeader() throws IOException {
-        assertEquals(10, getPgpPublicKeyRingsFromResource("10_pub_keys_armored_own_header.asc").size());
+        assertEquals(10, getCertificatesFromResource("10_pub_keys_armored_own_header.asc").size());
     }
 
     /**
@@ -152,7 +149,7 @@ class KeyRingReaderTest {
      */
     @Test
     void parsePublicKeysMultiplyArmoredOwnWithSingleHeader() throws IOException {
-        assertEquals(10, getPgpPublicKeyRingsFromResource("10_pub_keys_armored_own_with_single_header.asc").size());
+        assertEquals(10, getCertificatesFromResource("10_pub_keys_armored_own_with_single_header.asc").size());
     }
 
     /**
@@ -160,7 +157,7 @@ class KeyRingReaderTest {
      */
     @Test
     void parsePublicKeysMultiplyBinary() throws IOException {
-        assertEquals(10, getPgpPublicKeyRingsFromResource("10_pub_keys_binary.key").size());
+        assertEquals(10, getCertificatesFromResource("10_pub_keys_binary.key").size());
     }
 
     /**
@@ -168,7 +165,7 @@ class KeyRingReaderTest {
      */
     @Test
     void parseSecretKeysSingleArmored() throws IOException {
-        assertEquals(1, getPgpSecretKeyRingsFromResource("single_prv_key_armored.asc").size());
+        assertEquals(1, getKeysFromResource("single_prv_key_armored.asc").size());
     }
 
     /**
@@ -176,7 +173,7 @@ class KeyRingReaderTest {
      */
     @Test
     void parseSecretKeysSingleBinary() throws IOException {
-        assertEquals(1, getPgpSecretKeyRingsFromResource("single_prv_key_binary.key").size());
+        assertEquals(1, getKeysFromResource("single_prv_key_binary.key").size());
     }
 
     /**
@@ -185,7 +182,7 @@ class KeyRingReaderTest {
      */
     @Test
     void parseSecretKeysMultiplyArmoredSingleHeader() throws IOException {
-        assertEquals(10, getPgpSecretKeyRingsFromResource("10_prv_keys_armored_single_header.asc").size());
+        assertEquals(10, getKeysFromResource("10_prv_keys_armored_single_header.asc").size());
     }
 
     /**
@@ -193,7 +190,7 @@ class KeyRingReaderTest {
      */
     @Test
     void parseSecretKeysMultiplyArmoredOwnHeader() throws IOException {
-        assertEquals(10, getPgpSecretKeyRingsFromResource("10_prv_keys_armored_own_header.asc").size());
+        assertEquals(10, getKeysFromResource("10_prv_keys_armored_own_header.asc").size());
     }
 
     /**
@@ -202,7 +199,7 @@ class KeyRingReaderTest {
      */
     @Test
     void parseSecretKeysMultiplyArmoredOwnWithSingleHeader() throws IOException {
-        assertEquals(10, getPgpSecretKeyRingsFromResource("10_prv_keys_armored_own_with_single_header.asc").size());
+        assertEquals(10, getKeysFromResource("10_prv_keys_armored_own_with_single_header.asc").size());
     }
 
     /**
@@ -210,7 +207,7 @@ class KeyRingReaderTest {
      */
     @Test
     void parseSecretKeysMultiplyBinary() throws IOException {
-        assertEquals(10, getPgpSecretKeyRingsFromResource("10_prv_keys_binary.key").size());
+        assertEquals(10, getKeysFromResource("10_prv_keys_binary.key").size());
     }
 
     /**
@@ -218,7 +215,7 @@ class KeyRingReaderTest {
      */
     @Test
     void parseKeysMultiplyArmoredOwnHeader() throws IOException {
-        assertEquals(10, getPGPKeyRingsFromResource("10_prv_and_pub_keys_armored_own_header.asc").size());
+        assertEquals(10, getKeysOrCertificatesFromResource("10_prv_and_pub_keys_armored_own_header.asc").size());
     }
 
     /**
@@ -227,7 +224,7 @@ class KeyRingReaderTest {
      */
     @Test
     void parseKeysMultiplyArmoredOwnWithSingleHeader() throws IOException {
-        assertEquals(10, getPGPKeyRingsFromResource("10_prv_and_pub_keys_armored_own_with_single_header.asc").size());
+        assertEquals(10, getKeysOrCertificatesFromResource("10_prv_and_pub_keys_armored_own_with_single_header.asc").size());
     }
 
     /**
@@ -235,22 +232,22 @@ class KeyRingReaderTest {
      */
     @Test
     void parseKeysMultiplyBinary() throws IOException {
-        assertEquals(10, getPGPKeyRingsFromResource("10_prv_and_pub_keys_binary.key").size());
+        assertEquals(10, getKeysOrCertificatesFromResource("10_prv_and_pub_keys_binary.key").size());
     }
 
-    private PGPKeyRingCollection getPGPKeyRingsFromResource(String fileName)
+    private List<OpenPGPCertificate> getKeysOrCertificatesFromResource(String fileName)
             throws IOException {
-        return PGPainless.readKeyRing().keyRingCollection(requireResource(fileName), true);
+        return api.readKey().parseKeysOrCertificates(requireResource(fileName));
     }
 
-    private PGPPublicKeyRingCollection getPgpPublicKeyRingsFromResource(String fileName)
+    private List<OpenPGPCertificate> getCertificatesFromResource(String fileName)
             throws IOException {
-        return PGPainless.readKeyRing().publicKeyRingCollection(requireResource(fileName));
+        return api.readKey().parseCertificates(requireResource(fileName));
     }
 
-    private PGPSecretKeyRingCollection getPgpSecretKeyRingsFromResource(String fileName)
+    private List<OpenPGPKey> getKeysFromResource(String fileName)
             throws IOException {
-        return PGPainless.readKeyRing().secretKeyRingCollection(requireResource(fileName));
+        return api.readKey().parseKeys(requireResource(fileName));
     }
 
     @Test
@@ -379,7 +376,7 @@ class KeyRingReaderTest {
                 "=Jgh3\n" +
                 "-----END PGP PRIVATE KEY BLOCK-----";
 
-        PGPSecretKeyRingCollection secretKeys = PGPainless.readKeyRing().secretKeyRingCollection(markersAndKeys);
+        List<OpenPGPKey> secretKeys = api.readKey().parseKeys(markersAndKeys);
         assertEquals(3, secretKeys.size());
     }
 
@@ -433,7 +430,7 @@ class KeyRingReaderTest {
                 "=aWCj\n" +
                 "-----END PGP PUBLIC KEY BLOCK-----\n";
 
-        PGPPublicKeyRingCollection certificates = PGPainless.readKeyRing().publicKeyRingCollection(markersAndCerts);
+        List<OpenPGPCertificate> certificates = api.readKey().parseCertificates(markersAndCerts);
         assertEquals(3, certificates.size());
     }
 
@@ -479,10 +476,10 @@ class KeyRingReaderTest {
 
         String armoredMess = bytes.toString();
 
-        PGPSecretKeyRingCollection secretKeys = PGPainless.readKeyRing().secretKeyRingCollection(armoredMess);
+        List<OpenPGPKey> secretKeys = api.readKey().parseKeys(armoredMess);
         assertEquals(2, secretKeys.size());
-        assertTrue(secretKeys.contains(alice.getKeyIdentifier().getKeyId()));
-        assertTrue(secretKeys.contains(bob.getKeyIdentifier().getKeyId()));
+        assertTrue(secretKeys.stream().anyMatch(it -> it.getKeyIdentifier().matchesExplicit(alice.getKeyIdentifier())));
+        assertTrue(secretKeys.stream().anyMatch(it -> it.getKeyIdentifier().matchesExplicit(bob.getKeyIdentifier())));
     }
 
     @Test
@@ -575,11 +572,10 @@ class KeyRingReaderTest {
         OpenPGPCertificate publicKeys = secretKeys.toCertificate();
         byte[] bytes = publicKeys.getEncoded();
 
-        PGPKeyRing keyRing = PGPainless.readKeyRing()
-                .keyRing(bytes);
+        OpenPGPCertificate keyOrCert = api.readKey().parseKeyOrCertificate(bytes);
 
-        assertInstanceOf(PGPPublicKeyRing.class, keyRing);
-        assertArrayEquals(keyRing.getEncoded(), publicKeys.getEncoded());
+        assertInstanceOf(OpenPGPCertificate.class, keyOrCert);
+        assertArrayEquals(keyOrCert.getEncoded(), publicKeys.getEncoded());
     }
 
     @Test
@@ -587,11 +583,10 @@ class KeyRingReaderTest {
         OpenPGPKey secretKeys = api.generateKey().modernKeyRing("Alice <alice@pgpainless.org>");
         byte[] bytes = secretKeys.getEncoded();
 
-        PGPKeyRing keyRing = PGPainless.readKeyRing()
-                .keyRing(bytes);
+        OpenPGPCertificate keyOrCert = api.readKey().parseKeyOrCertificate(bytes);
 
-        assertInstanceOf(PGPSecretKeyRing.class, keyRing);
-        assertArrayEquals(keyRing.getEncoded(), secretKeys.getEncoded());
+        assertInstanceOf(OpenPGPKey.class, keyOrCert);
+        assertArrayEquals(keyOrCert.getEncoded(), secretKeys.getEncoded());
     }
 
     @Test
@@ -600,11 +595,10 @@ class KeyRingReaderTest {
         OpenPGPCertificate publicKeys = secretKeys.toCertificate();
         String armored = api.toAsciiArmor(publicKeys);
 
-        PGPKeyRing keyRing = PGPainless.readKeyRing()
-                .keyRing(armored);
+        OpenPGPCertificate keyOrCert = api.readKey().parseKeyOrCertificate(armored);
 
-        assertInstanceOf(PGPPublicKeyRing.class, keyRing);
-        assertArrayEquals(keyRing.getEncoded(), publicKeys.getEncoded());
+        assertInstanceOf(OpenPGPCertificate.class, keyOrCert);
+        assertArrayEquals(keyOrCert.getEncoded(), publicKeys.getEncoded());
     }
 
     @Test
@@ -612,10 +606,9 @@ class KeyRingReaderTest {
         OpenPGPKey secretKeys = api.generateKey().modernKeyRing("Alice <alice@pgpainless.org>");
         String armored = secretKeys.toAsciiArmoredString();
 
-        PGPKeyRing keyRing = PGPainless.readKeyRing()
-                .keyRing(armored);
+        OpenPGPCertificate keyOrCert = api.readKey().parseKeyOrCertificate(armored);
 
-        assertInstanceOf(PGPSecretKeyRing.class, keyRing);
-        assertArrayEquals(keyRing.getEncoded(), secretKeys.getEncoded());
+        assertInstanceOf(OpenPGPKey.class, keyOrCert);
+        assertArrayEquals(keyOrCert.getEncoded(), secretKeys.getEncoded());
     }
 }

@@ -27,8 +27,8 @@ public class GenerateWithEmptyPassphraseTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void testGeneratingKeyWithEmptyPassphraseDoesNotThrow() {
-
-        assertNotNull(PGPainless.buildKeyRing()
+        PGPainless api = PGPainless.getInstance();
+        assertNotNull(api.buildKey()
                 .setPrimaryKey(KeySpec.getBuilder(
                                 KeyType.RSA(RsaLength._3072),
                                 KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA, KeyFlag.ENCRYPT_COMMS))

@@ -8,11 +8,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
@@ -35,7 +38,7 @@ public class KeyRingCollectionReaderTest {
         PGPSecretKeyRingCollection collection = KeyRingUtils.keyRingsToKeyRingCollection(alice, bob);
         String ascii = ArmorUtils.toAsciiArmoredString(collection);
 
-        PGPSecretKeyRingCollection parsed = PGPainless.readKeyRing().secretKeyRingCollection(ascii);
+        List<OpenPGPKey> parsed = api.readKey().parseKeys(ascii);
         assertEquals(collection.size(), parsed.size());
 
         // public keys
@@ -45,7 +48,7 @@ public class KeyRingCollectionReaderTest {
         PGPPublicKeyRingCollection pCollection = KeyRingUtils.keyRingsToKeyRingCollection(pAlice, pBob);
         ascii = ArmorUtils.toAsciiArmoredString(pCollection);
 
-        PGPPublicKeyRingCollection pParsed = PGPainless.readKeyRing().publicKeyRingCollection(ascii);
+        List<OpenPGPCertificate> pParsed = api.readKey().parseCertificates(ascii);
         assertEquals(pCollection.size(), pParsed.size());
     }
 
@@ -99,9 +102,10 @@ public class KeyRingCollectionReaderTest {
                 "=JB3F\n" +
                 "-----END PGP PRIVATE KEY BLOCK-----";
 
-        PGPSecretKeyRingCollection collection = PGPainless.readKeyRing().secretKeyRingCollection(ascii);
+        PGPainless api = PGPainless.getInstance();
+        List<OpenPGPKey> collection = api.readKey().parseKeys(ascii);
         assertEquals(2, collection.size());
-        Iterator<PGPSecretKeyRing> iterator = collection.getKeyRings();
+        Iterator<OpenPGPKey> iterator = collection.iterator();
         assertEquals(new OpenPgpV4Fingerprint("58F2 0119 232F BBC0 B624  CCA7 7BED B6B3 2279 0657"),
                 new OpenPgpV4Fingerprint(iterator.next()));
         assertEquals(new OpenPgpV4Fingerprint("88DD 9483 8B3D AB5B A07B  8F77 C852 EE0C 9502 F445"),
@@ -149,9 +153,10 @@ public class KeyRingCollectionReaderTest {
                 "=TTn+\n" +
                 "-----END PGP PRIVATE KEY BLOCK-----";
 
-        PGPSecretKeyRingCollection collection = PGPainless.readKeyRing().secretKeyRingCollection(ascii);
+        PGPainless api = PGPainless.getInstance();
+        List<OpenPGPKey> collection = api.readKey().parseKeys(ascii);
         assertEquals(2, collection.size());
-        Iterator<PGPSecretKeyRing> iterator = collection.getKeyRings();
+        Iterator<OpenPGPKey> iterator = collection.iterator();
         assertEquals(new OpenPgpV4Fingerprint("58F2 0119 232F BBC0 B624  CCA7 7BED B6B3 2279 0657"),
                 new OpenPgpV4Fingerprint(iterator.next()));
         assertEquals(new OpenPgpV4Fingerprint("88DD 9483 8B3D AB5B A07B  8F77 C852 EE0C 9502 F445"),

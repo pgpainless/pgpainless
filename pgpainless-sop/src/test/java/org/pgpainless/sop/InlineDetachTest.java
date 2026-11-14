@@ -21,7 +21,6 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPLiteralData;
 import org.bouncycastle.openpgp.PGPLiteralDataGenerator;
 import org.bouncycastle.openpgp.PGPObjectFactory;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.openpgp.api.OpenPGPImplementation;
@@ -59,12 +58,13 @@ public class InlineDetachTest {
      */
     @Test
     public void detachCleartextSignedMessage() throws IOException {
+        PGPainless api = PGPainless.getInstance();
         byte[] key = sop.generateKey()
                 .userId("Alice <alice@pgpainless.org>")
                 .generate()
                 .getBytes();
         byte[] cert = sop.extractCert().key(key).getBytes();
-        PGPSecretKeyRing secretKey = PGPainless.readKeyRing().secretKeyRing(key);
+        OpenPGPKey secretKey = api.readKey().parseKey(key);
 
         // Create a cleartext signed message
         byte[] data = "Hello, World\n".getBytes(StandardCharsets.UTF_8);

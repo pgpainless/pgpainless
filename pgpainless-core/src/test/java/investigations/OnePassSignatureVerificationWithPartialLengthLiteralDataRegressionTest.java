@@ -11,8 +11,8 @@ import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.bcpg.ArmoredInputStream;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -111,8 +111,9 @@ public class OnePassSignatureVerificationWithPartialLengthLiteralDataRegressionT
 
     @Test
     public void testDecryptAndVerify_0_2_9_message() throws IOException, PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
-        PGPPublicKeyRing cert = PGPainless.readKeyRing().publicKeyRing(CERT);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.readKey().parseKey(KEY);
+        OpenPGPCertificate cert = api.readKey().parseCertificate(CERT);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         ByteArrayOutputStream dearmored = new ByteArrayOutputStream();
@@ -122,9 +123,9 @@ public class OnePassSignatureVerificationWithPartialLengthLiteralDataRegressionT
 
         ByteArrayInputStream in = new ByteArrayInputStream(dearmored.toByteArray());
 
-        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(in)
-                .withOptions(ConsumerOptions.get()
+                .withOptions(ConsumerOptions.get(api)
                         .addVerificationCert(cert)
                         .addDecryptionKey(secretKeys));
 

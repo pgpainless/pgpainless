@@ -10,12 +10,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.key.info.KeyRingInfo;
-import org.pgpainless.util.CollectionUtils;
 
 /**
  * Test for v6-style self-certifying revocations.
@@ -147,32 +146,35 @@ public class SelfCertifyingRevocationTest {
 
     @Test
     public void parseSelfCertifyingRevocation() throws IOException {
-        PGPPublicKeyRing revocation = PGPainless.readKeyRing().publicKeyRing(SELF_CERTIFYING_REVOCATION);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate revocation = api.readKey().parseCertificate(SELF_CERTIFYING_REVOCATION);
         assertNotNull(revocation);
-        assertEquals(1, CollectionUtils.iteratorToList(revocation.getPublicKeys()).size());
+        assertEquals(1, revocation.getKeys().size());
     }
 
     @Test
     public void selfCertifyingRevocationIsRevoked() throws IOException {
-        PGPPublicKeyRing revocation = PGPainless.readKeyRing().publicKeyRing(SELF_CERTIFYING_REVOCATION);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate revocation = api.readKey().parseCertificate(SELF_CERTIFYING_REVOCATION);
         assertNotNull(revocation);
-        KeyRingInfo info = PGPainless.inspectKeyRing(revocation);
+        KeyRingInfo info = api.inspect(revocation);
         assertTrue(info.getRevocationState().isHardRevocation());
     }
 
     @Test
     public void mergeCertificatesResultsInRevokedKey() throws IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(SECRET_KEY);
-        assertNotNull(secretKeys);
-        PGPPublicKeyRing publicKeys = PGPainless.extractCertificate(secretKeys);
-        KeyRingInfo info = PGPainless.inspectKeyRing(publicKeys);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secrectKeys = api.readKey().parseKey(SECRET_KEY);
+        assertNotNull(secrectKeys);
+        OpenPGPCertificate publicKeys = secrectKeys.toCertificate();
+        KeyRingInfo info = api.inspect(publicKeys);
         assertTrue(info.getRevocationState().isNotRevoked());
 
-        PGPPublicKeyRing revocation = PGPainless.readKeyRing().publicKeyRing(SELF_CERTIFYING_REVOCATION);
+        OpenPGPCertificate revocation = api.readKey().parseCertificate(SELF_CERTIFYING_REVOCATION);
         assertNotNull(revocation);
 
-        PGPPublicKeyRing merged = PGPainless.mergeCertificate(publicKeys, revocation);
-        info = PGPainless.inspectKeyRing(merged);
+        OpenPGPCertificate merged = api.mergeCertificate(publicKeys, revocation);
+        info = api.inspect(merged);
         assertTrue(info.getRevocationState().isHardRevocation());
     }
 }

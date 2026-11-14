@@ -22,10 +22,11 @@ public class EncryptionStreamClosedTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void testStreamHasToBeClosedBeforeGetResultCanBeCalled() throws IOException, PGPException {
+        PGPainless api = PGPainless.getInstance();
         OutputStream out = new ByteArrayOutputStream();
-        EncryptionStream stream = PGPainless.encryptAndOrSign()
+        EncryptionStream stream = api.generateMessage()
                 .onOutputStream(out)
-                .withOptions(ProducerOptions.encrypt(EncryptionOptions.encryptCommunications()
+                .withOptions(ProducerOptions.encrypt(EncryptionOptions.encryptCommunications(api)
                 .addMessagePassphrase(Passphrase.fromPassword("dummy"))));
 
         // No close() called => getResult throws

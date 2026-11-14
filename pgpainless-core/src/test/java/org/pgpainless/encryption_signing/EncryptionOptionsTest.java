@@ -9,14 +9,12 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
+import org.bouncycastle.openpgp.api.MessageEncryptionMechanism;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.jetbrains.annotations.NotNull;
@@ -66,20 +64,24 @@ public class EncryptionOptionsTest {
     @Test
     public void testOverrideEncryptionAlgorithmFailsForNULL() {
         EncryptionOptions options = EncryptionOptions.get(api);
-        assertNull(options.getEncryptionAlgorithmOverride());
+        assertNull(options.getEncryptionMechanismOverride());
 
-        assertThrows(IllegalArgumentException.class, () -> options.overrideEncryptionAlgorithm(SymmetricKeyAlgorithm.NULL));
+        assertThrows(IllegalArgumentException.class, () -> options.overrideEncryptionMechanism(
+                MessageEncryptionMechanism.integrityProtected(SymmetricKeyAlgorithm.NULL.getAlgorithmId())));
 
-        assertNull(options.getEncryptionAlgorithmOverride());
+        assertNull(options.getEncryptionMechanismOverride());
     }
 
     @Test
     public void testOverrideEncryptionOptions() {
         EncryptionOptions options = EncryptionOptions.get(api);
-        assertNull(options.getEncryptionAlgorithmOverride());
-        options.overrideEncryptionAlgorithm(SymmetricKeyAlgorithm.AES_128);
+        assertNull(options.getEncryptionMechanismOverride());
+        options.overrideEncryptionMechanism(
+                MessageEncryptionMechanism.integrityProtected(SymmetricKeyAlgorithm.AES_128.getAlgorithmId()));
 
-        assertEquals(SymmetricKeyAlgorithm.AES_128, options.getEncryptionAlgorithmOverride());
+        assertEquals(
+                MessageEncryptionMechanism.integrityProtected(SymmetricKeyAlgorithm.AES_128.getAlgorithmId()),
+                options.getEncryptionMechanismOverride());
     }
 
     @Test
@@ -112,15 +114,6 @@ public class EncryptionOptionsTest {
         assertEquals(2, encryptionKeys.size());
         assertTrue(encryptionKeys.contains(encryptComms));
         assertTrue(encryptionKeys.contains(encryptStorage));
-    }
-
-    @SuppressWarnings("deprecation")
-    @Test
-    public void testAddEmptyRecipientsFails() {
-        EncryptionOptions options = EncryptionOptions.get(api);
-        assertThrows(IllegalArgumentException.class, () -> options.addRecipients(Collections.emptyList()));
-        assertThrows(IllegalArgumentException.class, () -> options.addRecipients(Collections.emptyList(),
-                ArrayList::new));
     }
 
     @Test
@@ -163,20 +156,6 @@ public class EncryptionOptionsTest {
                         return Collections.emptyList();
                     }
                 }));
-    }
-
-    @Test
-    public void testAddRecipients_PGPPublicKeyRingCollection() {
-        OpenPGPKey secondKey = api.generateKey().modernKeyRing("Other <other@pgpainless.org>");
-        OpenPGPCertificate secondCert = secondKey.toCertificate();
-
-        PGPPublicKeyRingCollection collection = new PGPPublicKeyRingCollection(
-                Arrays.asList(publicKeys.getPGPPublicKeyRing(), secondCert.getPGPPublicKeyRing()));
-
-        EncryptionOptions options = EncryptionOptions.get();
-        // noinspection deprecation
-        options.addRecipients(collection, EncryptionOptions.encryptToFirstSubkey());
-        assertEquals(2, options.getEncryptionKeyIdentifiers().size());
     }
 
     @Test

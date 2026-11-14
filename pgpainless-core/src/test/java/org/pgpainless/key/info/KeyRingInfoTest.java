@@ -563,7 +563,7 @@ public class KeyRingInfoTest {
     @Test
     public void testGetExpirationDateForUse_NoSuchKey() {
         PGPainless api = PGPainless.getInstance();
-        OpenPGPKey secretKeys = PGPainless.buildKeyRing()
+        OpenPGPKey secretKeys = api.buildKey()
                 .addUserId("Alice")
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .build();

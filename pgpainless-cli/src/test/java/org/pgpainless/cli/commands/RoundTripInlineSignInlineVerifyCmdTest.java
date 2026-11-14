@@ -362,8 +362,8 @@ public class RoundTripInlineSignInlineVerifyCmdTest extends CLITest {
                         .setAsciiArmor(false));
         encryptionStream.write(msg.getBytes(StandardCharsets.UTF_8));
         encryptionStream.close();
-        PGPSignature sig = encryptionStream.getResult().getDetachedSignatures().entrySet()
-                .iterator().next().getValue().iterator().next();
+        PGPSignature sig = encryptionStream.getResult().getDetachedDocumentSignatures().getSignatures()
+                .get(0).getSignature();
         ArmoredOutputStream armorOut = new ArmoredOutputStream(System.out);
         armorOut.write(ciphertext.toByteArray());
         armorOut.write(sig.getEncoded());

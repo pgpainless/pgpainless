@@ -33,7 +33,8 @@ public class IncapableKeysTest {
 
     @BeforeAll
     public static void generateKeys() throws IOException {
-        PGPSecretKeyRing key = PGPainless.buildKeyRing()
+        PGPainless api = PGPainless.getInstance();
+        PGPSecretKeyRing key = api.buildKey()
                 .addSubkey(KeySpec.getBuilder(KeyType.ECDH(EllipticCurve._P256), KeyFlag.ENCRYPT_COMMS, KeyFlag.ENCRYPT_STORAGE))
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .addUserId("Non Signing <non@signing.key>")
@@ -42,7 +43,7 @@ public class IncapableKeysTest {
         nonSigningKey = ArmorUtils.toAsciiArmoredString(key).getBytes(StandardCharsets.UTF_8);
         nonSigningCert = sop.extractCert().key(nonSigningKey).getBytes();
 
-        key = PGPainless.buildKeyRing()
+        key = api.buildKey()
                 .addSubkey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.SIGN_DATA))
                 .setPrimaryKey(KeySpec.getBuilder(KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519), KeyFlag.CERTIFY_OTHER))
                 .addUserId("Non Encryption <non@encryption.key>")

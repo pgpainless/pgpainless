@@ -470,14 +470,7 @@ class KeyRingInfo(
     fun getLatestUserIdCertification(userId: CharSequence): PGPSignature? =
         // workaround for https://github.com/pgpainless/pgpainless/issues/495
         // TODO: Change back once fixed in BC: https://github.com/bcgit/bc-java/pull/2217
-        // keys.getUserId(userId.toString())?.getCertification(referenceDate)?.signature
-        keys
-            .getUserId(userId.toString())
-            ?.signatureChains
-            ?.fromOrigin(primaryKey)
-            ?.getCertificationAt(referenceDate)
-            ?.signature
-            ?.signature
+        keys.getUserId(userId.toString())?.getCertification(referenceDate)?.signature
 
     /**
      * Return the latest revocation self-signature for the given user-ID

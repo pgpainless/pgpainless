@@ -16,9 +16,9 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -26,7 +26,6 @@ import org.pgpainless.decryption_verification.ConsumerOptions;
 import org.pgpainless.decryption_verification.DecryptionStream;
 import org.pgpainless.decryption_verification.MessageMetadata;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
-import org.pgpainless.key.util.KeyRingUtils;
 
 /**
  * Test if marker packets are being ignored properly.
@@ -135,16 +134,16 @@ public class IgnoreMarkerPacketsTest {
                 "+J5EAJeGsE8/f/gi6pLtgAhjCNzH0qltOZsdJAfXqmd0NJ4=\n" +
                 "=5tQ4\n" +
                 "-----END PGP SIGNATURE-----\n";
-
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
-        PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.readKey().parseKey(KEY);
+        OpenPGPCertificate publicKeys = secretKeys.toCertificate();
         String data = "Marker + Detached signature";
         PGPSignature signature = SignatureUtils.readSignatures(sig).get(0);
 
         InputStream messageIn = new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(messageIn)
-                .withOptions(ConsumerOptions.get()
+                .withOptions(ConsumerOptions.get(api)
                         .addVerificationCert(publicKeys)
                         .addVerificationOfDetachedSignature(signature)
                 );
@@ -186,14 +185,15 @@ public class IgnoreMarkerPacketsTest {
                 "=VSZ3\n" +
                 "-----END PGP MESSAGE-----\n";
 
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(KEY);
-        PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.readKey().parseKey(KEY);
+        OpenPGPCertificate publicKeys = secretKeys.toCertificate();
         String data = "Marker + Encrypted Message";
 
         InputStream messageIn = new ByteArrayInputStream(msg.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(messageIn)
-                .withOptions(ConsumerOptions.get()
+                .withOptions(ConsumerOptions.get(api)
                         .addDecryptionKey(secretKeys)
                         .addVerificationCert(publicKeys)
                 );
@@ -252,8 +252,9 @@ public class IgnoreMarkerPacketsTest {
                 "=TrY7\n" +
                 "-----END PGP PUBLIC KEY BLOCK-----\n";
 
-        PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(pubKeyBlock);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate publicKeys = api.readKey().parseCertificate(pubKeyBlock);
         assertEquals(new OpenPgpV4Fingerprint("D1A66E1A23B182C9980F788CFBFCC82A015E7330"), new OpenPgpV4Fingerprint(publicKeys));
-        assertNotNull(publicKeys.getPublicKey(new OpenPgpV4Fingerprint("1DDCE15F09217CEE2F3B37607C2FAA4DF93C37B2").getKeyId()));
+        assertNotNull(publicKeys.getKey(new OpenPgpV4Fingerprint("1DDCE15F09217CEE2F3B37607C2FAA4DF93C37B2").getKeyIdentifier()));
     }
 }

@@ -14,7 +14,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.bcpg.KeyIdentifier;
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -28,8 +28,9 @@ import javax.annotation.Nonnull;
 
 public class PostponeDecryptionUsingKeyWithMissingPassphraseTest {
 
-    private static PGPSecretKeyRing k1;
-    private static PGPSecretKeyRing k2;
+    private static PGPainless api = new PGPainless();
+    private static OpenPGPKey k1;
+    private static OpenPGPKey k2;
     private static final Passphrase p1 = Passphrase.fromPassword("P1");
     private static final Passphrase p2 = Passphrase.fromPassword("P2");
 
@@ -65,7 +66,7 @@ public class PostponeDecryptionUsingKeyWithMissingPassphraseTest {
 
     @BeforeAll
     public static void prepareKeys() throws IOException {
-        k1 = PGPainless.readKeyRing().secretKeyRing("-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
+        k1 = api.readKey().parseKey("-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
                 "Version: PGPainless\n" +
                 "Comment: 9D0D 40DD 5B0A B5C7 9E73  E847 71BD 67EB 18A5 1034\n" +
                 "Comment: K1\n" +
@@ -91,7 +92,7 @@ public class PostponeDecryptionUsingKeyWithMissingPassphraseTest {
                 "/lv8PRbqIHsN\n" +
                 "=PETI\n" +
                 "-----END PGP PRIVATE KEY BLOCK-----");
-        k2 = PGPainless.readKeyRing().secretKeyRing("-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
+        k2 = api.readKey().parseKey("-----BEGIN PGP PRIVATE KEY BLOCK-----\n" +
                 "Version: PGPainless\n" +
                 "Comment: 1458 6C84 3082 7226 5F4A  1EAC 15C9 772F 51A3 F48A\n" +
                 "Comment: K2\n" +
@@ -135,9 +136,9 @@ public class PostponeDecryptionUsingKeyWithMissingPassphraseTest {
         });
         SecretKeyRingProtector protector2 = SecretKeyRingProtector.unlockEachKeyWith(p2, k2);
 
-        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(ENCRYPTED_FOR_K1_K2.getBytes(StandardCharsets.UTF_8)))
-                .withOptions(ConsumerOptions.get()
+                .withOptions(ConsumerOptions.get(api)
                         .addDecryptionKey(k1, protector1)
                         .addDecryptionKey(k2, protector2));
 
@@ -164,9 +165,9 @@ public class PostponeDecryptionUsingKeyWithMissingPassphraseTest {
             }
         });
 
-        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(ENCRYPTED_FOR_K1_K2.getBytes(StandardCharsets.UTF_8)))
-                .withOptions(ConsumerOptions.get()
+                .withOptions(ConsumerOptions.get(api)
                         .addDecryptionKey(k1, protector1)
                         .addDecryptionKey(k2, protector2));
 
@@ -193,9 +194,9 @@ public class PostponeDecryptionUsingKeyWithMissingPassphraseTest {
         };
         SecretKeyRingProtector protector = new CachingSecretKeyRingProtector(provider);
 
-        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(ENCRYPTED_FOR_K2_PASS_K1.getBytes(StandardCharsets.UTF_8)))
-                .withOptions(ConsumerOptions.get()
+                .withOptions(ConsumerOptions.get(api)
                         .addMessagePassphrase(PASSPHRASE)
                         .addDecryptionKey(k1, protector)
                         .addDecryptionKey(k2, protector));

@@ -14,8 +14,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,16 +43,17 @@ public class SymmetricEncryptionTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void encryptWithKeyAndPassphrase_DecryptWithKey() throws IOException, PGPException {
+        PGPainless api = PGPainless.getInstance();
         byte[] plaintext = "This is a secret message".getBytes(StandardCharsets.UTF_8);
         ByteArrayInputStream plaintextIn = new ByteArrayInputStream(plaintext);
-        PGPPublicKeyRing encryptionKey = TestKeys.getCryptiePublicKeyRing();
+        OpenPGPCertificate encryptionKey = api.toCertificate(TestKeys.getCryptiePublicKeyRing());
         Passphrase encryptionPassphrase = Passphrase.fromPassword("greenBeans");
 
         ByteArrayOutputStream ciphertextOut = new ByteArrayOutputStream();
-        EncryptionStream encryptor = PGPainless.encryptAndOrSign()
+        EncryptionStream encryptor = api.generateMessage()
                 .onOutputStream(ciphertextOut)
                 .withOptions(ProducerOptions.encrypt(
-                        EncryptionOptions.encryptCommunications()
+                        EncryptionOptions.encryptCommunications(api)
                                 .addMessagePassphrase(encryptionPassphrase)
                                 .addRecipient(encryptionKey)
                 ));
@@ -63,9 +64,9 @@ public class SymmetricEncryptionTest {
         byte[] ciphertext = ciphertextOut.toByteArray();
 
         // Test symmetric decryption
-        DecryptionStream decryptor = PGPainless.getInstance().processMessage()
+        DecryptionStream decryptor = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(ciphertext))
-                .withOptions(ConsumerOptions.get()
+                .withOptions(ConsumerOptions.get(api)
                         .addMessagePassphrase(encryptionPassphrase));
 
         ByteArrayOutputStream decrypted = new ByteArrayOutputStream();
@@ -76,14 +77,14 @@ public class SymmetricEncryptionTest {
         assertArrayEquals(plaintext, decrypted.toByteArray());
 
         // Test public key decryption
-        PGPSecretKeyRingCollection decryptionKeys = TestKeys.getCryptieSecretKeyRingCollection();
+        OpenPGPKey decryptionKey = api.toKey(TestKeys.getCryptieSecretKeyRing());
         SecretKeyRingProtector protector = new PasswordBasedSecretKeyRingProtector(
                 KeyRingProtectionSettings.secureDefaultSettings(),
                 new SolitaryPassphraseProvider(Passphrase.fromPassword(TestKeys.CRYPTIE_PASSWORD)));
         decryptor = PGPainless.getInstance().processMessage()
                 .onInputStream(new ByteArrayInputStream(ciphertext))
-                .withOptions(ConsumerOptions.get()
-                        .addDecryptionKeys(decryptionKeys, protector));
+                .withOptions(ConsumerOptions.get(api)
+                        .addDecryptionKey(decryptionKey, protector));
 
         decrypted = new ByteArrayOutputStream();
 
@@ -96,21 +97,22 @@ public class SymmetricEncryptionTest {
     @TestTemplate
     @ExtendWith(TestAllImplementations.class)
     public void testMismatchPassphraseFails() throws IOException, PGPException {
+        PGPainless api = PGPainless.getInstance();
         byte[] bytes = new byte[5000];
         new Random().nextBytes(bytes);
 
         ByteArrayOutputStream ciphertextOut = new ByteArrayOutputStream();
-        EncryptionStream encryptor = PGPainless.getInstance().generateMessage().onOutputStream(ciphertextOut)
+        EncryptionStream encryptor = api.generateMessage().onOutputStream(ciphertextOut)
                 .withOptions(ProducerOptions.encrypt(
-                        EncryptionOptions.encryptCommunications()
+                        EncryptionOptions.encryptCommunications(api)
                                 .addMessagePassphrase(Passphrase.fromPassword("mellon"))));
 
         Streams.pipeAll(new ByteArrayInputStream(bytes), encryptor);
         encryptor.close();
 
-        assertThrows(MissingDecryptionMethodException.class, () -> PGPainless.getInstance().processMessage()
+        assertThrows(MissingDecryptionMethodException.class, () -> api.processMessage()
                 .onInputStream(new ByteArrayInputStream(ciphertextOut.toByteArray()))
-                .withOptions(ConsumerOptions.get()
+                .withOptions(ConsumerOptions.get(api)
                         .setMissingKeyPassphraseStrategy(MissingKeyPassphraseStrategy.THROW_EXCEPTION)
                         .addMessagePassphrase(Passphrase.fromPassword("meldir"))));
     }

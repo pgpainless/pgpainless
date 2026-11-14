@@ -14,7 +14,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.util.io.Streams;
@@ -157,8 +156,8 @@ public class CertificateValidatorTest {
                 "u5SfXaTsbMeVQJNdjCNsHq2bOXPGLw==\n" +
                 "=2BW4\n" +
                 "-----END PGP ARMORED FILE-----\n";
-
-        PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate publicKeys = api.readKey().parseCertificate(key);
         PGPSignature predatesPrimaryKey = SignatureUtils.readSignatures(sigPredatesPrimaryKey).get(0);
         PGPSignature unboundSubkey = SignatureUtils.readSignatures(sigSubkeyNotBound).get(0);
         PGPSignature primaryKeyRevoked = SignatureUtils.readSignatures(sigPrimaryKeyRevoked).get(0);
@@ -306,8 +305,8 @@ public class CertificateValidatorTest {
                 "I5V/t2y6h6gaHbanggc0cMOaMTtEKQ==\n" +
                 "=lkHs\n" +
                 "-----END PGP ARMORED FILE-----\n";
-
-        PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate publicKeys = api.readKey().parseCertificate(key);
         PGPSignature predatesPrimaryKey = SignatureUtils.readSignatures(sigPredatesPrimaryKey).get(0);
         PGPSignature unboundSubkey = SignatureUtils.readSignatures(sigSigningKeyUnbound).get(0);
         PGPSignature revokedSubkey = SignatureUtils.readSignatures(sigSubkeyRevoked).get(0);
@@ -408,7 +407,6 @@ public class CertificateValidatorTest {
                 "Y87zSryajDMFXQS0exdvhN4AXDlPlB3Rrkj7CQ==\n" +
                 "=yTKS\n" +
                 "-----END PGP ARMORED FILE-----\n";
-        PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(keyWithHardRev);
         String sigPredatesPrimaryKey = "-----BEGIN PGP ARMORED FILE-----\n" +
                 "Comment: ASCII Armor added by openpgp-interoperability-test-suite\n" +
                 "\n" +
@@ -458,6 +456,8 @@ public class CertificateValidatorTest {
                 "=lkHs\n" +
                 "-----END PGP ARMORED FILE-----\n";
 
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate publicKeys = api.readKey().parseCertificate(keyWithHardRev);
         PGPSignature predatesPrimaryKey = SignatureUtils.readSignatures(sigPredatesPrimaryKey).get(0);
         PGPSignature unboundKey = SignatureUtils.readSignatures(sigUnboundBeforeHardRevocation).get(0);
         PGPSignature afterHardRevocation = SignatureUtils.readSignatures(sigAfterHardRevocation).get(0);
@@ -607,7 +607,8 @@ public class CertificateValidatorTest {
                 "=2BW4\n" +
                 "-----END PGP ARMORED FILE-----\n";
 
-        PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(keyWithSoftRev);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate publicKeys = api.readKey().parseCertificate(keyWithSoftRev);
         PGPSignature predatesPrimaryKey = SignatureUtils.readSignatures(sigPredatesPrimaryKey).get(0);
         PGPSignature keyIsValid = SignatureUtils.readSignatures(sigKeyIsValid).get(0);
         PGPSignature keyIsRevoked = SignatureUtils.readSignatures(sigKeyIsRevoked).get(0);
@@ -763,7 +764,8 @@ public class CertificateValidatorTest {
                 "=lkHs\n" +
                 "-----END PGP ARMORED FILE-----\n";
 
-        PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate publicKeys = api.readKey().parseCertificate(key);
         PGPSignature predatesPrimaryKey = SignatureUtils.readSignatures(sigPredatesPrimaryKey).get(0);
         PGPSignature keyNotBound = SignatureUtils.readSignatures(sigSubkeyNotBound).get(0);
         PGPSignature keyRevoked = SignatureUtils.readSignatures(sigKeyRevoked).get(0);
@@ -914,7 +916,8 @@ public class CertificateValidatorTest {
                 "=2BW4\n" +
                 "-----END PGP ARMORED FILE-----\n";
 
-        PGPPublicKeyRing publicKeys = PGPainless.readKeyRing().publicKeyRing(key);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate publicKeys = api.readKey().parseCertificate(key);
         PGPSignature predatesPrimaryKey = SignatureUtils.readSignatures(sigPredatesPrimaryKey).get(0);
         PGPSignature valid = SignatureUtils.readSignatures(sigValid).get(0);
         PGPSignature revoked = SignatureUtils.readSignatures(sigRevoked).get(0);
@@ -1241,9 +1244,10 @@ public class CertificateValidatorTest {
                 "=DeXH\n" +
                 "-----END PGP SIGNATURE-----\n";
 
-        PGPPublicKeyRing keysA = PGPainless.readKeyRing().publicKeyRing(keyA);
-        PGPPublicKeyRing keysB = PGPainless.readKeyRing().publicKeyRing(keyB);
-        PGPPublicKeyRing keysC = PGPainless.readKeyRing().publicKeyRing(keyC);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate keysA = api.readKey().parseCertificate(keyA);
+        OpenPGPCertificate keysB = api.readKey().parseCertificate(keyB);
+        OpenPGPCertificate keysC = api.readKey().parseCertificate(keyC);
 
         PGPSignature sigAT0 = SignatureUtils.readSignatures(keyASigT0).get(0);
         PGPSignature sigAT1_T2 = SignatureUtils.readSignatures(keyASigT1_T2).get(0);
@@ -1301,15 +1305,14 @@ public class CertificateValidatorTest {
                 "Key is valid again");
     }
 
-    private void verify(PGPSignature signature, InputStream dataIn, PGPPublicKeyRing cert) throws PGPException, IOException {
+    private void verify(PGPSignature signature, InputStream dataIn, OpenPGPCertificate cert) throws PGPException, IOException {
         PGPainless api = PGPainless.getInstance();
-        OpenPGPCertificate certificate = api.toCertificate(cert);
 
         DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(dataIn)
                 .withOptions(ConsumerOptions.get(api)
                         .addVerificationOfDetachedSignature(signature)
-                        .addVerificationCert(certificate));
+                        .addVerificationCert(cert));
 
         Streams.drain(decryptionStream);
         decryptionStream.close();
@@ -1389,7 +1392,7 @@ public class CertificateValidatorTest {
 
         DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(new ByteArrayInputStream(DATA.getBytes(StandardCharsets.UTF_8)))
-                .withOptions(ConsumerOptions.get()
+                .withOptions(ConsumerOptions.get(api)
                         .addVerificationCert(api.readKey().parseCertificate(CERT))
                         .addVerificationOfDetachedSignatures(new ByteArrayInputStream(SIG.getBytes(StandardCharsets.UTF_8))));
 

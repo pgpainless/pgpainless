@@ -6,8 +6,8 @@ package org.pgpainless.weird_keys;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
 import org.pgpainless.algorithm.KeyFlag;
@@ -16,13 +16,13 @@ import org.pgpainless.exception.KeyException;
 import org.pgpainless.key.generation.KeySpec;
 import org.pgpainless.key.generation.type.KeyType;
 import org.pgpainless.key.generation.type.rsa.RsaLength;
-import org.pgpainless.key.util.KeyRingUtils;
 
 public class TestEncryptCommsStorageFlagsDifferentiated {
 
     @Test
     public void testThatEncryptionDifferentiatesBetweenPurposeKeyFlags() {
-        PGPSecretKeyRing secretKeys = PGPainless.buildKeyRing()
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.buildKey()
                 .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.RSA(RsaLength._3072),
                                 KeyFlag.CERTIFY_OTHER,
@@ -30,12 +30,11 @@ public class TestEncryptCommsStorageFlagsDifferentiated {
                                 KeyFlag.ENCRYPT_STORAGE // no ENCRYPT_COMMS
                         ))
                 .addUserId("cannot@encrypt.comms")
-                .build()
-                .getPGPSecretKeyRing();
+                .build();
 
-        PGPPublicKeyRing publicKeys = KeyRingUtils.publicKeyRingFrom(secretKeys);
+        OpenPGPCertificate publicKeys = secretKeys.toCertificate();
 
-        assertThrows(KeyException.UnacceptableEncryptionKeyException.class, () -> EncryptionOptions.encryptCommunications()
+        assertThrows(KeyException.UnacceptableEncryptionKeyException.class, () -> EncryptionOptions.encryptCommunications(api)
                 .addRecipient(publicKeys));
     }
 }

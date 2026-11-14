@@ -18,8 +18,9 @@ public class AsciiArmorTest {
 
     @Test
     public void testCustomAsciiArmorComments() throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+        EncryptionStream encryptionStream = api.generateMessage()
                 .onOutputStream(out)
                 .withOptions(ProducerOptions.noEncryptionNoSigning()
                         .setAsciiArmor(true)
@@ -34,8 +35,9 @@ public class AsciiArmorTest {
 
     @Test
     public void testCustomAsciiArmorVersion() throws IOException, PGPException {
+        PGPainless api = PGPainless.getInstance();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+        EncryptionStream encryptionStream = api.generateMessage()
                 .onOutputStream(out)
                 .withOptions(ProducerOptions.noEncryptionNoSigning()
                         .setAsciiArmor(true)

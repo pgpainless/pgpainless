@@ -7,7 +7,7 @@ package org.pgpainless.key.generation;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.pgpainless.PGPainless;
@@ -27,16 +27,18 @@ public class GenerateEllipticCurveKeyTest {
     @ExtendWith(TestAllImplementations.class)
     public void generateEllipticCurveKeys()
             throws PGPException {
-        PGPSecretKeyRing keyRing = PGPainless.buildKeyRing()
+        OpenPGPKey keyRing = PGPainless.getInstance().buildKey()
                 .setPrimaryKey(KeySpec.getBuilder(
                         KeyType.EDDSA_LEGACY(EdDSALegacyCurve._Ed25519),
                         KeyFlag.CERTIFY_OTHER, KeyFlag.SIGN_DATA))
                 .addSubkey(KeySpec.getBuilder(KeyType.XDH_LEGACY(XDHLegacySpec._X25519), KeyFlag.ENCRYPT_COMMS))
                 .addUserId(UserId.onlyEmail("alice@wonderland.lit").toString())
-                .build()
-                .getPGPSecretKeyRing();
+                .build();
 
-        assertEquals(PublicKeyAlgorithm.EDDSA_LEGACY.getAlgorithmId(), keyRing.getPublicKey().getAlgorithm());
-        UnlockSecretKey.unlockSecretKey(keyRing.getSecretKey(), SecretKeyRingProtector.unprotectedKeys());
+        assertEquals(PublicKeyAlgorithm.EDDSA_LEGACY.getAlgorithmId(), keyRing.getPrimaryKey().getAlgorithm());
+        UnlockSecretKey.unlockSecretKey(
+                keyRing.getPrimarySecretKey(),
+                SecretKeyRingProtector.unprotectedKeys(),
+                PGPainless.getInstance().getAlgorithmPolicy());
     }
 }

@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPKey;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -174,28 +174,30 @@ public class PreventDecryptionUsingNonEncryptionKeyTest {
 
     @Test
     public void baseCase() throws PGPException, IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(ENCRYPTION_CAPABLE_KEY);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.readKey().parseKey(ENCRYPTION_CAPABLE_KEY);
 
         ByteArrayInputStream msgIn = new ByteArrayInputStream(MSG.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(msgIn)
-                .withOptions(ConsumerOptions.get().addDecryptionKey(secretKeys));
+                .withOptions(ConsumerOptions.get(api).addDecryptionKey(secretKeys));
 
         Streams.drain(decryptionStream);
         decryptionStream.close();
         MessageMetadata metadata = decryptionStream.getMetadata();
 
-        assertEquals(new SubkeyIdentifier(secretKeys, secretKeys.getPublicKey().getKeyID()), metadata.getDecryptionKey());
+        assertEquals(new SubkeyIdentifier(secretKeys.getEncryptionKeys().get(0)), metadata.getDecryptionKey());
     }
 
     @Test
     public void canDecryptMessageDespiteMissingKeyFlag() throws IOException, PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(ENCRYPTION_INCAPABLE_KEY);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.readKey().parseKey(ENCRYPTION_INCAPABLE_KEY);
 
         ByteArrayInputStream msgIn = new ByteArrayInputStream(MSG.getBytes(StandardCharsets.UTF_8));
-        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(msgIn)
-                .withOptions(ConsumerOptions.get()
+                .withOptions(ConsumerOptions.get(api)
                         .setAllowDecryptionWithMissingKeyFlags()
                         .addDecryptionKey(secretKeys));
 
@@ -203,30 +205,32 @@ public class PreventDecryptionUsingNonEncryptionKeyTest {
         decryptionStream.close();
         MessageMetadata metadata = decryptionStream.getMetadata();
 
-        assertEquals(new SubkeyIdentifier(secretKeys, secretKeys.getPublicKey().getKeyID()), metadata.getDecryptionKey());
+        assertEquals(new SubkeyIdentifier(secretKeys.getPrimaryKey()), metadata.getDecryptionKey());
     }
 
     @Test
     public void nonEncryptionKeyCannotDecrypt() throws IOException {
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(ENCRYPTION_INCAPABLE_KEY);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.readKey().parseKey(ENCRYPTION_INCAPABLE_KEY);
 
         ByteArrayInputStream msgIn = new ByteArrayInputStream(MSG.getBytes(StandardCharsets.UTF_8));
 
         assertThrows(MissingDecryptionMethodException.class, () ->
-                PGPainless.getInstance().processMessage()
+                api.processMessage()
                         .onInputStream(msgIn)
-                        .withOptions(ConsumerOptions.get().addDecryptionKey(secretKeys)));
+                        .withOptions(ConsumerOptions.get(api).addDecryptionKey(secretKeys)));
     }
 
     @Test
     public void nonEncryptionKeyCanDecryptIfAllowed() throws IOException, PGPException {
-        PGPSecretKeyRing secretKeys = PGPainless.readKeyRing().secretKeyRing(ENCRYPTION_INCAPABLE_KEY);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPKey secretKeys = api.readKey().parseKey(ENCRYPTION_INCAPABLE_KEY);
 
         ByteArrayInputStream msgIn = new ByteArrayInputStream(MSG.getBytes(StandardCharsets.UTF_8));
 
-        DecryptionStream decryptionStream = PGPainless.getInstance().processMessage()
+        DecryptionStream decryptionStream = api.processMessage()
                 .onInputStream(msgIn)
-                .withOptions(ConsumerOptions.get()
+                .withOptions(ConsumerOptions.get(api)
                         .setAllowDecryptionWithMissingKeyFlags()
                         .addDecryptionKey(secretKeys));
 

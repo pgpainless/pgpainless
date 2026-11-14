@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.bouncycastle.openpgp.PGPException;
-import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.api.OpenPGPCertificate;
 import org.bouncycastle.util.io.Streams;
 import org.junit.jupiter.api.Test;
 import org.pgpainless.PGPainless;
@@ -23,7 +23,6 @@ import org.pgpainless.encryption_signing.EncryptionStream;
 import org.pgpainless.encryption_signing.ProducerOptions;
 import org.pgpainless.exception.KeyException;
 import org.pgpainless.key.OpenPgpV4Fingerprint;
-import org.pgpainless.key.SubkeyIdentifier;
 
 public class CertificateExpirationTest {
 
@@ -74,9 +73,10 @@ public class CertificateExpirationTest {
                 "=F9yX\n" +
                 "-----END PGP PUBLIC KEY BLOCK-----\n";
 
-        PGPPublicKeyRing cert = PGPainless.readKeyRing().publicKeyRing(CERT);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate cert = api.readKey().parseCertificate(CERT);
         EncryptionResult result = encrypt(cert);
-        assertTrue(result.getRecipients().contains(new SubkeyIdentifier(cert, encryptionSubkey)));
+        assertTrue(result.isEncryptedFor(cert.getKey(encryptionSubkey.getKeyIdentifier())));
     }
 
     @Test
@@ -124,16 +124,18 @@ public class CertificateExpirationTest {
                 "=Bn/c\n" +
                 "-----END PGP PUBLIC KEY BLOCK-----\n";
 
-        PGPPublicKeyRing cert = PGPainless.readKeyRing().publicKeyRing(CERT);
+        PGPainless api = PGPainless.getInstance();
+        OpenPGPCertificate cert = api.readKey().parseCertificate(CERT);
         assertThrows(KeyException.ExpiredKeyException.class, () -> encrypt(cert));
     }
 
-    private EncryptionResult encrypt(PGPPublicKeyRing certificate) throws PGPException, IOException {
+    private EncryptionResult encrypt(OpenPGPCertificate certificate) throws PGPException, IOException {
+        PGPainless api = PGPainless.getInstance();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        EncryptionStream encryptionStream = PGPainless.encryptAndOrSign()
+        EncryptionStream encryptionStream = api.generateMessage()
                 .onOutputStream(out)
                 .withOptions(ProducerOptions.encrypt(
-                        EncryptionOptions.encryptCommunications()
+                        EncryptionOptions.encryptCommunications(api)
                                 .addRecipient(certificate)
                 ));
 

@@ -7,7 +7,6 @@ package org.pgpainless.encryption_signing
 import java.util.*
 import org.bouncycastle.openpgp.PGPLiteralData
 import org.bouncycastle.openpgp.PGPPublicKeyRing
-import org.bouncycastle.openpgp.PGPSignature
 import org.bouncycastle.openpgp.api.MessageEncryptionMechanism
 import org.bouncycastle.openpgp.api.OpenPGPCertificate
 import org.bouncycastle.openpgp.api.OpenPGPSignature.OpenPGPDocumentSignature
@@ -16,7 +15,6 @@ import org.pgpainless.algorithm.StreamEncoding
 import org.pgpainless.algorithm.SymmetricKeyAlgorithm
 import org.pgpainless.bouncycastle.extensions.matches
 import org.pgpainless.key.SubkeyIdentifier
-import org.pgpainless.util.MultiMap
 import org.pgpainless.util.SessionKey
 
 data class EncryptionResult(
@@ -35,18 +33,6 @@ data class EncryptionResult(
     val encryptionAlgorithm: SymmetricKeyAlgorithm?
         get() = SymmetricKeyAlgorithm.fromId(encryptionMechanism.symmetricKeyAlgorithm)
 
-    @Deprecated(
-        "Use detachedSignatures instead", replaceWith = ReplaceWith("detachedDocumentSignatures"))
-    // TODO: Remove in 2.1
-    val detachedSignatures: MultiMap<SubkeyIdentifier, PGPSignature>
-        get() {
-            val map = MultiMap<SubkeyIdentifier, PGPSignature>()
-            detachedDocumentSignatures.signatures
-                .map { SubkeyIdentifier(it.issuer) to it.signature }
-                .forEach { map.put(it.first, it.second) }
-            return map
-        }
-
     /**
      * Return true, if the message is marked as for-your-eyes-only. This is typically done by
      * setting the filename "_CONSOLE".
@@ -58,6 +44,9 @@ data class EncryptionResult(
 
     fun isEncryptedFor(certificate: OpenPGPCertificate) =
         recipients.any { certificate.getKey(it.keyIdentifier) != null }
+
+    fun isEncryptedFor(componentKey: OpenPGPCertificate.OpenPGPComponentKey) =
+        recipients.any { it.keyIdentifier == componentKey.keyIdentifier }
 
     /**
      * Returns true, if the message was encrypted for at least one subkey of the given certificate.

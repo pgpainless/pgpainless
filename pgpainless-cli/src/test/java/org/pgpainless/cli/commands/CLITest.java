@@ -164,4 +164,8 @@ public abstract class CLITest {
         assertEquals(0, exitCode,
                 "Expected successful program execution");
     }
+
+    public void assertSuccess(int exitCode, String message) {
+        assertEquals(0, exitCode, message);
+    }
 }
