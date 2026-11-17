@@ -210,11 +210,19 @@
   "methods":[{"name":"<init>","parameterTypes":["sun.security.x509.X500Name"] }]
 },
 {
+  "name":"org.bouncycastle.jcajce.provider.asymmetric.CMCE$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
   "name":"org.bouncycastle.jcajce.provider.asymmetric.COMPOSITE$Mappings",
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
   "name":"org.bouncycastle.jcajce.provider.asymmetric.CONTEXT$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"org.bouncycastle.jcajce.provider.asymmetric.CompositeKEMs$Mappings",
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
@@ -231,10 +239,6 @@
 },
 {
   "name":"org.bouncycastle.jcajce.provider.asymmetric.DSTU4145$Mappings",
-  "methods":[{"name":"<init>","parameterTypes":[] }]
-},
-{
-  "name":"org.bouncycastle.jcajce.provider.asymmetric.Dilithium$Mappings",
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
@@ -259,6 +263,10 @@
 },
 {
   "name":"org.bouncycastle.jcajce.provider.asymmetric.Falcon$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"org.bouncycastle.jcajce.provider.asymmetric.FrodoKEM$Mappings",
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
@@ -302,11 +310,19 @@
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
-  "name":"org.bouncycastle.jcajce.provider.asymmetric.SPHINCSPlus$Mappings",
+  "name":"org.bouncycastle.jcajce.provider.asymmetric.X509$Mappings",
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
-  "name":"org.bouncycastle.jcajce.provider.asymmetric.X509$Mappings",
+  "name":"org.bouncycastle.jcajce.provider.asymmetric.XMSS$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"org.bouncycastle.jcajce.provider.asymmetric.XWing$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"org.bouncycastle.jcajce.provider.digest.Ascon$Mappings",
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
@@ -414,6 +430,18 @@
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
+  "name":"org.bouncycastle.jcajce.provider.kdf.KBKDF$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"org.bouncycastle.jcajce.provider.kdf.KMAC$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"org.bouncycastle.jcajce.provider.kdf.ONESTEP$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
   "name":"org.bouncycastle.jcajce.provider.kdf.PBKDF2$Mappings",
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
@@ -442,7 +470,15 @@
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
+  "name":"org.bouncycastle.jcajce.provider.symmetric.ARGON2$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
   "name":"org.bouncycastle.jcajce.provider.symmetric.ARIA$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.Ascon$Mappings",
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
@@ -507,6 +543,10 @@
 },
 {
   "name":"org.bouncycastle.jcajce.provider.symmetric.IDEA$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.LEA$Mappings",
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
@@ -607,6 +647,10 @@
 },
 {
   "name":"org.bouncycastle.jcajce.provider.symmetric.VMPCKSA3$Mappings",
+  "methods":[{"name":"<init>","parameterTypes":[] }]
+},
+{
+  "name":"org.bouncycastle.jcajce.provider.symmetric.XChaCha$Mappings",
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
