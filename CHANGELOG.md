@@ -5,7 +5,10 @@ SPDX-License-Identifier: CC0-1.0
 
 # PGPainless Changelog
 
-## 2.0.5-SNAPSHOT
+## 2.0.5
+- Bump `bcpg-jdk18on` to `1.87`
+- Bump `bcprov-jdk18on` to `1.87`
+- Introduce `Policy.Builder.withMaxDecompressedDataSize()` (default: 32mb)
 - Properly compare IntendedRecipientFingerprint to recipient certificate fingerprint
 - Do not silently swallow exceptions in `OpenPGPMessageInputStream.read()`
 - `sop inline-verify / sop verify`: Require `CERTS` argument
@@ -14,6 +17,7 @@ SPDX-License-Identifier: CC0-1.0
 - Bump `logback` to `1.5.34`
 - Remove unused unsafe `OpenPGPSecretKey.unlock()` extension function
 - Document reason for deprecation of plain `setSessionKey(sk)` method
+- Add `PGPainless.readSignatures()` method
 
 ## 2.0.4
 - Bump `checkstyle` tool version to `10.26.1`
@@ -42,7 +46,7 @@ SPDX-License-Identifier: CC0-1.0
 - Emit OnePassSignaturePackets using new packet format
 
 ## 2.0.3
-- Bump `bcpg-jdk8on` to `1.84`
+- Bump `bcpg-jdk18on` to `1.84`
 - Bump `bcprov-jdk18on` to `1.84`
 - Bump `sop-java` to `15.0.1`
 - Bump `logback-classic` to `1.5.25`
