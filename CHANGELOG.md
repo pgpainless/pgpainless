@@ -8,6 +8,7 @@ SPDX-License-Identifier: CC0-1.0
 ## 2.0.5
 - Bump `bcpg-jdk18on` to `1.87`
 - Bump `bcprov-jdk18on` to `1.87`
+- Bump `sop-java` to `15.0.2`
 - Introduce `Policy.Builder.withMaxDecompressedDataSize()` (default: 32mb)
 - Properly compare IntendedRecipientFingerprint to recipient certificate fingerprint
 - Do not silently swallow exceptions in `OpenPGPMessageInputStream.read()`
