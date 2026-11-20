@@ -151,12 +151,18 @@ class OpenPgpMessageInputStream(
 
         var packet: OpenPgpPacket?
 
+        var packetCount = 0
+
         // Consume packets, potentially stepping into nested layers
         layer@ while (run {
             packet = pIn.nextPacketTag()
             packet
         } != null) {
-
+            val policy = api.algorithmPolicy
+            if (policy.maxPacketsPerLayer != null && ++packetCount >= policy.maxPacketsPerLayer) {
+                throw MalformedOpenPgpMessageException(
+                    "Sequential packet limit ${policy.maxPacketsPerLayer} exceeded.")
+            }
             signatures.nextPacket(packet!!)
             // Consume packets in a layer
             when (packet) {
@@ -235,7 +241,8 @@ class OpenPgpMessageInputStream(
         val compressionLayer =
             CompressedData(
                 CompressionAlgorithm.requireFromId(compressedData.algorithm),
-                layerMetadata.depth + 1)
+                layerMetadata.depth + 1,
+                api.algorithmPolicy.maxPacketNestingDepth)
 
         LOGGER.debug(
             "Compressed Data Packet (${compressionLayer.algorithm}) at depth ${layerMetadata.depth} encountered.")
@@ -344,7 +351,7 @@ class OpenPgpMessageInputStream(
         syntaxVerifier.next(InputSymbol.ENCRYPTED_DATA)
 
         val encDataList = packetInputStream!!.readEncryptedDataList()
-        val esks = ESKsAndData(encDataList)
+        val esks = ESKsAndData(encDataList, api)
 
         val encDataPacketType = EncryptedDataPacketType.of(encDataList)!!
         when (encDataPacketType) {
@@ -779,7 +786,7 @@ class OpenPgpMessageInputStream(
         }
     }
 
-    private class ESKsAndData(private val esks: PGPEncryptedDataList) {
+    private class ESKsAndData(private val esks: PGPEncryptedDataList, private val api: PGPainless) {
 
         fun toSessionKeyEncryptedData(
             passwordDerivedSessionKey: Boolean
@@ -787,26 +794,31 @@ class OpenPgpMessageInputStream(
             esks.extractSessionKeyEncryptedData(passwordDerivedSessionKey)
 
         fun toEncryptedData(sk: SessionKey, depth: Int): EncryptedData {
+            val maxDepth = api.algorithmPolicy.maxPacketNestingDepth
             return when (EncryptedDataPacketType.of(esks)!!) {
                 EncryptedDataPacketType.SED ->
                     EncryptedData(
                         MessageEncryptionMechanism.legacyEncryptedNonIntegrityProtected(
                             sk.algorithm.algorithmId),
-                        depth)
+                        depth,
+                        maxDepth)
                 EncryptedDataPacketType.SEIPDv1 ->
                     EncryptedData(
                         MessageEncryptionMechanism.integrityProtected(sk.algorithm.algorithmId),
-                        depth)
+                        depth,
+                        maxDepth)
                 EncryptedDataPacketType.SEIPDv2 -> {
                     val seipd2 = esks.encryptedData as SymmetricEncIntegrityPacket
                     EncryptedData(
                         MessageEncryptionMechanism.aead(
                             seipd2.cipherAlgorithm, seipd2.aeadAlgorithm),
-                        depth)
+                        depth,
+                        maxDepth)
                 }
                 EncryptedDataPacketType.LIBREPGP_OED -> {
                     val oed = esks.encryptedData as AEADEncDataPacket
-                    EncryptedData(MessageEncryptionMechanism.librePgp(oed.algorithm.toInt()), depth)
+                    EncryptedData(
+                        MessageEncryptionMechanism.librePgp(oed.algorithm.toInt()), depth, maxDepth)
                 }
             }.also { it.sessionKey = sk }
         }
@@ -1154,7 +1166,11 @@ class OpenPgpMessageInputStream(
 
         @JvmStatic
         fun create(inputStream: InputStream, options: ConsumerOptions, api: PGPainless) =
-            create(inputStream, options, Message(), api)
+            create(
+                inputStream,
+                options,
+                Message(false, api.algorithmPolicy.maxPacketNestingDepth),
+                api)
 
         @JvmStatic
         internal fun create(

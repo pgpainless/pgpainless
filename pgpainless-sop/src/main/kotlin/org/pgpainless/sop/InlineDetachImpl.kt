@@ -15,7 +15,6 @@ import org.bouncycastle.openpgp.PGPOnePassSignatureList
 import org.bouncycastle.openpgp.PGPSignatureList
 import org.bouncycastle.util.io.Streams
 import org.pgpainless.PGPainless
-import org.pgpainless.decryption_verification.MessageMetadata.Layer.Companion.MAX_LAYER_DEPTH
 import org.pgpainless.decryption_verification.OpenPGPAnimalSnifferInputStream
 import org.pgpainless.decryption_verification.cleartext_signatures.ClearsignedMessageUtil
 import org.pgpainless.exception.MalformedOpenPgpMessageException
@@ -37,6 +36,8 @@ class InlineDetachImpl(private val api: PGPainless) : InlineDetach {
             private val sigOut = ByteArrayOutputStream()
 
             override fun writeTo(outputStream: OutputStream): Signatures {
+                val maxNestingDepth = api.algorithmPolicy.maxPacketNestingDepth
+                val maxPacketsPerLayer = api.algorithmPolicy.maxPacketsPerLayer
                 var pgpIn = OpenPGPAnimalSnifferInputStream(messageInputStream)
                 if (pgpIn.isNonOpenPgp) {
                     throw SOPGPException.BadData("Data appears to be non-OpenPGP.")
@@ -77,7 +78,12 @@ class InlineDetachImpl(private val api: PGPainless) : InlineDetach {
                     var objectFactory = api.implementation.pgpObjectFactory(pgpIn)
                     var next: Any?
                     var nestingDepth: Int = 0
+                    var packetCount = 0
                     while (objectFactory.nextObject().also { next = it } != null) {
+                        if (maxPacketsPerLayer != null && ++packetCount >= maxPacketsPerLayer) {
+                            throw MalformedOpenPgpMessageException(
+                                "Sequential packet limit $maxPacketsPerLayer exceeded.")
+                        }
 
                         if (next is PGPOnePassSignatureList) {
                             // Skip over OPSs
@@ -95,16 +101,18 @@ class InlineDetachImpl(private val api: PGPainless) : InlineDetach {
                         if (next is PGPCompressedData) {
                             // Guard packet nesting depth
                             nestingDepth++
-                            if (nestingDepth > MAX_LAYER_DEPTH) {
+                            if (maxNestingDepth != null && nestingDepth > maxNestingDepth) {
                                 throw MalformedOpenPgpMessageException(
-                                    "Maximum packet nesting depth ($MAX_LAYER_DEPTH) exceeded.")
+                                    "Maximum packet nesting depth ($maxNestingDepth) exceeded.")
                             }
 
                             // Decompress compressed data
                             try {
+                                packetCount = 0
                                 objectFactory =
                                     api.implementation.pgpObjectFactory(
-                                        (next as PGPCompressedData).dataStream)
+                                        (next as PGPCompressedData).getDataStream(
+                                            api.algorithmPolicy.maxDecompressedDataSize ?: -1))
                             } catch (e: PGPException) {
                                 throw SOPGPException.BadData(
                                     "Cannot decompress PGPCompressedData", e)

@@ -9,7 +9,6 @@ import java.io.InputStream
 import org.bouncycastle.bcpg.KeyIdentifier
 import org.bouncycastle.openpgp.*
 import org.pgpainless.PGPainless
-import org.pgpainless.decryption_verification.MessageMetadata.Layer.Companion.MAX_LAYER_DEPTH
 import org.pgpainless.exception.MalformedOpenPgpMessageException
 import org.pgpainless.util.ArmorUtils
 
@@ -72,8 +71,15 @@ class MessageInspector(val api: PGPainless = PGPainless.getInstance()) {
         var objectFactory = api.implementation.pgpObjectFactory(inputStream)
 
         var n: Any?
+        val maxDepth = api.algorithmPolicy.maxPacketNestingDepth
+        val maxPackets = api.algorithmPolicy.maxPacketsPerLayer
         var nestingDepth: Int = 0
+        var packetCount = 0
         while (objectFactory.nextObject().also { n = it } != null) {
+            if (maxPackets != null && ++packetCount >= maxPackets) {
+                throw MalformedOpenPgpMessageException(
+                    "Sequential packet limit $maxPackets exceeded.")
+            }
             when (val next = n!!) {
                 is PGPOnePassSignatureList -> {
                     if (!next.isEmpty) {
@@ -97,14 +103,15 @@ class MessageInspector(val api: PGPainless = PGPainless.getInstance()) {
                 is PGPCompressedData -> {
                     // Guard packet nesting depth
                     nestingDepth++
-                    if (nestingDepth > MAX_LAYER_DEPTH) {
+                    if (maxDepth != null && nestingDepth > maxDepth) {
                         throw MalformedOpenPgpMessageException(
-                            "Maximum packet nesting depth ($MAX_LAYER_DEPTH) exceeded.")
+                            "Maximum packet nesting depth ($maxDepth) exceeded.")
                     }
 
+                    val decompressed =
+                        next.getDataStream(api.algorithmPolicy.maxDecompressedDataSize ?: -1)
                     objectFactory =
-                        api.implementation.pgpObjectFactory(
-                            PGPUtil.getDecoderStream(next.dataStream))
+                        api.implementation.pgpObjectFactory(PGPUtil.getDecoderStream(decompressed))
                     continue
                 }
                 is PGPLiteralData -> {

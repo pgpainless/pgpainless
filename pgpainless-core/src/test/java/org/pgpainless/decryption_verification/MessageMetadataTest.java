@@ -27,11 +27,11 @@ public class MessageMetadataTest {
         // Note: COMP of ENC does not make sense, since ENC is indistinguishable from randomness
         //  and randomness cannot be compressed.
         //  For the sake of testing though, this is okay.
-        MessageMetadata.Message message = new MessageMetadata.Message();
+        MessageMetadata.Message message = new MessageMetadata.Message(false, 16);
 
-        MessageMetadata.CompressedData compressedData = new MessageMetadata.CompressedData(CompressionAlgorithm.ZIP, message.getDepth() + 1);
-        MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(MessageEncryptionMechanism.integrityProtected(SymmetricKeyAlgorithm.AES_128.getAlgorithmId()), compressedData.getDepth() + 1);
-        MessageMetadata.EncryptedData encryptedData1 = new MessageMetadata.EncryptedData(MessageEncryptionMechanism.integrityProtected(SymmetricKeyAlgorithm.AES_256.getAlgorithmId()), encryptedData.getDepth() + 1);
+        MessageMetadata.CompressedData compressedData = new MessageMetadata.CompressedData(CompressionAlgorithm.ZIP, message.getDepth() + 1, 16);
+        MessageMetadata.EncryptedData encryptedData = new MessageMetadata.EncryptedData(MessageEncryptionMechanism.integrityProtected(SymmetricKeyAlgorithm.AES_128.getAlgorithmId()), compressedData.getDepth() + 1, 16);
+        MessageMetadata.EncryptedData encryptedData1 = new MessageMetadata.EncryptedData(MessageEncryptionMechanism.integrityProtected(SymmetricKeyAlgorithm.AES_256.getAlgorithmId()), encryptedData.getDepth() + 1, 16);
         MessageMetadata.LiteralData literalData = new MessageMetadata.LiteralData();
 
         message.setChild(compressedData);
@@ -72,7 +72,7 @@ public class MessageMetadataTest {
                 "collateral_murder.zip",
                 DateUtil.parseUTCDate("2010-04-05 10:12:03 UTC"),
                 StreamEncoding.BINARY);
-        MessageMetadata.Message message = new MessageMetadata.Message();
+        MessageMetadata.Message message = new MessageMetadata.Message(false, 16);
         message.setChild(literalData);
 
         MessageMetadata metadata = new MessageMetadata(message);

@@ -34,7 +34,9 @@ class Policy(
         KeyRingProtectionSettings.secureDefaultSettings(),
     val notationRegistry: NotationRegistry = NotationRegistry(),
     val keyGenerationAlgorithmSuite: AlgorithmSuite = AlgorithmSuite.defaultAlgorithmSuite,
-    val maxDecompressedDataSize: Long? = 32 * 1024 * 1024
+    val maxDecompressedDataSize: Long? = 32 * 1024 * 1024,
+    val maxPacketNestingDepth: Int? = 16,
+    val maxPacketsPerLayer: Int? = 256
 ) {
 
     /**
@@ -530,6 +532,8 @@ class Policy(
         private var notationRegistry: NotationRegistry = origin.notationRegistry
         private var keyGenerationAlgorithmSuite: AlgorithmSuite = origin.keyGenerationAlgorithmSuite
         private var maxDecompressedDataSize: Long? = origin.maxDecompressedDataSize
+        private var maxPacketNestingDepth: Int? = origin.maxPacketNestingDepth
+        private var maxPacketsPerLayer: Int? = origin.maxPacketsPerLayer
 
         fun withCertificationSignatureHashAlgorithmPolicy(
             certificationSignatureHashAlgorithmPolicy: HashAlgorithmPolicy
@@ -584,6 +588,14 @@ class Policy(
 
         fun withMaxDecompressedDataSize(maxDecompressedDataSize: Long?) = apply {
             this.maxDecompressedDataSize = maxDecompressedDataSize
+        }
+
+        fun withMaxPacketNestingDepth(maxPacketNestingDepth: Int) = apply {
+            this.maxPacketNestingDepth = maxPacketNestingDepth
+        }
+
+        fun withMaxPacketsPerLayer(maxPacketsPerLayer: Int) = apply {
+            this.maxPacketsPerLayer = maxPacketsPerLayer
         }
 
         fun build() =

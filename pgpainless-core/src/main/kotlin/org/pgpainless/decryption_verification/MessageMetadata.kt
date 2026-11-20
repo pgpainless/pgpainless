@@ -381,12 +381,12 @@ class MessageMetadata(val message: Message) {
         fun hasNestedChild(): Boolean
     }
 
-    abstract class Layer(val depth: Int) : Packet {
+    abstract class Layer(val depth: Int, val maxDepth: Int?) : Packet {
 
         init {
-            if (depth > MAX_LAYER_DEPTH) {
+            if (maxDepth != null && depth > maxDepth) {
                 throw MalformedOpenPgpMessageException(
-                    "Maximum packet nesting depth ($MAX_LAYER_DEPTH) exceeded.")
+                    "Maximum packet nesting depth (${maxDepth}) exceeded.")
             }
         }
 
@@ -468,10 +468,6 @@ class MessageMetadata(val message: Message) {
                 }
             }
         }
-
-        companion object {
-            const val MAX_LAYER_DEPTH = 16
-        }
     }
 
     /**
@@ -481,7 +477,7 @@ class MessageMetadata(val message: Message) {
      * @see
      *   [RFC4880 §7. Cleartext Signature Framework](https://www.rfc-editor.org/rfc/rfc4880#section-7)
      */
-    class Message(var cleartextSigned: Boolean = false) : Layer(0) {
+    class Message(var cleartextSigned: Boolean = false, maxDepth: Int?) : Layer(0, maxDepth) {
         fun setCleartextSigned() = apply { cleartextSigned = true }
     }
 
@@ -509,7 +505,8 @@ class MessageMetadata(val message: Message) {
      * @param algorithm [CompressionAlgorithm] used to compress the packet.
      * @param depth nesting depth at which this packet was encountered.
      */
-    class CompressedData(val algorithm: CompressionAlgorithm, depth: Int) : Layer(depth), Nested {
+    class CompressedData(val algorithm: CompressionAlgorithm, depth: Int, maxDepth: Int?) :
+        Layer(depth, maxDepth), Nested {
 
         // A compressed data packet MUST have a child element
         override fun hasNestedChild() = true
@@ -521,8 +518,8 @@ class MessageMetadata(val message: Message) {
      * @param mechanism mechanism used to encrypt the packet.
      * @param depth nesting depth at which this packet was encountered.
      */
-    class EncryptedData(val mechanism: MessageEncryptionMechanism, depth: Int) :
-        Layer(depth), Nested {
+    class EncryptedData(val mechanism: MessageEncryptionMechanism, depth: Int, maxDepth: Int?) :
+        Layer(depth, maxDepth), Nested {
 
         /** [SessionKey] used to decrypt the packet. */
         var sessionKey: SessionKey? = null
